@@ -47,7 +47,7 @@ qu'elle n'a pas**.
 | `label_confidence` | Absente pour 3999/11020 lignes (36 %). |
 | `sectionName` | Très bruité avant normalisation (`Discussion`, `DISCUSSION`, `4. Discussion` traités comme distincts ; 724 valeurs vides) — normalisé dans le script (`normalize_section`). |
 | Distribution `label` | background 60 %, method 28 %, result 12 % — cohérent avec la fiche officielle. |
-| **Doublons exacts inter-splits** | 60 `citation_id` (paire citant/cité + index d'extrait) apparaissent **à l'identique** dans deux splits différents — pas juste un chevauchement d'articles, mais la même instance de citation dupliquée. À dédupliquer avant tout entraînement rigoureux. |
+| **Doublons de `citation_id`** | 60 `citation_id` dupliqués au total. **Correction d'une erreur de documentation précédente** : ce ne sont pas 60 doublons inter-splits. En réalité : **9** sont de vrais doublons inter-splits (la même citation apparaît dans deux splits différents — fuite réelle) ; les **51** autres sont dans le **même** split et ne diffèrent que par un artefact d'encodage (mojibake, ex. « Griffith's » vs « Griffith‚Äôs ») sur la même phrase — un bug d'export du corpus, pas un doublon sémantique. **Dédupliqué** dans `scicite_fine_classified_full.csv` (11 020 → 10 960 lignes), en gardant la copie sans artefact d'encodage quand elle existe. |
 
 ## 2. Règles de reclassement fin (heuristique, pas un modèle entraîné)
 
@@ -136,28 +136,70 @@ citations `usage` fraîchement détectées (hors des 328 lignes vérifiées) :
 11/12 plausibles à la relecture manuelle — la règle généralise bien au-delà
 de l'échantillon qui a servi à la calibrer.
 
-## 5. Résultat final (heuristique v2 + 340 lignes vérifiées par LLM)
+## 5. Phase 3 — chasse ciblée aux `critique`/`extension` cachés dans `comparison`
 
-| Classe | Effectif (sur 11 020) | Évolution vs Phase 1 |
+**Constat de départ** : après la Phase 2, 1076 lignes restaient classées
+`comparison` par la seule heuristique (non vérifiées), la majorité issues
+du label `result` de SciCite sans marqueur lexical fort. Comme `critique`
+et `extension` ne peuvent provenir que de ce label, c'est le seul réservoir
+où en chercher davantage.
+
+**Méthode** : échantillon stratifié de 300 lignes (100 par lot), 3 agents
+indépendants, consigne resserrée sur la précision (« la plupart des lignes
+sont déjà correctement `comparison`, ne signalez `critique`/`extension` que
+si l'évidence textuelle est claire — ignorez les différences numériques
+neutres »).
+
+**Résultat** : 45/300 lignes corrigées (15 %) :
+
+| Nouvelle classe | Nombre | Exemples de formulations manquées par le regex |
 |---|---|---|
-| `background` | 6428 (58.3 %) | ≈ stable |
-| `methodology` | 2325 (21.1 %) | ↓ (des cas déplacés vers `usage`/`background`) |
-| `comparison` | 1231 (11.2 %) | ≈ stable |
-| `usage` | **790 (7.2 %)** | **×3.4** (232 → 790) |
-| `critique` | 222 (2.0 %) | ≈ stable |
-| `extension` | 24 (0.2 %) | légère hausse |
+| `critique` | 27 | « contrary to », « conflicting results », « not consistent with », « opposite trend », « contrasts findings », « comes with its own challenges », « not particularly useful » |
+| `extension` | 4 | « an improvement of the original X technique », généralisation d'un effet à un nouveau domaine sans le mot « extend » |
+| `usage` | 6 | dataset/benchmark repris directement (ex. FedBench, données de Rosengaus et al.) |
+| `background` | 6 | contexte de littérature pur, sans lien direct avec les résultats propres |
+| `methodology` | 2 | approche adaptée « similaire à celles appliquées dans des études précédentes » |
 
-340 lignes portent `classification_method="llm_assisted_verified"` (label
-de confiance la plus haute de ce dataset, vérifié individuellement) ; le
-reste porte `classification_method="heuristic_rule_based"` avec le détail
-de la règle déclenchante dans `classification_rule`.
+**Règles regex ajoutées à `CRITIQUE_RE`** (testées avant intégration :
+7/8 = 87,5 % de précision sur les 300 lignes) : « contrary to », « conflicting »,
+« not consistent with », « opposite (trend|effect|results) ».
+Les cas d'`extension` (seulement 4 trouvés) restent trop rares et trop
+idiosyncratiques pour en tirer une règle regex fiable — cette classe reste
+la plus dépendante d'un passage LLM complet.
+
+**Vérification finale (nouvel échantillon, non calibré dessus)** : sur 10
+lignes `critique` fraîchement détectées, 8 sont clairement correctes, mais
+**2 faux positifs confirmés** : « did not differ… a finding **consistent
+with** previous studies » et « However, similar to our results… » sont
+déclenchés par « did not »/« however » alors que la suite de la phrase est
+en réalité supportive. **Ce biais résiduel est documenté, pas corrigé** :
+distinguer ces cas demanderait de comprendre la portée sémantique de la
+proposition qui suit le connecteur, hors de portée d'un regex.
+
+## 6. Résultat final (heuristique v3 + 628 lignes vérifiées par LLM + dédoublonnage)
+
+| Classe | Effectif (sur 10 960, dédoublonné) | Évolution vs Phase 1 |
+|---|---|---|
+| `background` | 6433 (58.7 %) | ≈ stable |
+| `methodology` | 2304 (21.0 %) | ↓ (cas déplacés vers `usage`/`background`) |
+| `comparison` | 1152 (10.5 %) | ↓ (cas déplacés vers `critique`/`extension`) |
+| `usage` | **785 (7.2 %)** | **×3.4** (232 → 785) |
+| `critique` | **259 (2.4 %)** | **+23 %** (210 → 259) |
+| `extension` | 27 (0.2 %) | +42 % (19 → 27) |
+
+628 `citation_id` uniques portent `classification_method="llm_assisted_verified"`
+(deux passages combinés : 328 lignes Phase 2 + 300 lignes Phase 3, avec
+quelques recouvrements de doublons de `citation_id` résolus par le
+dédoublonnage) ; le reste porte `classification_method="heuristic_rule_based"`
+avec le détail de la règle déclenchante dans `classification_rule`.
 
 ## Fichiers
 
-- `fine_classify_scicite.py` — script de reclassement (reproductible : `python3 fine_classify_scicite.py`, nécessite les fichiers `train.jsonl`/`dev.jsonl`/`test.jsonl` de SciCite dans `/tmp/scicite_data/scicite/` et, pour appliquer les surcharges vérifiées, les fichiers `llm_verification_pass/llm_pass_chunk_*_labeled.csv`).
-- `scicite_fine_classified_full.csv` — les 11 020 lignes de SciCite reclassées (v2, post-Phase 2), avec colonnes : `dataset_source`, `split`, `paper_id` (=`citingPaperId`), `citation_id`, `section` (normalisée), `citation_context`, `citation_topic` (vide — voir limites), `cited_reference` (=`citedPaperId`, identifiant Semantic Scholar — voir limites), `label_coarse` (label SciCite d'origine), `label2_scicite`, `classification` (label fin), `classification_rule`, `classification_method` (`heuristic_rule_based` ou `llm_assisted_verified`), `is_key_citation`, `source_marker_type`.
-- `scicite_pilot_sample.csv` — échantillon stratifié (v2) pour audit qualité continu.
-- `llm_verification_pass/` — les 330 lignes soumises aux agents LLM (`llm_pass_sample.csv`) et les 3 lots de résultats (`llm_pass_chunk_{1,2,3}_labeled.csv`, avec la justification de chaque décision dans la colonne `rationale`).
+- `fine_classify_scicite.py` — script de reclassement (reproductible : `python3 fine_classify_scicite.py`, nécessite les fichiers `train.jsonl`/`dev.jsonl`/`test.jsonl` de SciCite dans `/tmp/scicite_data/scicite/` et, pour appliquer les surcharges vérifiées, les fichiers `llm_verification_pass/llm_pass_chunk_*_labeled.csv` et `llm_verification_pass_2/ce_hunt_chunk_*_labeled.csv`).
+- `scicite_fine_classified_full.csv` — les 10 960 lignes de SciCite reclassées et dédoublonnées (v3), avec colonnes : `dataset_source`, `split`, `paper_id` (=`citingPaperId`), `citation_id`, `section` (normalisée), `citation_context`, `citation_topic` (vide — voir limites), `cited_reference` (=`citedPaperId`, identifiant Semantic Scholar — voir limites), `label_coarse` (label SciCite d'origine), `label2_scicite`, `classification` (label fin), `classification_rule`, `classification_method` (`heuristic_rule_based` ou `llm_assisted_verified`), `is_key_citation`, `source_marker_type`.
+- `scicite_pilot_sample.csv` — échantillon stratifié (v3) pour audit qualité continu.
+- `llm_verification_pass/` — Phase 2 : 330 lignes soumises aux agents LLM (`llm_pass_sample.csv`) et les 3 lots de résultats (`llm_pass_chunk_{1,2,3}_labeled.csv`).
+- `llm_verification_pass_2/` — Phase 3 : les 3 lots de résultats de la chasse ciblée `critique`/`extension` (`ce_hunt_chunk_{1,2,3}_labeled.csv`, avec justification par ligne dans `rationale`).
 
 ## Limites connues et travail restant
 
@@ -168,30 +210,40 @@ de la règle déclenchante dans `classification_rule`.
    cet environnement d'exécution** (bloquée par le proxy réseau — testé et
    confirmé : `curl` retourne une erreur 403 sur `api.semanticscholar.org`).
    À faire depuis un environnement avec accès réseau complet.
-2. **`citation_topic` est vide** pour les 11 020 lignes SciCite : le générer
+2. **`citation_topic` est vide** pour les 10 960 lignes SciCite : le générer
    correctement (un résumé du sujet de la citation, comme dans le dataset
    manuel) demande une lecture/synthèse par citation. Faisable avec le même
-   pipeline d'agents que la Phase 2, en traitant cela comme un troisième
+   pipeline d'agents que les Phases 2/3, en traitant cela comme un nouveau
    pilote avant un passage à l'échelle complète.
-3. **`methodology` reste un bucket résiduel imparfait** : même après la
-   Phase 2, ~30 % des lignes `methodology` par défaut examinées étaient en
-   réalité du `background` pur (mention d'une méthode sans réutilisation par
-   les auteurs citants). Aucune règle heuristique testée ne discrimine
+3. **`methodology` reste un bucket résiduel imparfait** : ~30 % des lignes
+   `methodology` par défaut examinées en Phase 2 étaient en réalité du
+   `background` pur (mention d'une méthode sans réutilisation par les
+   auteurs citants). Aucune règle heuristique testée ne discrimine
    correctement ce cas (voir la piste rejetée en section 4) ; seule une
    relecture cas par cas (ou un LLM) le peut de façon fiable.
-4. Le rappel de `critique` et surtout `extension` reste faible même après
-   l'ajout des marqueurs passifs (qui ciblaient spécifiquement `usage`) : un
-   futur pilote devrait cibler spécifiquement ces deux classes.
-5. Les splits SciCite ont un chevauchement d'articles citants entre
-   train/dev/test, et 60 lignes sont des doublons exacts inter-splits (voir
-   audit) — à corriger (déduplication + re-split par article) avant tout
-   entraînement/évaluation rigoureux d'un modèle sur ce dataset combiné.
+4. **`critique` garde un biais résiduel connu et non corrigé** : les
+   connecteurs « however » et « did not » déclenchent parfois `critique` à
+   tort quand la proposition qui suit est en fait supportive (« did not
+   differ… consistent with previous studies ») — voir section 5. Ce n'est
+   pas corrigible par regex sans analyse sémantique de la portée du
+   connecteur.
+5. **`extension` reste la classe la plus fragile** (27 cas sur 10 960,
+   0,2 %) : même après deux passages LLM ciblés, trop peu d'exemples ont été
+   trouvés pour dériver des règles lexicales fiables ; seul un passage LLM
+   complet sur l'ensemble du corpus (pas un échantillon) donnerait un
+   rappel correct sur cette classe.
+6. Les splits SciCite ont un chevauchement d'articles citants entre
+   train/dev/test (voir section 1) — la déduplication de `citation_id` a
+   été appliquée, mais le chevauchement d'*articles* (au-delà des lignes
+   dupliquées) persiste et nécessiterait un re-split complet par article
+   avant tout entraînement/évaluation rigoureux.
 
 ## Prochaines étapes suggérées
 
-1. Cibler spécifiquement `critique` et `extension` avec un nouveau pilote
-   LLM (échantillon plus large, ces classes étant rares).
+1. Passage LLM complet (pas un échantillon) ciblant spécifiquement
+   `extension`, la classe la plus rare et la moins bien couverte.
 2. Générer `citation_topic` par LLM sur un pilote, puis à l'échelle.
-3. Dédupliquer et re-splitter par article avant tout entraînement.
+3. Re-splitter par article (au-delà de la déduplication déjà faite) avant
+   tout entraînement.
 4. Résoudre `cited_reference` en métadonnées lisibles via l'API Semantic
    Scholar, depuis un environnement avec accès réseau.

@@ -32,7 +32,11 @@ USAGE_RE = re.compile(
 CRITIQUE_RE = re.compile(
     r"\bhowever\b|\bin contrast\b|\bunlike\b|\bfail(?:s|ed)?\b|\bcannot\b|\bdoes not\b|\bdid not\b"
     r"|\blimitation|\binconsistent|\bcontradict|\boverestimat|\bunderestimat|\bweakness"
-    r"|\bno significant\b|\bnot support|\bdisagree|\bdespite\b",
+    r"|\bno significant\b|\bnot support|\bdisagree|\bdespite\b"
+    # Added after a targeted LLM-assisted hunt for critique/extension hidden in
+    # the "comparison" default bucket (300-row sample, 7/8 precision on these
+    # additions, i.e. 87.5%):
+    r"|\bcontrary to\b|\bconflicting\b|\bnot consistent with\b|\bopposite (?:trend|effect|results?)\b",
     re.IGNORECASE,
 )
 
@@ -106,6 +110,16 @@ def load_llm_verified_overrides():
                     overrides[r["citation_id"]] = r["new_classification"]
         except FileNotFoundError:
             pass
+    # Second LLM-assisted pass: targeted hunt for critique/extension hidden
+    # in the "comparison" default bucket (300-row stratified sample).
+    for i in [1, 2, 3]:
+        path = f"ce_hunt_chunk_{i}_labeled.csv"
+        try:
+            with open(path) as f:
+                for r in csv.DictReader(f):
+                    overrides[r["citation_id"]] = r["new_classification"]
+        except FileNotFoundError:
+            pass
     return overrides
 
 
@@ -141,6 +155,31 @@ def main():
 
     n_verified = sum(1 for r in out_rows if r["classification_method"] == "llm_assisted_verified")
     print(f"Applied {n_verified} LLM-verified overrides on top of the heuristic pass.\n")
+
+    # De-duplicate citation_id groups. The raw SciCite corpus contains 60
+    # duplicate citation_id values: 51 are the *same* sentence duplicated
+    # (50 of those only differ by a mojibake re-encoding artifact, e.g.
+    # "Griffith's" vs "Griffith‚Äôs"), and 9 are genuine cross-split
+    # duplicates (identical or near-identical citation appearing in two of
+    # train/dev/test). Within each group we keep the row without the
+    # mojibake marker when one exists, else the first encountered
+    # (train > dev > test, per load_all's iteration order).
+    MOJIBAKE_MARKER = "‚Ä"  # the "‚Ä" sequence seen in corrupted rows
+    by_id = collections.defaultdict(list)
+    for r in out_rows:
+        by_id[r["citation_id"]].append(r)
+    deduped_rows = []
+    n_dropped = 0
+    for cid, group in by_id.items():
+        if len(group) == 1:
+            deduped_rows.append(group[0])
+            continue
+        n_dropped += len(group) - 1
+        clean = [g for g in group if MOJIBAKE_MARKER not in g["citation_context"]]
+        deduped_rows.append(clean[0] if clean else group[0])
+    print(f"De-duplication: dropped {n_dropped} duplicate citation_id rows "
+          f"({len(out_rows)} -> {len(deduped_rows)}).\n")
+    out_rows = deduped_rows
 
     dist = collections.Counter(r["classification"] for r in out_rows)
     rule_dist = collections.Counter(r["classification_rule"] for r in out_rows)
