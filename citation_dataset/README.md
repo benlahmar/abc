@@ -56,6 +56,16 @@ ce qui correspond à la notion d'« utilisation » demandée :
 | `extension`   | L'article étend explicitement, prolonge ou généralise un cadre/une idée introduit(e) dans la référence (souvent un travail antérieur des mêmes auteurs). |
 | `critique`    | La référence, ou le phénomène qu'elle documente, présente une limite, une faiblesse ou un problème qui motive l'étude actuelle. |
 
+## Extension avec SciCite
+
+Le sous-dossier [`scicite_extension/`](scicite_extension/) documente une
+tentative de mise à l'échelle de cette taxonomie sur le dataset public
+**SciCite** (Cohan et al., NAACL 2019 — licence Apache 2.0, 11 020 citations).
+Il contient un audit du dataset brut, un pipeline heuristique de reclassement
+fin (3 classes SciCite → nos 6 classes), un échantillon de vérification
+manuelle, et un rapport honnête de précision/rappel par classe. Voir son
+README pour le détail et les limites connues.
+
 ## Statistiques
 
 - 80 occurrences de citation distinctes dans le texte
