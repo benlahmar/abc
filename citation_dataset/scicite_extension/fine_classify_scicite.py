@@ -17,7 +17,15 @@ import random
 USAGE_RE = re.compile(
     r"\bwe (use|used|utili[sz]e[sd]?|employ(?:ed|s)?|adopt(?:ed|s)?|appl(?:y|ied)|implement(?:ed|s)?)\b"
     r"|\busing (?:the |a |an )?(?:method|approach|algorithm|tool|toolkit|dataset|corpus|framework|model|package|library|code|software|technique|pipeline)\b"
-    r"|\b(?:based on|built (?:up)?on) (?:the )?(?:method|approach|algorithm|tool|dataset|framework|model|technique)\b",
+    r"|\b(?:based on|built (?:up)?on) (?:the )?(?:method|approach|algorithm|tool|dataset|framework|model|technique)\b"
+    # Added after an LLM-assisted verification pass (330-row pilot, Sept 2026):
+    # passive-voice usage of a named artifact/protocol is the single biggest
+    # source of missed `usage` cases in the original heuristic (~68% of
+    # methodology-default rows in the verified sample were actually usage).
+    r"|\b(?:assessed|measured|evaluated|calculated|analyz(?:ed)?|analys(?:ed)?|performed|prepared|carried out"
+    r"|conducted|determined|quantified|obtained|purified|extracted|sequenced|identified|detected|collected)\b"
+    r".{0,40}\b(?:using|with|via)\b"
+    r"|\bas (?:previously |elsewhere )?described\b",
     re.IGNORECASE,
 )
 
@@ -83,16 +91,41 @@ def load_all():
     return rows
 
 
+def load_llm_verified_overrides():
+    """Load the 328 rows verified by an LLM-assisted pass (3 parallel agents,
+    110 rows each, targeting the weakest-recall heuristic buckets). These
+    override the heuristic label and are marked with a distinct
+    classification_method so downstream users can filter by confidence tier.
+    """
+    overrides = {}
+    for i in [1, 2, 3]:
+        path = f"llm_pass_chunk_{i}_labeled.csv"
+        try:
+            with open(path) as f:
+                for r in csv.DictReader(f):
+                    overrides[r["citation_id"]] = r["new_classification"]
+        except FileNotFoundError:
+            pass
+    return overrides
+
+
 def main():
     rows = load_all()
+    overrides = load_llm_verified_overrides()
     out_rows = []
     for r in rows:
         fine, rule = classify_fine(r["label"], r.get("label2"), r["string"])
+        cid = r["unique_id"]
+        method = "heuristic_rule_based"
+        if cid in overrides:
+            fine = overrides[cid]
+            rule = "llm_verified_override"
+            method = "llm_assisted_verified"
         out_rows.append({
             "dataset_source": "scicite",
             "split": r["split"],
             "paper_id": r["citingPaperId"],
-            "citation_id": r["unique_id"],
+            "citation_id": cid,
             "section": normalize_section(r.get("sectionName", "")),
             "citation_context": r["string"],
             "citation_topic": "",  # not auto-generated at this stage; see README
@@ -101,10 +134,13 @@ def main():
             "label2_scicite": r.get("label2") or "",
             "classification": fine,
             "classification_rule": rule,
-            "classification_method": "heuristic_rule_based",
+            "classification_method": method,
             "is_key_citation": r.get("isKeyCitation"),
             "source_marker_type": r.get("source"),
         })
+
+    n_verified = sum(1 for r in out_rows if r["classification_method"] == "llm_assisted_verified")
+    print(f"Applied {n_verified} LLM-verified overrides on top of the heuristic pass.\n")
 
     dist = collections.Counter(r["classification"] for r in out_rows)
     rule_dist = collections.Counter(r["classification_rule"] for r in out_rows)
