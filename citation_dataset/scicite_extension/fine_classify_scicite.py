@@ -120,6 +120,17 @@ def load_llm_verified_overrides():
                     overrides[r["citation_id"]] = r["new_classification"]
         except FileNotFoundError:
             pass
+    # Third LLM-assisted pass: targeted hunt for `extension` specifically
+    # (the rarest class) across a larger 500-row sample drawn from the
+    # unverified methodology + comparison default buckets.
+    for i in [1, 2, 3, 4, 5]:
+        path = f"ext_hunt_chunk_{i}_labeled.csv"
+        try:
+            with open(path) as f:
+                for r in csv.DictReader(f):
+                    overrides[r["citation_id"]] = r["new_classification"]
+        except FileNotFoundError:
+            pass
     return overrides
 
 

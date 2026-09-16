@@ -176,30 +176,73 @@ en réalité supportive. **Ce biais résiduel est documenté, pas corrigé** :
 distinguer ces cas demanderait de comprendre la portée sémantique de la
 proposition qui suit le connecteur, hors de portée d'un regex.
 
-## 6. Résultat final (heuristique v3 + 628 lignes vérifiées par LLM + dédoublonnage)
+## 6. Phase 4 — chasse élargie sur `extension` + re-split par article
+
+**Pourquoi** : après la Phase 3, `extension` restait la classe la plus
+fragile (27 cas sur 10 960, 0,2 %) — trop peu d'exemples trouvés pour en
+tirer une règle regex fiable. Plutôt que de traiter les 10 960 lignes par
+LLM (disproportionné : ~100 lots d'agents), un pilote élargi ciblé de 500
+lignes (5 lots de 100) a été tiré des bassins `methodology` et `comparison`
+non encore vérifiés (250 de chaque), avec une consigne spécifiquement
+orientée « cherchez `extension` en priorité ».
+
+**Résultat** : 203/500 lignes corrigées (41 %), dont **12 nouvelles
+`extension`** (2,4 % du bucket testé — un taux bien supérieur aux 0,2 %
+de base, confirmant que la classe était sévèrement sous-détectée), plus de
+nombreux `usage`/`critique`/`background` supplémentaires trouvés au passage.
+Formulations typiques manquées par le regex : « builds upon X », « was
+refined by X », « generalising previously obtained results in X », « model
+may be expanded to include… », « adapted procedures used for… » (application
+à un nouveau domaine).
+
+**Re-split par article** (`resplit_by_paper.py`) : les splits SciCite
+d'origine mélangeaient les citations d'un même article citant entre
+train/dev/test (fuite documentée en section 1). Un nouveau re-split
+déterministe (hash du `paper_id`) regroupe désormais toutes les citations
+d'un même article dans un seul split, aux mêmes proportions que l'original
+(74,8 % / 8,3 % / 16,9 %). **Fuite vérifiée nulle** après re-split, et la
+distribution des 6 classes reste stable entre les nouveaux splits (pas de
+biais introduit). Le résultat est ajouté en tant que nouvelle colonne
+`split_resplit_by_paper` ; la colonne `split` d'origine (avec fuite) est
+conservée pour référence/comparaison.
+
+**⚠️ Ordre d'exécution important** : `resplit_by_paper.py` doit être lancé
+*après* `fine_classify_scicite.py`, car ce dernier régénère le fichier CSV
+en entier et écraserait la colonne de re-split si l'ordre était inversé.
+
+## 7. Résultat final (heuristique v4 + 1128 lignes vérifiées par LLM + dédoublonnage + re-split)
 
 | Classe | Effectif (sur 10 960, dédoublonné) | Évolution vs Phase 1 |
 |---|---|---|
-| `background` | 6433 (58.7 %) | ≈ stable |
-| `methodology` | 2304 (21.0 %) | ↓ (cas déplacés vers `usage`/`background`) |
-| `comparison` | 1152 (10.5 %) | ↓ (cas déplacés vers `critique`/`extension`) |
-| `usage` | **785 (7.2 %)** | **×3.4** (232 → 785) |
-| `critique` | **259 (2.4 %)** | **+23 %** (210 → 259) |
-| `extension` | 27 (0.2 %) | +42 % (19 → 27) |
+| `background` | 6495 (59.3 %) | ≈ stable |
+| `methodology` | 2140 (19.5 %) | ↓ (cas déplacés vers `usage`/`background`) |
+| `comparison` | 1131 (10.3 %) | ↓ (cas déplacés vers `critique`/`extension`) |
+| `usage` | **873 (8.0 %)** | **×3.8** (232 → 873) |
+| `critique` | **282 (2.6 %)** | **+34 %** (210 → 282) |
+| `extension` | **39 (0.4 %)** | **×2.1** (19 → 39) |
 
-628 `citation_id` uniques portent `classification_method="llm_assisted_verified"`
-(deux passages combinés : 328 lignes Phase 2 + 300 lignes Phase 3, avec
-quelques recouvrements de doublons de `citation_id` résolus par le
-dédoublonnage) ; le reste porte `classification_method="heuristic_rule_based"`
-avec le détail de la règle déclenchante dans `classification_rule`.
+1128 `citation_id` uniques portent `classification_method="llm_assisted_verified"`
+(trois passages combinés : 328 lignes Phase 2 + 300 lignes Phase 3 + ~500
+lignes Phase 4, avec recouvrements résolus par le dédoublonnage) ; le reste
+porte `classification_method="heuristic_rule_based"` avec le détail de la
+règle déclenchante dans `classification_rule`.
+
+**Ce qui reste non résolu** : même après 3 passages LLM ciblés couvrant
+~1150 lignes vérifiées sur 10 960 (~10 %), `extension` reste minoritaire
+(0,4 %) et son vrai taux de base dans le corpus complet est inconnu — les
+échantillons ciblés sur-représentent les buckets où on s'attend à en
+trouver, donc ce chiffre ne doit pas être lu comme une estimation fiable de
+la prévalence réelle d'`extension` dans les 90 % de lignes non vérifiées.
 
 ## Fichiers
 
-- `fine_classify_scicite.py` — script de reclassement (reproductible : `python3 fine_classify_scicite.py`, nécessite les fichiers `train.jsonl`/`dev.jsonl`/`test.jsonl` de SciCite dans `/tmp/scicite_data/scicite/` et, pour appliquer les surcharges vérifiées, les fichiers `llm_verification_pass/llm_pass_chunk_*_labeled.csv` et `llm_verification_pass_2/ce_hunt_chunk_*_labeled.csv`).
-- `scicite_fine_classified_full.csv` — les 10 960 lignes de SciCite reclassées et dédoublonnées (v3), avec colonnes : `dataset_source`, `split`, `paper_id` (=`citingPaperId`), `citation_id`, `section` (normalisée), `citation_context`, `citation_topic` (vide — voir limites), `cited_reference` (=`citedPaperId`, identifiant Semantic Scholar — voir limites), `label_coarse` (label SciCite d'origine), `label2_scicite`, `classification` (label fin), `classification_rule`, `classification_method` (`heuristic_rule_based` ou `llm_assisted_verified`), `is_key_citation`, `source_marker_type`.
-- `scicite_pilot_sample.csv` — échantillon stratifié (v3) pour audit qualité continu.
+- `fine_classify_scicite.py` — script de reclassement (reproductible : `python3 fine_classify_scicite.py`, nécessite les fichiers `train.jsonl`/`dev.jsonl`/`test.jsonl` de SciCite dans `/tmp/scicite_data/scicite/` et, pour appliquer les surcharges vérifiées, les fichiers `llm_verification_pass/llm_pass_chunk_*_labeled.csv`, `llm_verification_pass_2/ce_hunt_chunk_*_labeled.csv` et `llm_verification_pass_3/ext_hunt_chunk_*_labeled.csv`).
+- `resplit_by_paper.py` — re-split déterministe par article citant, à lancer après `fine_classify_scicite.py` (voir avertissement ci-dessus).
+- `scicite_fine_classified_full.csv` — les 10 960 lignes de SciCite reclassées et dédoublonnées (v4), avec colonnes : `dataset_source`, `split` (original, avec fuite — conservé pour référence), `split_resplit_by_paper` (re-split sans fuite, à préférer), `paper_id` (=`citingPaperId`), `citation_id`, `section` (normalisée), `citation_context`, `citation_topic` (vide — voir limites), `cited_reference` (=`citedPaperId`, identifiant Semantic Scholar — voir limites), `label_coarse` (label SciCite d'origine), `label2_scicite`, `classification` (label fin), `classification_rule`, `classification_method` (`heuristic_rule_based` ou `llm_assisted_verified`), `is_key_citation`, `source_marker_type`.
+- `scicite_pilot_sample.csv` — échantillon stratifié (v4) pour audit qualité continu.
 - `llm_verification_pass/` — Phase 2 : 330 lignes soumises aux agents LLM (`llm_pass_sample.csv`) et les 3 lots de résultats (`llm_pass_chunk_{1,2,3}_labeled.csv`).
 - `llm_verification_pass_2/` — Phase 3 : les 3 lots de résultats de la chasse ciblée `critique`/`extension` (`ce_hunt_chunk_{1,2,3}_labeled.csv`, avec justification par ligne dans `rationale`).
+- `llm_verification_pass_3/` — Phase 4 : les 5 lots de résultats de la chasse élargie sur `extension` (`ext_hunt_chunk_{1..5}_labeled.csv`).
 
 ## Limites connues et travail restant
 
@@ -227,23 +270,25 @@ avec le détail de la règle déclenchante dans `classification_rule`.
    differ… consistent with previous studies ») — voir section 5. Ce n'est
    pas corrigible par regex sans analyse sémantique de la portée du
    connecteur.
-5. **`extension` reste la classe la plus fragile** (27 cas sur 10 960,
-   0,2 %) : même après deux passages LLM ciblés, trop peu d'exemples ont été
-   trouvés pour dériver des règles lexicales fiables ; seul un passage LLM
-   complet sur l'ensemble du corpus (pas un échantillon) donnerait un
-   rappel correct sur cette classe.
-6. Les splits SciCite ont un chevauchement d'articles citants entre
-   train/dev/test (voir section 1) — la déduplication de `citation_id` a
-   été appliquée, mais le chevauchement d'*articles* (au-delà des lignes
-   dupliquées) persiste et nécessiterait un re-split complet par article
-   avant tout entraînement/évaluation rigoureux.
+5. **`extension` reste la classe la plus fragile** (39 cas sur 10 960,
+   0,4 %) : même après trois passages LLM ciblés (~1150 lignes vérifiées),
+   trop peu d'exemples ont été trouvés pour dériver des règles lexicales
+   fiables, et son taux réel dans les ~90 % de lignes jamais vérifiées reste
+   inconnu (les échantillons ciblés sur-représentent les buckets où on
+   s'attend à en trouver — ne pas extrapoler 0,4 % comme prévalence
+   générale). Seul un passage LLM complet sur l'ensemble du corpus (pas un
+   échantillon) donnerait un rappel et une estimation de prévalence fiables.
+6. ~~Les splits SciCite ont un chevauchement d'articles citants entre
+   train/dev/test~~ — **résolu en Phase 4** par `resplit_by_paper.py`
+   (colonne `split_resplit_by_paper`, fuite vérifiée nulle).
 
 ## Prochaines étapes suggérées
 
-1. Passage LLM complet (pas un échantillon) ciblant spécifiquement
-   `extension`, la classe la plus rare et la moins bien couverte.
+1. Passage LLM complet (pas un échantillon) sur l'ensemble du corpus pour
+   obtenir un rappel et une prévalence fiables sur `extension`.
 2. Générer `citation_topic` par LLM sur un pilote, puis à l'échelle.
-3. Re-splitter par article (au-delà de la déduplication déjà faite) avant
-   tout entraînement.
-4. Résoudre `cited_reference` en métadonnées lisibles via l'API Semantic
+3. Résoudre `cited_reference` en métadonnées lisibles via l'API Semantic
    Scholar, depuis un environnement avec accès réseau.
+4. Corriger le biais résiduel « however »/« did not » de `critique` (section 5) —
+   nécessiterait un modèle plutôt qu'un regex pour juger la portée sémantique
+   de la proposition qui suit le connecteur.
