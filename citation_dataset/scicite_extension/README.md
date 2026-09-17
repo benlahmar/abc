@@ -11,6 +11,10 @@ en deux phases :
   ciblé de 330 citations (les buckets à plus faible rappel), utilisées à la
   fois comme sous-ensemble vérifié de haute confiance et pour affiner les
   règles heuristiques, puis ré-application sur l'ensemble des 11 020 lignes.
+- **Phase 3** : chasse ciblée `critique`/`extension` (300 lignes) et
+  re-split par article (voir sections 5-7 ci-dessous).
+- **Phase 5** : génération de `citation_topic` par LLM sur un échantillon
+  stratifié de 5000 lignes (voir section 8).
 
 Objectif : passer des 3 classes grossières de SciCite (`background`, `method`,
 `result`) à la taxonomie à 6 classes utilisée dans ce projet (`background`,
@@ -234,11 +238,44 @@ règle déclenchante dans `classification_rule`.
 trouver, donc ce chiffre ne doit pas être lu comme une estimation fiable de
 la prévalence réelle d'`extension` dans les 90 % de lignes non vérifiées.
 
+## 8. Phase 5 — génération de `citation_topic` par LLM (5000 lignes)
+
+**Méthode** : échantillon stratifié de 5000 lignes (proportionnel aux 6
+classes, ~46 % du corpus dédoublonné), réparti en 25 lots de 200, chacun
+soumis indépendamment à un agent LLM avec pour seule consigne d'écrire une
+phrase courte (5-12 mots) résumant le sujet scientifique concret de la
+citation (pas une reformulation de la classe).
+
+**Incident détecté et corrigé** : les agents tournant en parallèle
+partagent le même répertoire de travail temporaire. Un agent (chargé du
+lot 7) a lu par erreur le fichier d'entrée du lot 6 (collision de nommage
+de fichier intermédiaire) et a produit 200 sujets pour les mauvaises
+citations. **Détecté par vérification systématique** : pour chacun des 25
+lots, l'ensemble des `citation_id` en sortie a été comparé à l'ensemble
+des `citation_id` en entrée — un seul lot sur 25 ne correspondait pas
+exactement. Aucune donnée erronée n'a été fusionnée dans le dataset final :
+le lot 7 a été relancé avec des instructions renforcées (nom de fichier
+temporaire unique, vérification programmatique de correspondance des
+identifiants avant de conclure), puis re-vérifié à l'identique avant fusion.
+
+**Résultat** : 5000/5000 lignes avec `citation_topic` rempli, vérifiées
+individuellement par lot (identifiants en sortie == identifiants en
+entrée pour les 25 lots). Contrôle qualité final sur un échantillon
+aléatoire de 8 lignes : tous les topics sont concrets et fidèles au
+contenu (ex. « kanamycin-induced outer hair cell loss causing hearing
+threshold shifts », « chromatic number concentration result for random
+regular graphs »).
+
+**Limite qui persiste** : les 5960 lignes restantes (54 % du corpus, hors
+échantillon) ont encore `citation_topic` vide — un passage à l'échelle
+complète suivrait exactement la même méthode (lots de 200, vérification
+systématique des identifiants avant fusion).
+
 ## Fichiers
 
 - `fine_classify_scicite.py` — script de reclassement (reproductible : `python3 fine_classify_scicite.py`, nécessite les fichiers `train.jsonl`/`dev.jsonl`/`test.jsonl` de SciCite dans `/tmp/scicite_data/scicite/` et, pour appliquer les surcharges vérifiées, les fichiers `llm_verification_pass/llm_pass_chunk_*_labeled.csv`, `llm_verification_pass_2/ce_hunt_chunk_*_labeled.csv` et `llm_verification_pass_3/ext_hunt_chunk_*_labeled.csv`).
 - `resplit_by_paper.py` — re-split déterministe par article citant, à lancer après `fine_classify_scicite.py` (voir avertissement ci-dessus).
-- `scicite_fine_classified_full.csv` — les 10 960 lignes de SciCite reclassées et dédoublonnées (v4), avec colonnes : `dataset_source`, `split` (original, avec fuite — conservé pour référence), `split_resplit_by_paper` (re-split sans fuite, à préférer), `paper_id` (=`citingPaperId`), `citation_id`, `section` (normalisée), `citation_context`, `citation_topic` (vide — voir limites), `cited_reference` (=`citedPaperId`, identifiant Semantic Scholar — voir limites), `label_coarse` (label SciCite d'origine), `label2_scicite`, `classification` (label fin), `classification_rule`, `classification_method` (`heuristic_rule_based` ou `llm_assisted_verified`), `is_key_citation`, `source_marker_type`.
+- `scicite_fine_classified_full.csv` — les 10 960 lignes de SciCite reclassées et dédoublonnées (v5), avec colonnes : `dataset_source`, `split` (original, avec fuite — conservé pour référence), `split_resplit_by_paper` (re-split sans fuite, à préférer), `paper_id` (=`citingPaperId`), `citation_id`, `section` (normalisée), `citation_context`, `citation_topic` (rempli pour 5000/10960 lignes — voir Phase 5), `cited_reference` (=`citedPaperId`, identifiant Semantic Scholar — voir limites), `label_coarse` (label SciCite d'origine), `label2_scicite`, `classification` (label fin), `classification_rule`, `classification_method` (`heuristic_rule_based` ou `llm_assisted_verified`), `is_key_citation`, `source_marker_type`.
 - `scicite_pilot_sample.csv` — échantillon stratifié (v4) pour audit qualité continu.
 - `llm_verification_pass/` — Phase 2 : 330 lignes soumises aux agents LLM (`llm_pass_sample.csv`) et les 3 lots de résultats (`llm_pass_chunk_{1,2,3}_labeled.csv`).
 - `llm_verification_pass_2/` — Phase 3 : les 3 lots de résultats de la chasse ciblée `critique`/`extension` (`ce_hunt_chunk_{1,2,3}_labeled.csv`, avec justification par ligne dans `rationale`).
