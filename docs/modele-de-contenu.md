@@ -1,30 +1,35 @@
-# Modèle de contenu — base du futur back-office
+# Modèle de contenu — référence pour le back-office
 
-Toute la page d'accueil est alimentée par **9 collections JSON**. Aujourd'hui, ce sont des fichiers
-statiques dans `public/data/`. Le back-office devra exposer les mêmes structures en lecture :
+Le portail est alimenté par **9 collections**. Leur structure est définie **une seule fois**, en Zod, dans
+`packages/shared/src/schemas.ts`. Cette définition sert trois fois :
 
-```
-GET {VITE_CONTENT_API_URL}/site
-GET {VITE_CONTENT_API_URL}/hero
-GET {VITE_CONTENT_API_URL}/programmes
-GET {VITE_CONTENT_API_URL}/stats
-GET {VITE_CONTENT_API_URL}/news
-GET {VITE_CONTENT_API_URL}/services
-GET {VITE_CONTENT_API_URL}/dean
-GET {VITE_CONTENT_API_URL}/faculty
-GET {VITE_CONTENT_API_URL}/testimonials
-```
+- l'API (`apps/api`) valide chaque fichier avant de le servir ;
+- le front-end (`apps/web`) en déduit ses types TypeScript ;
+- le futur back-office validera ses formulaires avec les mêmes schémas.
 
-Le front-end n'a rien d'autre à changer : il suffit de définir `VITE_CONTENT_API_URL` dans `.env`
-(voir `.env.example`) et de reconstruire le site.
+Aujourd'hui, les données sont des fichiers JSON dans `apps/api/data/`. Ils sont relus à chaud dès qu'ils
+changent : pas besoin de redémarrer l'API.
+
+## API (lecture)
+
+| Méthode | Route | Réponse |
+| --- | --- | --- |
+| GET | `/api/v1/health` | `{ status, uptime }` |
+| GET | `/api/v1/{collection}` | la collection entière (`site`, `hero`, `programmes`, `stats`, `news`, `services`, `dean`, `faculty`, `testimonials`) |
+| GET | `/api/v1/news?category=&limit=&offset=` | `{ categories, counts, items, total, limit, offset }`, trié par date décroissante (`limit` ≤ 100) |
+| GET | `/api/v1/news/{id}` | `{ item, category }`, ou 404 |
+
+Toutes les erreurs ont la forme `{ "error": { "code", "message" } }`. Si une collection ne respecte pas son
+schéma, l'API répond 500 `content_unavailable` et consigne le détail dans ses logs. Ce détail n'est jamais
+renvoyé au client.
 
 Règles communes :
 
-- Tout le texte est affiché **échappé** (aucun HTML interprété). Le back-office peut donc stocker du texte brut.
-- Les liens acceptés sont les chemins relatifs (`/actualites/...`), `http(s)://`, `mailto:` et `tel:`. Tout autre lien est remplacé par `#`.
+- Tout le texte est affiché comme du texte brut (React échappe tout). Le back-office peut donc stocker du texte sans HTML.
+- Les liens acceptés sont les chemins internes (`/actualites/...`), `http(s)://`, `mailto:` et `tel:`. Tout autre lien devient `#` (`safeUrl`).
 - Les dates sont au format ISO `AAAA-MM-JJ`.
 - Un texte en arabe est détecté automatiquement : il s'affiche de droite à gauche, avec une police arabe.
-- Les champs `image` et `photo` sont optionnels. S'ils sont vides, une illustration graphique aux couleurs FSBM les remplace.
+- Les champs `image` et `photo` sont optionnels. S'ils sont vides, un visuel graphique aux couleurs FSBM les remplace.
 
 ## `site` — identité et coordonnées
 
@@ -56,13 +61,14 @@ L'élément `featured: true` occupe la grande carte. Le hero affiche les trois p
 ## `news` — Actualités et annonces
 
 - `categories[]` : `{ id, label }`. Seules les catégories qui contiennent au moins une actualité apparaissent dans les filtres.
-- `items[]` : `{ id, title, excerpt, category, date, image, url, featured, attachments[] }`.
+- `items[]` : `{ id, title, excerpt, body[] (paragraphes de la page détail), category, date, image, url, featured, attachments[] }`.
   - `featured: true` place l'actualité en « une » ; sinon, c'est la plus récente.
-  - `attachments[]` : `{ label, url }` (PDF des listes, etc.), dans une liste repliable. Elle est ouverte d'office s'il y a 3 documents ou moins.
+  - `attachments[]` : `{ label, url }` (PDF des listes, etc.), dans un volet repliable sur l'accueil et en grille sur la page détail `/actualites/{id}`.
 
 ## `services` — Services du campus
 
-`items[]` : `{ id, icon, title, description, url }`, où `icon` ∈ chart, document, exam, graduate, info.
+`items[]` : `{ id, icon, title, description, url, highlight }`, où `icon` ∈ portal, apply, chart, document, exam, graduate, info.
+Ces services forment la bande « Accès rapide » sous le hero. `highlight: true` ajoute un filet doré en haut de la tuile.
 
 ## `dean` — Mot du Doyen
 

@@ -1,17 +1,23 @@
 {
-  "name": "faculty-of-science-portal",
+  "name": "fsbm-portail",
   "private": true,
-  "version": "1.0.0",
+  "description": "Portail web de la Faculté des Sciences Ben M'Sik — front-end React, API Node.js.",
   "type": "module",
-  "description": "Homepage for the Faculty of Science portal: editorial layout, Tailwind CSS v4, accessible vanilla JS modules.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "concurrently -k -n api,web -c yellow,cyan \"npm run dev -w @fsbm/api\" \"npm run dev -w @fsbm/web\"",
+    "build": "npm run build -w @fsbm/web && npm run build -w @fsbm/api",
+    "start": "npm run start -w @fsbm/api",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20.19"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.3",
-    "tailwindcss": "^4.3.3",
-    "vite": "^7.3.6"
+    "concurrently": "^9.2.0"
   }
 }

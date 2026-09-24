@@ -1,8 +1,0 @@
-{
-  "items": [
-    { "id": "chiffres-cles", "icon": "chart", "title": "Chiffres Clés (2024-2025)", "description": "Effectifs, filières et indicateurs de l'année universitaire.", "url": "/services/chiffres-cles" },
-    { "id": "demande-document", "icon": "document", "title": "Demande de Document", "description": "Attestations, relevés de notes et documents administratifs.", "url": "/services/demande-document" },
-    { "id": "inscription-examens", "icon": "exam", "title": "Inscription aux Examens", "description": "Inscription aux sessions d'examens et calendriers.", "url": "/services/inscription-examens" },
-    { "id": "suivi-laureats", "icon": "graduate", "title": "Suivi des Lauréats", "description": "Parcours et insertion professionnelle des diplômés.", "url": "/services/suivi-laureats" }
-  ]
-}

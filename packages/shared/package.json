@@ -1,0 +1,21 @@
+{
+  "name": "@fsbm/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Schémas de contenu (Zod), types et utilitaires partagés entre l'API et le front-end.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.2",
+    "vitest": "^5.0.1"
+  }
+}

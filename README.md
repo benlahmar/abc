@@ -1,52 +1,79 @@
-# Portail FSBM — Page d'accueil
+# Portail FSBM
 
-Page d'accueil de la **Faculté des Sciences Ben M'Sik** (Université Hassan II de Casablanca), construite avec
-**Vite + Tailwind CSS v4** et des modules JavaScript sans dépendance. Tout le contenu provient de collections JSON,
-prêtes à être servies par le futur back-office.
+Portail web de la **Faculté des Sciences Ben M'Sik** (Université Hassan II de Casablanca).
+
+| | |
+| --- | --- |
+| **Front-end** | React 19, TypeScript, Vite 8, Tailwind CSS v4, Motion, TanStack Query, React Router 7 |
+| **Back-end** | Node.js (≥ 20.19), Express 5, Zod, Helmet |
+| **Partagé** | Schémas Zod du contenu et types TypeScript, communs à l'API, au front et au futur back-office |
+
+## Démarrer
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # site statique dans dist/
+npm run dev        # API sur :4000 + front sur http://localhost:5173 (proxy /api vers l'API)
 ```
 
-## Structure
+Autres commandes :
 
-```
-index.html                  Squelette de la page ; sections assemblées via <include src="…" />
-vite.config.js              Plugin Tailwind + mini-plugin d'inclusion HTML (sans dépendance)
-public/data/*.json          Contenu : site, hero, programmes, stats, news, services, dean, faculty, testimonials
-docs/modele-de-contenu.md   Schéma de chaque collection (référence pour le back-office)
-src/styles/main.css         Jetons de design (@theme), styles de base, composants
-src/partials/               Une section par fichier (en-tête, méga-menus, hero, programmes, chiffres…)
-src/js/main.js              Démarrage : interface + remplissage des zones [data-render]
-src/js/content/             Client de données, gabarits échappés (anti-XSS), formats fr-FR / arabe
-src/js/sections/            Un module de rendu par section
-src/js/modules/             Comportements : en-tête, méga-menu, menu mobile, média, compteurs, révélations
+```bash
+npm test           # tests (schémas partagés + API)
+npm run typecheck  # vérification TypeScript de tous les paquets
+npm run build      # compile le front (apps/web/dist) puis l'API (apps/api/dist)
+npm start          # production : l'API sert aussi le front compilé, sur :4000
 ```
 
-## Brancher le back-office
+## Architecture
 
-Définir `VITE_CONTENT_API_URL` dans `.env` (voir `.env.example`). Chaque collection est alors lue depuis
-`<API>/<collection>` au lieu de `public/data/<collection>.json`. Les formats attendus sont décrits dans
-[`docs/modele-de-contenu.md`](docs/modele-de-contenu.md).
+```
+apps/
+  api/                  API Node.js / Express
+    data/*.json         contenu (9 collections), relu à chaud
+    src/repository.ts   accès aux données (fichiers JSON aujourd'hui, base de données demain)
+    src/routes/         GET /api/v1/{collection}, /news (filtre + pagination), /news/:id
+    src/app.ts          sécurité (Helmet/CSP), CORS, compression, cache HTTP, service du front
+  web/                  Front-end React
+    src/components/
+      layout/           en-tête, méga-menus, menu mobile, pied de page
+      home/             sections de l'accueil
+      news/             cartes d'actualités, pièces jointes
+      ui/               boutons, révélations animées, compteurs, constellation, visuels
+    src/pages/          accueil, détail d'actualité, page « en préparation »
+    src/lib/            client API, hooks React Query, formats, navigation
+packages/
+  shared/               schémas Zod + types + safeUrl()
+docs/
+  modele-de-contenu.md  référence des collections et de l'API (base du back-office)
+```
 
-## Charte
+## Design
 
 | Jeton | Valeur | Usage |
 | --- | --- | --- |
-| `midnight` | `#0A192F` | Encre principale, surfaces sombres |
-| `paper` | `#F8FAFC` | Fond de page |
+| `midnight` / `midnight-950` | `#0A192F` / `#050E1C` | Surfaces sombres (hero, chiffres, témoignages, pied de page) |
+| `paper` / `ivory` | `#F8FAFC` / `#F4EFE4` | Fonds clairs |
 | `muted` | `#64748B` | Texte secondaire |
-| `gold` | `#C5A059` | Accents et états interactifs sur fond sombre |
-| `bronze` | `#85652B` | Texte « doré » sur fond clair (conforme WCAG AA, contrairement à `gold`) |
+| `gold` | `#C5A059` | Accents, états interactifs, bande d'appel à l'action |
+| `bronze` | `#85652B` | Texte « doré » sur fond clair (contraste AA) |
 
-Polices : Cormorant Garamond (titres), Inter (interface et chiffres), IBM Plex Sans Arabic (contenus en arabe).
+Polices (auto-hébergées) : Cormorant Garamond (titres), Inter (interface et chiffres), IBM Plex Sans Arabic (contenus en arabe).
 
-## Accessibilité
+Tant que les photos réelles ne sont pas fournies, des **visuels génératifs** les remplacent : la constellation
+animée du hero et des motifs par discipline. Il suffit de renseigner `image` ou `photo` dans les données pour
+afficher les vraies photos.
 
-- Lien d'évitement, régions nommées, `lang="fr"` ; les textes arabes reçoivent `lang="ar" dir="rtl"`.
-- Méga-menus au modèle « disclosure » WAI-ARIA (clavier : Échap, ↓, ←/→). Le menu mobile utilise le `<dialog>` natif.
-- Le carrousel « À la une » est manuel : aucun défilement automatique.
-- Les compteurs animés n'exposent que leur valeur finale aux lecteurs d'écran.
-- L'animation du hero a un bouton pause, et toutes les animations respectent `prefers-reduced-motion`.
+## Qualité
+
+- **Accessibilité** : lien d'évitement, méga-menus au modèle « disclosure » WAI-ARIA (clavier : Échap, ↓, ←/→), menu mobile sur `<dialog>` natif, carrousel avec bouton pause (WCAG 2.2.2), compteurs lus directement à leur valeur finale, `lang="ar" dir="rtl"` sur les textes arabes, animations désactivées si `prefers-reduced-motion`.
+- **Sécurité** : CSP stricte, échappement systématique, liens filtrés par `safeUrl`, validation Zod des données et des paramètres, erreurs sans fuite d'information, API en lecture seule.
+- **Performance** : polices auto-hébergées, découpage du bundle (react / motion / app), cache HTTP (`max-age=60, stale-while-revalidate`), fichiers fingerprintés en cache long, lecteur YouTube chargé seulement au clic, animation du hero suspendue hors écran.
+
+## Prochaine étape : le back-office
+
+Le back-office viendra se brancher sur la même API. Il faudra ajouter :
+
+1. l'authentification des responsables et leurs rôles (par exemple : actualités, formations, contenu institutionnel) ;
+2. les routes d'écriture `POST` / `PUT` / `DELETE` sur `/api/v1/...`, validées par les schémas de `@fsbm/shared` ;
+3. le téléversement des images et des PDF ;
+4. une implémentation de `ContentRepository` sur une base de données (PostgreSQL par exemple) à la place des fichiers JSON.

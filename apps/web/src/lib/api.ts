@@ -1,0 +1,35 @@
+import type { CollectionMap, CollectionName, NewsDetail, NewsPage } from '@fsbm/shared';
+
+const BASE = (import.meta.env.VITE_API_URL || '/api/v1').replace(/\/+$/, '');
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, { headers: { Accept: 'application/json' }, signal });
+  if (!res.ok) throw new ApiError(`Requête ${path} échouée (HTTP ${res.status})`, res.status);
+  return (await res.json()) as T;
+}
+
+export interface NewsQuery {
+  category?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export const api = {
+  collection: <N extends CollectionName>(name: N, signal?: AbortSignal) => get<CollectionMap[N]>(`/${name}`, signal),
+  news: ({ category, limit = 7, offset = 0 }: NewsQuery, signal?: AbortSignal) => {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    if (category && category !== 'all') params.set('category', category);
+    return get<NewsPage>(`/news?${params}`, signal);
+  },
+  newsItem: (id: string, signal?: AbortSignal) => get<NewsDetail>(`/news/${encodeURIComponent(id)}`, signal),
+};
