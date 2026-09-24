@@ -53,11 +53,13 @@ docs/
 
 | Jeton | Valeur | Usage |
 | --- | --- | --- |
-| `midnight` / `midnight-950` | `#0A192F` / `#050E1C` | Surfaces sombres (hero, chiffres, témoignages, pied de page) |
-| `paper` / `ivory` | `#F8FAFC` / `#F4EFE4` | Fonds clairs |
-| `muted` | `#64748B` | Texte secondaire |
-| `gold` | `#C5A059` | Accents, états interactifs, bande d'appel à l'action |
-| `bronze` | `#85652B` | Texte « doré » sur fond clair (contraste AA) |
+| `brand` | `#2A5494` | Bleu du logo FSBM : couleur principale (accents, boutons, bandeaux) |
+| `brand-light` | `#9DB8E6` | Accents bleus sur fond sombre (contraste AA) |
+| `steel` | `#888888` | Gris du logo FSBM |
+| `midnight` / `midnight-950` | `#0B1D3A` / `#06112A` | Surfaces sombres, teintées du bleu FSBM |
+| `paper` / `ivory` | `#F8FAFC` / `#F3F1EC` | Fonds clairs |
+| `muted` | `#5F6B7A` | Texte secondaire |
+| `gold` | `#C5A059` | Accent discret uniquement : filets, points, barres de progression |
 
 Polices (auto-hébergées) : Cormorant Garamond (titres), Inter (interface et chiffres), IBM Plex Sans Arabic (contenus en arabe).
 
