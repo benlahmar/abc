@@ -1,54 +1,52 @@
-# Faculty of Science — Homepage
+# Portail FSBM — Page d'accueil
 
-An editorial, accessible homepage for a university Faculty of Science portal, built with **Vite + Tailwind CSS v4** and dependency-free vanilla JS modules.
+Page d'accueil de la **Faculté des Sciences Ben M'Sik** (Université Hassan II de Casablanca), construite avec
+**Vite + Tailwind CSS v4** et des modules JavaScript sans dépendance. Tout le contenu provient de collections JSON,
+prêtes à être servies par le futur back-office.
 
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm run build    # static output in dist/
+npm run build    # site statique dans dist/
 ```
 
 ## Structure
 
 ```
-index.html                 Page shell. Sections are composed with <include src="…" />
-vite.config.js             Tailwind plugin + a tiny zero-dependency HTML partials plugin
-src/styles/main.css        Design tokens (@theme), base styles, component classes
-src/partials/
-  header.html              Sticky frosted header, utility bar, mega-menu triggers
-  mega-{academics,research,campus}.html
-  mobile-nav.html          Native <dialog> drawer with <details> accordions
-  hero.html                Asymmetric hero + masked cinematic media container
-  impact.html              Bento grid of live statistics
-  feed.html                Breakthroughs (filterable) | International symposia
-  footer.html
-src/js/main.js             Boots every module
-src/js/modules/            header, mega-menu, mobile-nav, media, stats, glow, feed, reveal, motion
+index.html                  Squelette de la page ; sections assemblées via <include src="…" />
+vite.config.js              Plugin Tailwind + mini-plugin d'inclusion HTML (sans dépendance)
+public/data/*.json          Contenu : site, hero, programmes, stats, news, services, dean, faculty, testimonials
+docs/modele-de-contenu.md   Schéma de chaque collection (référence pour le back-office)
+src/styles/main.css         Jetons de design (@theme), styles de base, composants
+src/partials/               Une section par fichier (en-tête, méga-menus, hero, programmes, chiffres…)
+src/js/main.js              Démarrage : interface + remplissage des zones [data-render]
+src/js/content/             Client de données, gabarits échappés (anti-XSS), formats fr-FR / arabe
+src/js/sections/            Un module de rendu par section
+src/js/modules/             Comportements : en-tête, méga-menu, menu mobile, média, compteurs, révélations
 ```
 
-## Design tokens
+## Brancher le back-office
 
-| Token | Value | Use |
+Définir `VITE_CONTENT_API_URL` dans `.env` (voir `.env.example`). Chaque collection est alors lue depuis
+`<API>/<collection>` au lieu de `public/data/<collection>.json`. Les formats attendus sont décrits dans
+[`docs/modele-de-contenu.md`](docs/modele-de-contenu.md).
+
+## Charte
+
+| Jeton | Valeur | Usage |
 | --- | --- | --- |
-| `midnight` | `#0A192F` | Primary ink, dark surfaces |
-| `paper` | `#F8FAFC` | Page background |
-| `muted` | `#64748B` | Secondary text |
-| `gold` | `#C5A059` | Accents and interactive states on dark surfaces |
-| `bronze` | `#85652B` | Gold-family **text** on light surfaces (meets WCAG AA; `gold` alone does not) |
+| `midnight` | `#0A192F` | Encre principale, surfaces sombres |
+| `paper` | `#F8FAFC` | Fond de page |
+| `muted` | `#64748B` | Texte secondaire |
+| `gold` | `#C5A059` | Accents et états interactifs sur fond sombre |
+| `bronze` | `#85652B` | Texte « doré » sur fond clair (conforme WCAG AA, contrairement à `gold`) |
 
-Typefaces: Cormorant Garamond (editorial headings) and Inter (UI and body).
+Polices : Cormorant Garamond (titres), Inter (interface et chiffres), IBM Plex Sans Arabic (contenus en arabe).
 
-## Swapping in real content
+## Accessibilité
 
-- **Hero video:** replace the generative scene in `hero.html` with the commented `<video>` block. The pause control and timecode already handle a video element.
-- **Live statistics:** set `data-live-endpoint` on the `#impact` section to a JSON URL such as `{ "publications": 4813, "updated": "…" }`; it is polled every 60 s. **Remove `data-live-demo`** in production. That attribute simulates new publications for demonstration only.
-- All names, figures and stories are placeholder content for a fictional institution.
-
-## Accessibility
-
-- Skip link, landmark regions, and labelled sections.
-- Mega menus follow the WAI-ARIA disclosure pattern: `aria-expanded`, `aria-controls`, and `inert` on closed panels. Supported keys: Esc, ArrowDown, ArrowLeft and ArrowRight. Menus close on an outside click or when focus leaves the header.
-- The mobile menu uses a native modal `<dialog>`, which traps focus and restores it on close.
-- Animated counters expose only their final value to screen readers. Charts have text alternatives.
-- The looping hero media has a pause control (WCAG 2.2.2). All motion respects `prefers-reduced-motion`.
-- Reveal animations are progressive enhancement: if JS fails to boot, content stays visible.
+- Lien d'évitement, régions nommées, `lang="fr"` ; les textes arabes reçoivent `lang="ar" dir="rtl"`.
+- Méga-menus au modèle « disclosure » WAI-ARIA (clavier : Échap, ↓, ←/→). Le menu mobile utilise le `<dialog>` natif.
+- Le carrousel « À la une » est manuel : aucun défilement automatique.
+- Les compteurs animés n'exposent que leur valeur finale aux lecteurs d'écran.
+- L'animation du hero a un bouton pause, et toutes les animations respectent `prefers-reduced-motion`.

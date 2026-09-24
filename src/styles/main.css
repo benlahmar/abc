@@ -16,8 +16,8 @@
   --color-bronze: #85652b;
   --color-gold-soft: #e9dcc0;
 
-  --font-serif: 'Cormorant Garamond', 'Iowan Old Style', 'Times New Roman', serif;
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Cormorant Garamond', 'IBM Plex Sans Arabic', 'Iowan Old Style', 'Times New Roman', serif;
+  --font-sans: 'Inter', 'IBM Plex Sans Arabic', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   --tracking-eyebrow: 0.18em;
   --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
@@ -53,10 +53,6 @@
   body {
     @apply bg-paper font-sans text-midnight;
     font-feature-settings: 'ss01', 'cv11';
-  }
-  /* Lining figures keep statistics and dates on a common baseline. */
-  .font-serif {
-    font-variant-numeric: lining-nums;
   }
   ::selection {
     @apply bg-gold/30 text-midnight;
@@ -217,18 +213,18 @@
    ------------------------------------------------------------------------- */
 @layer components {
   .nav-trigger {
-    @apply relative flex cursor-pointer items-center gap-1.5 px-4 text-[0.875rem] font-medium text-midnight/75 transition-colors hover:text-midnight aria-expanded:text-midnight;
+    @apply relative flex cursor-pointer items-center gap-1.5 px-2.5 text-[0.8125rem] font-medium whitespace-nowrap 2xl:px-3.5 2xl:text-[0.875rem] text-midnight/75 transition-colors hover:text-midnight aria-expanded:text-midnight;
   }
   .nav-trigger::after {
     content: '';
-    @apply absolute inset-x-4 bottom-0 h-px origin-left scale-x-0 bg-gold transition-transform duration-500 ease-editorial;
+    @apply absolute inset-x-2.5 bottom-0 h-px origin-left scale-x-0 bg-gold transition-transform duration-500 ease-editorial;
   }
   .nav-trigger[aria-expanded='true']::after {
     @apply scale-x-100;
   }
 
   .mega-panel {
-    @apply invisible absolute inset-x-0 top-full hidden lg:block -translate-y-2 border-t border-b border-midnight/10 bg-paper opacity-0 shadow-[0_32px_64px_-32px_rgb(10_25_47/0.35)] transition-[opacity,translate,visibility] duration-300 ease-editorial;
+    @apply invisible absolute inset-x-0 top-full hidden xl:block -translate-y-2 border-t border-b border-midnight/10 bg-paper opacity-0 shadow-[0_32px_64px_-32px_rgb(10_25_47/0.35)] transition-[opacity,translate,visibility] duration-300 ease-editorial;
   }
   .mega-panel[data-open] {
     @apply visible translate-y-0 opacity-100;
@@ -276,4 +272,50 @@
 }
 .js [data-stats]:not([data-visible]) [data-bar='y'] {
   transform: scaleY(0);
+}
+
+/* -------------------------------------------------------------------------
+   Contenu dynamique : squelettes de chargement, texte arabe, états
+   ------------------------------------------------------------------------- */
+@layer components {
+  .skeleton {
+    @apply relative overflow-hidden bg-midnight/[0.05];
+  }
+  .skeleton-dark {
+    @apply bg-paper/[0.06];
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    translate: -100% 0;
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+    animation: shimmer 1.6s infinite;
+  }
+  .skeleton-dark::after {
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent);
+  }
+
+  /* Texte arabe : police et interlignage adaptés. */
+  [lang='ar'],
+  :lang(ar) {
+    font-family: 'IBM Plex Sans Arabic', var(--font-sans);
+    line-height: 1.7;
+  }
+
+  /* Chiffres statistiques : Inter Light à chasse fixe (Cormorant n'a que des chiffres elzéviriens). */
+  .figure {
+    @apply font-sans font-light tracking-[-0.045em];
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .content-error {
+    @apply col-span-full border border-dashed border-midnight/20 p-8 text-center text-sm text-muted;
+  }
+}
+
+@keyframes shimmer {
+  to {
+    translate: 100% 0;
+  }
 }

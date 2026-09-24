@@ -1,8 +1,8 @@
 import { onceVisible, prefersReducedMotion } from './motion.js';
 
-/** Fades editorial blocks in as they enter the viewport. */
+/** Fait apparaître les blocs éditoriaux à leur entrée dans la fenêtre. */
 export function initReveal(root = document) {
-  const targets = root.querySelectorAll('[data-reveal]');
+  const targets = root.querySelectorAll('[data-reveal]:not([data-visible])');
   if (prefersReducedMotion()) {
     targets.forEach((el) => el.setAttribute('data-visible', ''));
     return;

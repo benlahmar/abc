@@ -1,0 +1,42 @@
+{
+  "year": "2024-2025",
+  "items": [
+    {
+      "id": "etudiants",
+      "value": 11994,
+      "prefix": "+",
+      "label": "Étudiants",
+      "description": "étudiantes et étudiants",
+      "featured": true,
+      "short": "Étudiants"
+    },
+    {
+      "id": "laboratoires",
+      "value": 12,
+      "label": "Recherche",
+      "description": "laboratoires de recherche",
+      "short": "Laboratoires"
+    },
+    {
+      "id": "entreprises",
+      "value": 160,
+      "label": "Entreprises",
+      "description": "partenaires & mécènes",
+      "short": "Partenaires"
+    },
+    {
+      "id": "filieres-master",
+      "value": 12,
+      "label": "Filières en Master",
+      "description": "filières de Master accréditées",
+      "short": "Masters"
+    },
+    {
+      "id": "filieres-licence",
+      "value": 18,
+      "label": "Filières en Licence",
+      "description": "filières de Licence accréditées",
+      "short": "Licences"
+    }
+  ]
+}

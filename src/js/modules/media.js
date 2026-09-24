@@ -46,7 +46,7 @@ export function initMedia(figure) {
     paused = value;
     figure.toggleAttribute('data-paused', paused);
     button?.setAttribute('aria-pressed', String(paused));
-    if (label) label.textContent = paused ? 'Play background animation' : 'Pause background animation';
+    if (label) label.textContent = paused ? 'Lire l’animation' : 'Mettre en pause l’animation';
     button?.querySelector('[data-icon="pause"]')?.classList.toggle('hidden', paused);
     button?.querySelector('[data-icon="play"]')?.classList.toggle('hidden', !paused);
     if (video) paused ? video.pause() : video.play().catch(() => {});

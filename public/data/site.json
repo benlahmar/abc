@@ -1,0 +1,18 @@
+{
+  "name": "Faculté des Sciences Ben M'Sik",
+  "shortName": "FSBM",
+  "university": "Université Hassan II de Casablanca",
+  "tagline": "Offrant une éducation de qualité et des opportunités de recherche innovantes.",
+  "logo": "",
+  "contact": {
+    "email": "fsbm.contact@univh2c.ma",
+    "phone": "+212661442427",
+    "phoneDisplay": "(+212) 6 61 44 24 27",
+    "address": ["Faculté des Sciences Ben M'Sik", "Boulevard Driss El Harti, Ben M'Sik", "Casablanca, Maroc"]
+  },
+  "socials": [
+    { "network": "facebook", "label": "Facebook", "url": "#" },
+    { "network": "twitter", "label": "Twitter / X", "url": "#" },
+    { "network": "linkedin", "label": "LinkedIn", "url": "#" }
+  ]
+}

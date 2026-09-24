@@ -1,0 +1,28 @@
+{
+  "slides": [
+    {
+      "id": "master-gaprn-2026-2028",
+      "kicker": "Admissions Master",
+      "title": "Liste des candidats admis au Master Géologie Appliquée à la Prospection des Ressources Naturelles (GAPRN) – Promotion 2026-2028",
+      "subtitle": "Liste principale des candidats admis et liste d'attente classée par ordre de mérite.",
+      "url": "/actualites/master-gaprn-2026-2028",
+      "cta": "Voir plus"
+    },
+    {
+      "id": "tronc-commun-informatique-appliquee",
+      "kicker": "Inscriptions",
+      "title": "Liste des étudiants admis à s'inscrire au tronc commun Informatique Appliquée",
+      "subtitle": "Deuxième liste des étudiants admis à s'inscrire en Informatique Appliquée.",
+      "url": "/actualites/tronc-commun-informatique-appliquee",
+      "cta": "Voir plus"
+    },
+    {
+      "id": "etudiants-inscrits-2025-2026",
+      "kicker": "Scolarité",
+      "title": "Listes des étudiants inscrits – 2025-2026",
+      "subtitle": "Listes par groupe et par section pour les semestres 2, 4 et 6.",
+      "url": "/actualites/etudiants-inscrits-2025-2026",
+      "cta": "Voir plus"
+    }
+  ]
+}

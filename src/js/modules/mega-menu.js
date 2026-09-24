@@ -13,7 +13,7 @@ export function initMegaMenu(header) {
   if (!triggers.length) return;
 
   const scrim = document.querySelector('[data-mega-scrim]');
-  const desktop = window.matchMedia('(min-width: 64rem)');
+  const desktop = window.matchMedia('(min-width: 80rem)');
   const panelFor = (trigger) => document.getElementById(trigger.getAttribute('aria-controls'));
 
   let current = null;

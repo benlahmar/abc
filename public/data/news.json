@@ -1,0 +1,257 @@
+{
+  "categories": [
+    {
+      "id": "recherche",
+      "label": "Recherche"
+    },
+    {
+      "id": "campus",
+      "label": "Campus"
+    },
+    {
+      "id": "partenariat",
+      "label": "Partenariat"
+    },
+    {
+      "id": "evenements",
+      "label": "Événements"
+    },
+    {
+      "id": "services",
+      "label": "Services"
+    },
+    {
+      "id": "reussite",
+      "label": "Réussite Étudiante"
+    }
+  ],
+  "items": [
+    {
+      "id": "tronc-commun-informatique-appliquee",
+      "title": "Liste des étudiants admis à s'inscrire au tronc commun Informatique Appliquée",
+      "excerpt": "Deuxième liste des étudiants admis à s'inscrire en Informatique Appliquée.",
+      "category": "campus",
+      "date": "2026-09-15",
+      "image": "",
+      "url": "/actualites/tronc-commun-informatique-appliquee",
+      "featured": false,
+      "attachments": [
+        {
+          "label": "Liste 1",
+          "url": "#"
+        },
+        {
+          "label": "Liste 2",
+          "url": "#"
+        }
+      ]
+    },
+    {
+      "id": "etudiants-inscrits-2025-2026",
+      "title": "Listes des étudiants inscrits – 2025-2026",
+      "excerpt": "Les listes des étudiants inscrits par groupe et par section pour les semestres 2, 4 et 6 sont publiées pour les filières concernées.",
+      "category": "campus",
+      "date": "2026-02-14",
+      "image": "",
+      "url": "/actualites/etudiants-inscrits-2025-2026",
+      "featured": false,
+      "attachments": [
+        {
+          "label": "Liste 1",
+          "url": "#"
+        },
+        {
+          "label": "Liste 2",
+          "url": "#"
+        },
+        {
+          "label": "Liste 3",
+          "url": "#"
+        },
+        {
+          "label": "Liste 4",
+          "url": "#"
+        },
+        {
+          "label": "Liste 5",
+          "url": "#"
+        },
+        {
+          "label": "Liste 6",
+          "url": "#"
+        },
+        {
+          "label": "Liste 7",
+          "url": "#"
+        },
+        {
+          "label": "Liste 8",
+          "url": "#"
+        },
+        {
+          "label": "Liste 9",
+          "url": "#"
+        },
+        {
+          "label": "Liste 10",
+          "url": "#"
+        },
+        {
+          "label": "Liste 11",
+          "url": "#"
+        },
+        {
+          "label": "Liste 12",
+          "url": "#"
+        },
+        {
+          "label": "Liste 13",
+          "url": "#"
+        },
+        {
+          "label": "Liste 14",
+          "url": "#"
+        },
+        {
+          "label": "Liste 15",
+          "url": "#"
+        },
+        {
+          "label": "Liste 16",
+          "url": "#"
+        },
+        {
+          "label": "Liste 17",
+          "url": "#"
+        },
+        {
+          "label": "Liste 18",
+          "url": "#"
+        },
+        {
+          "label": "Liste 19",
+          "url": "#"
+        },
+        {
+          "label": "Liste 20",
+          "url": "#"
+        },
+        {
+          "label": "Liste 21",
+          "url": "#"
+        },
+        {
+          "label": "Liste 22",
+          "url": "#"
+        },
+        {
+          "label": "Liste 23",
+          "url": "#"
+        },
+        {
+          "label": "Liste 24",
+          "url": "#"
+        }
+      ]
+    },
+    {
+      "id": "inscrits-session-automne-2025-2026",
+      "title": "Listes des inscrits – Session d'automne 2025-2026 – Mise à jour du 10-11-2025",
+      "excerpt": "Mise à jour du 10-11-2025.",
+      "category": "campus",
+      "date": "2025-10-18",
+      "image": "",
+      "url": "/actualites/inscrits-session-automne-2025-2026",
+      "featured": false,
+      "attachments": [
+        {
+          "label": "Liste 1",
+          "url": "#"
+        },
+        {
+          "label": "Liste 2",
+          "url": "#"
+        },
+        {
+          "label": "Liste 3",
+          "url": "#"
+        },
+        {
+          "label": "Liste 4",
+          "url": "#"
+        },
+        {
+          "label": "Liste 5",
+          "url": "#"
+        },
+        {
+          "label": "Liste 6",
+          "url": "#"
+        },
+        {
+          "label": "Liste 7",
+          "url": "#"
+        },
+        {
+          "label": "Liste 8",
+          "url": "#"
+        },
+        {
+          "label": "Liste 9",
+          "url": "#"
+        },
+        {
+          "label": "Liste 10",
+          "url": "#"
+        },
+        {
+          "label": "Liste 11",
+          "url": "#"
+        },
+        {
+          "label": "Liste 12",
+          "url": "#"
+        },
+        {
+          "label": "Liste 13",
+          "url": "#"
+        },
+        {
+          "label": "Liste 14",
+          "url": "#"
+        },
+        {
+          "label": "Liste 15",
+          "url": "#"
+        },
+        {
+          "label": "Liste 16",
+          "url": "#"
+        },
+        {
+          "label": "Liste 17",
+          "url": "#"
+        },
+        {
+          "label": "Liste 18",
+          "url": "#"
+        },
+        {
+          "label": "Liste 19",
+          "url": "#"
+        }
+      ]
+    },
+    {
+      "id": "examens-s6-licence-excellence",
+      "title": "Liste des examens de la session 1 du printemps pour le semestre 6 de la Licence d'Excellence en Intelligence Artificielle",
+      "excerpt": "تم نشر نتائج الفصل الأول لجميع المسالك على البوابة الإلكترونية للكلية. تاريخ الإعلان: الأربعاء 4 يونيو 2025",
+      "category": "recherche",
+      "date": "2025-06-04",
+      "image": "",
+      "url": "/actualites/examens-s6-licence-excellence",
+      "featured": true,
+      "attachments": []
+    }
+  ]
+}

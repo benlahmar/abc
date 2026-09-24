@@ -1,0 +1,8 @@
+{
+  "items": [
+    { "id": "enseignant-1", "name": "Nom de l'enseignant·e", "title": "Professeur·e", "department": "Département à renseigner", "photo": "", "url": "/enseignants" },
+    { "id": "enseignant-2", "name": "Nom de l'enseignant·e", "title": "Professeur·e", "department": "Département à renseigner", "photo": "", "url": "/enseignants" },
+    { "id": "enseignant-3", "name": "Nom de l'enseignant·e", "title": "Professeur·e", "department": "Département à renseigner", "photo": "", "url": "/enseignants" },
+    { "id": "enseignant-4", "name": "Nom de l'enseignant·e", "title": "Professeur·e", "department": "Département à renseigner", "photo": "", "url": "/enseignants" }
+  ]
+}

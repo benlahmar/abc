@@ -1,0 +1,10 @@
+{
+  "items": [
+    { "id": "licences", "title": "Licences", "count": 17, "description": "Formation fondamentale de 3 ans offrant une base solide dans diverses disciplines scientifiques.", "url": "/formation/licences" },
+    { "id": "masters", "title": "Masters", "count": 16, "description": "Programmes spécialisés de 2 ans pour approfondir vos compétences et votre expertise.", "url": "/formation/masters" },
+    { "id": "doctorats", "title": "Doctorats", "count": 4, "description": "Programmes de recherche avancée pour former les futurs chercheurs et innovateurs.", "url": "/formation/doctorats" },
+    { "id": "formation-continue", "title": "Formation Continue", "count": null, "description": "Programmes flexibles pour les professionnels souhaitant développer leurs compétences.", "url": "/formation/formation-continue" },
+    { "id": "formation-excellence", "title": "Formation d'Excellence", "count": null, "description": "Programmes sélectifs destinés aux étudiants les plus méritants et motivés pour une montée en compétences très pertinente.", "url": "/formation/excellence" },
+    { "id": "programmes-courts", "title": "Programmes Courts", "count": null, "description": "Formations courtes et certifications professionnelles pour une montée en compétences rapide.", "url": "/formation/programmes-courts" }
+  ]
+}

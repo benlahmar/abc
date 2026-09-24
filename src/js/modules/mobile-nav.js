@@ -4,7 +4,7 @@ export function initMobileNav() {
   const dialog = document.querySelector('[data-mobile-nav]');
   if (!toggle || !dialog || typeof dialog.showModal !== 'function') return;
 
-  const desktop = window.matchMedia('(min-width: 64rem)');
+  const desktop = window.matchMedia('(min-width: 80rem)');
 
   toggle.addEventListener('click', () => {
     dialog.showModal();

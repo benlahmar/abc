@@ -1,61 +1,63 @@
 <!-- =====================================================================
-     Footer
+     Pied de page — coordonnées liées à /data/site.json (data-bind)
      ===================================================================== -->
 <footer class="on-dark bg-midnight-950 text-paper" aria-labelledby="footer-title">
-  <h2 id="footer-title" class="sr-only">Faculty of Science site footer</h2>
+  <h2 id="footer-title" class="sr-only">Pied de page de la Faculté des Sciences Ben M’Sik</h2>
   <div class="container-editorial">
     <div class="grid gap-14 border-b border-paper/10 py-20 lg:grid-cols-12">
-      <div class="lg:col-span-5">
-        <p class="font-serif text-[clamp(2rem,3.4vw,3rem)] leading-[1.05] tracking-tight">
-          Questions worth a lifetime.<br /><em class="text-gold italic">Begin with one.</em>
+      <div class="lg:col-span-4">
+        <p class="flex items-center gap-3">
+          <span aria-hidden="true" class="grid h-10 place-items-center bg-paper px-2 text-[0.8125rem] font-semibold tracking-[0.08em] text-midnight">FSBM</span>
+          <span class="font-serif text-2xl leading-none">Portail Campus</span>
         </p>
-        <form class="mt-10 max-w-md" action="/newsletter" method="post">
-          <label for="newsletter-email" class="text-[0.6875rem] font-semibold tracking-eyebrow text-paper/60 uppercase">The Faculty Dispatch — monthly</label>
-          <div class="mt-3 flex border-b border-paper/30 transition-colors focus-within:border-gold">
-            <input id="newsletter-email" name="email" type="email" required autocomplete="email" placeholder="you@example.org" class="min-w-0 flex-1 bg-transparent py-3 text-[0.9375rem] text-paper placeholder:text-paper/35 focus:outline-none" />
-            <button type="submit" class="group flex items-center gap-2 py-3 pl-4 text-[0.8125rem] font-medium text-paper hover:text-gold">Subscribe <span class="arrow-nudge" aria-hidden="true">→</span></button>
-          </div>
-        </form>
+        <p class="mt-6 max-w-sm text-[0.9375rem] leading-relaxed text-paper/65">
+          <span data-bind="name">Faculté des Sciences Ben M’Sik</span>. <span data-bind="tagline">Offrant une éducation de qualité et des opportunités de recherche innovantes.</span>
+        </p>
+        <ul class="mt-6 flex items-center gap-3" aria-label="Réseaux sociaux" data-render="socials"></ul>
       </div>
 
-      <nav aria-label="Footer" class="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:col-span-6 lg:col-start-7">
+      <nav aria-label="Pied de page" class="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:col-span-8">
         <div>
-          <h3 class="text-[0.6875rem] font-semibold tracking-eyebrow text-gold uppercase">Study</h3>
+          <h3 class="text-[0.6875rem] font-semibold tracking-eyebrow text-gold uppercase">Liens rapides</h3>
           <ul class="mt-5 space-y-3 text-[0.875rem] text-paper/70">
-            <li><a class="link-rule hover:text-paper" href="/academics/undergraduate">Undergraduate</a></li>
-            <li><a class="link-rule hover:text-paper" href="/academics/graduate">Graduate</a></li>
-            <li><a class="link-rule hover:text-paper" href="/academics/doctoral-school">Doctoral School</a></li>
-            <li><a class="link-rule hover:text-paper" href="/admissions/fees">Fees &amp; Funding</a></li>
+            <li><a class="link-rule hover:text-paper" href="/">Accueil</a></li>
+            <li><a class="link-rule hover:text-paper" href="/formation">Formation</a></li>
+            <li><a class="link-rule hover:text-paper" href="/recherche">Recherche</a></li>
+            <li><a class="link-rule hover:text-paper" href="/partenariat">Partenariat</a></li>
+            <li><a class="link-rule hover:text-paper" href="/etudiant">Étudiant</a></li>
+            <li><a class="link-rule hover:text-paper" href="/departements">Départements</a></li>
           </ul>
         </div>
         <div>
-          <h3 class="text-[0.6875rem] font-semibold tracking-eyebrow text-gold uppercase">Research</h3>
+          <h3 class="text-[0.6875rem] font-semibold tracking-eyebrow text-gold uppercase">Ressources</h3>
           <ul class="mt-5 space-y-3 text-[0.875rem] text-paper/70">
-            <li><a class="link-rule hover:text-paper" href="/research/institutes">Institutes</a></li>
-            <li><a class="link-rule hover:text-paper" href="/research/facilities">Facilities</a></li>
-            <li><a class="link-rule hover:text-paper" href="/research/repository">Repository</a></li>
-            <li><a class="link-rule hover:text-paper" href="/research/industry">Partnerships</a></li>
+            <li><a class="link-rule hover:text-paper" href="/portail-etudiant">Portail Étudiant</a></li>
+            <li><a class="link-rule hover:text-paper" href="/portail-professeur">Portail Professeur</a></li>
+            <li><a class="link-rule hover:text-paper" href="/bibliotheque">Bibliothèque</a></li>
+            <li><a class="link-rule hover:text-paper" href="/evenements">Événements</a></li>
+            <li><a class="link-rule hover:text-paper" href="/pre-candidature">Pré-Candidature</a></li>
+            <li><a class="link-rule hover:text-paper" href="/publications">Publications</a></li>
           </ul>
         </div>
-        <div>
-          <h3 class="text-[0.6875rem] font-semibold tracking-eyebrow text-gold uppercase">Faculty</h3>
-          <ul class="mt-5 space-y-3 text-[0.875rem] text-paper/70">
-            <li><a class="link-rule hover:text-paper" href="/about">About</a></li>
-            <li><a class="link-rule hover:text-paper" href="/people">People</a></li>
-            <li><a class="link-rule hover:text-paper" href="/careers">Work with us</a></li>
-            <li><a class="link-rule hover:text-paper" href="/contact">Contact</a></li>
+        <div class="col-span-2 sm:col-span-1">
+          <h3 class="text-[0.6875rem] font-semibold tracking-eyebrow text-gold uppercase">Contact</h3>
+          <address class="mt-5 text-[0.875rem] leading-relaxed text-paper/70 not-italic" data-render="address">
+            Faculté des Sciences Ben M’Sik<br />Boulevard Driss El Harti, Ben M’Sik<br />Casablanca, Maroc
+          </address>
+          <ul class="mt-5 space-y-2 text-[0.875rem] text-paper/70">
+            <li><a class="link-rule hover:text-paper" data-bind-href="tel:contact.phone" href="tel:+212661442427" data-bind="contact.phoneDisplay">(+212) 6 61 44 24 27</a></li>
+            <li><a class="link-rule break-all hover:text-paper" data-bind-href="mailto:contact.email" href="mailto:fsbm.contact@univh2c.ma" data-bind="contact.email">fsbm.contact@univh2c.ma</a></li>
           </ul>
         </div>
       </nav>
     </div>
 
     <div class="flex flex-col gap-4 py-8 text-[0.75rem] text-paper/50 md:flex-row md:items-center md:justify-between">
-      <address class="not-italic">Faculty of Science, Northvale University · 1 Observatory Lane, Science Quarter</address>
+      <p>© <span data-year>2026</span> FSBM Portail Campus. Tous droits réservés.</p>
       <ul class="flex flex-wrap gap-x-6 gap-y-2">
-        <li><a class="link-rule hover:text-paper" href="/accessibility">Accessibility</a></li>
-        <li><a class="link-rule hover:text-paper" href="/privacy">Privacy</a></li>
-        <li><a class="link-rule hover:text-paper" href="/cookies">Cookies</a></li>
-        <li>© <span data-year>2026</span> Northvale University</li>
+        <li><a class="link-rule hover:text-paper" href="/accessibilite">Accessibilité</a></li>
+        <li><a class="link-rule hover:text-paper" href="/mentions-legales">Mentions légales</a></li>
+        <li><a class="link-rule hover:text-paper" href="/confidentialite">Confidentialité</a></li>
       </ul>
     </div>
   </div>
