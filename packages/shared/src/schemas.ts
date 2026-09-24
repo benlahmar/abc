@@ -31,6 +31,8 @@ export const SiteSchema = z.object({
 });
 
 export const HeroSchema = z.object({
+  /** Photo de fond du hero (chemin /images/… ou URL). */
+  image: optionalText,
   slides: z
     .array(
       z.object({
@@ -144,6 +146,46 @@ export const TestimonialsSchema = z.object({
   ),
 });
 
+export const GallerySchema = z.object({
+  items: z.array(
+    z.object({
+      id: text,
+      image: text,
+      /** Texte alternatif décrivant la photo (accessibilité). */
+      alt: text,
+      kicker: optionalText,
+      caption: optionalText,
+    }),
+  ),
+});
+
+/** Sujets proposés dans le formulaire de contact. */
+export const contactSubjects = ['scolarite', 'formation', 'recherche', 'partenariat', 'autre'] as const;
+export const contactSubjectLabels: Record<(typeof contactSubjects)[number], string> = {
+  scolarite: 'Scolarité et inscriptions',
+  formation: 'Offre de formation',
+  recherche: 'Recherche et laboratoires',
+  partenariat: 'Partenariats et entreprises',
+  autre: 'Autre demande',
+};
+
+/** Message envoyé depuis le formulaire de contact (POST /api/v1/contact). */
+export const ContactMessageSchema = z.object({
+  name: z.string().trim().min(2, 'Indiquez votre nom').max(120),
+  email: z.email('Adresse e-mail invalide').max(200),
+  phone: z
+    .string()
+    .trim()
+    .max(30)
+    .regex(/^[+\d\s().-]*$/, 'Numéro de téléphone invalide')
+    .optional()
+    .default(''),
+  subject: z.enum(contactSubjects, { message: 'Choisissez l’objet de votre message' }),
+  message: z.string().trim().min(10, 'Votre message est trop court (10 caractères minimum)').max(5000),
+  /** Champ piège invisible : rempli uniquement par les robots. */
+  website: z.string().max(0).optional().default(''),
+});
+
 export const collections = {
   site: SiteSchema,
   hero: HeroSchema,
@@ -154,6 +196,7 @@ export const collections = {
   dean: DeanSchema,
   faculty: FacultySchema,
   testimonials: TestimonialsSchema,
+  gallery: GallerySchema,
 } as const;
 
 export type CollectionName = keyof typeof collections;
@@ -179,6 +222,11 @@ export type FacultyMember = Faculty['items'][number];
 export type Testimonials = z.infer<typeof TestimonialsSchema>;
 export type Testimonial = Testimonials['items'][number];
 
+export type Gallery = z.infer<typeof GallerySchema>;
+export type GalleryItem = Gallery['items'][number];
+export type ContactMessage = z.input<typeof ContactMessageSchema>;
+export type ContactSubject = (typeof contactSubjects)[number];
+
 export interface CollectionMap {
   site: Site;
   hero: Hero;
@@ -189,6 +237,7 @@ export interface CollectionMap {
   dean: Dean;
   faculty: Faculty;
   testimonials: Testimonials;
+  gallery: Gallery;
 }
 
 /** Réponse paginée de GET /api/v1/news. */

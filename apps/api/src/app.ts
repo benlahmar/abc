@@ -6,15 +6,19 @@ import helmet from 'helmet';
 import { errorHandler, HttpError } from './errors.js';
 import type { ContentRepository } from './repository.js';
 import { contentRouter } from './routes/content.js';
+import { contactRouter } from './routes/contact.js';
+import type { MessageStore } from './messages.js';
 
 export interface AppOptions {
   repo: ContentRepository;
+  /** Stockage des messages du formulaire de contact. */
+  messages: MessageStore;
   corsOrigins?: string[];
   /** Dossier du front-end compilé à servir (production). */
   webDist?: string | null;
 }
 
-export function createApp({ repo, corsOrigins = [], webDist = null }: AppOptions): Express {
+export function createApp({ repo, messages, corsOrigins = [], webDist = null }: AppOptions): Express {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
@@ -41,9 +45,10 @@ export function createApp({ repo, corsOrigins = [], webDist = null }: AppOptions
   app.use(compression());
 
   const api = express.Router();
-  api.use(cors({ origin: corsOrigins, methods: ['GET'] }));
-  api.use((_req, res, next) => {
-    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+  api.use(cors({ origin: corsOrigins, methods: ['GET', 'POST'] }));
+  api.use(contactRouter(messages));
+  api.use((req, res, next) => {
+    if (req.method === 'GET') res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     next();
   });
   api.get('/health', (_req, res) => {

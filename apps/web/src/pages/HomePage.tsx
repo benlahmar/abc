@@ -1,3 +1,4 @@
+import { Campus } from '../components/home/Campus';
 import { Dean } from '../components/home/Dean';
 import { Faculty } from '../components/home/Faculty';
 import { Hero } from '../components/home/Hero';
@@ -17,6 +18,7 @@ export function HomePage() {
       <QuickAccess />
       <Programmes />
       <KeyFigures />
+      <Campus />
       <News />
       <Dean />
       <Faculty />

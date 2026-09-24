@@ -12,6 +12,8 @@ export const config = {
   env: process.env.NODE_ENV ?? 'development',
   port: Number(process.env.PORT ?? 4000),
   dataDir: process.env.DATA_DIR ? resolve(process.env.DATA_DIR) : resolve(packageRoot, 'data'),
+  /** Données écrites par l'application (messages de contact…). */
+  storageDir: process.env.STORAGE_DIR ? resolve(process.env.STORAGE_DIR) : resolve(packageRoot, 'storage'),
   corsOrigins: (process.env.CORS_ORIGIN ?? 'http://localhost:5173')
     .split(',')
     .map((origin) => origin.trim())

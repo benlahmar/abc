@@ -14,7 +14,7 @@ export function Footer() {
       <div className="container-x relative">
         <div className="grid gap-14 border-b border-paper/10 py-20 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <Brand tone="dark" />
+            <Brand tone="dark" size="lg" />
             <p className="mt-8 max-w-sm text-[0.95rem] leading-relaxed text-paper/60">
               {site ? `${site.name}. ${site.tagline}` : 'Faculté des Sciences Ben M’Sik. Offrant une éducation de qualité et des opportunités de recherche innovantes.'}
             </p>

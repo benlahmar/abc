@@ -1,6 +1,6 @@
 # Modèle de contenu — référence pour le back-office
 
-Le portail est alimenté par **9 collections**. Leur structure est définie **une seule fois**, en Zod, dans
+Le portail est alimenté par **10 collections**. Leur structure est définie **une seule fois**, en Zod, dans
 `packages/shared/src/schemas.ts`. Cette définition sert trois fois :
 
 - l'API (`apps/api`) valide chaque fichier avant de le servir ;
@@ -15,9 +15,15 @@ changent : pas besoin de redémarrer l'API.
 | Méthode | Route | Réponse |
 | --- | --- | --- |
 | GET | `/api/v1/health` | `{ status, uptime }` |
-| GET | `/api/v1/{collection}` | la collection entière (`site`, `hero`, `programmes`, `stats`, `news`, `services`, `dean`, `faculty`, `testimonials`) |
+| GET | `/api/v1/{collection}` | la collection entière (`site`, `hero`, `programmes`, `stats`, `news`, `services`, `dean`, `faculty`, `testimonials`, `gallery`) |
 | GET | `/api/v1/news?category=&limit=&offset=` | `{ categories, counts, items, total, limit, offset }`, trié par date décroissante (`limit` ≤ 100) |
 | GET | `/api/v1/news/{id}` | `{ item, category }`, ou 404 |
+| POST | `/api/v1/contact` | `{ name, email, phone?, subject, message }` → 201. Erreurs : 422 `{ error: { fields } }`, 413 si le corps est trop volumineux, 429 au-delà de 5 messages par IP en 15 min |
+
+Les messages de contact sont enregistrés dans `apps/api/storage/messages.jsonl`, un message JSON par ligne
+(`id`, `receivedAt`, puis les champs du formulaire). Le back-office les affichera. L'envoi par e-mail pourra
+s'ajouter dans `JsonlMessageStore`. Le champ piège `website` n'est jamais enregistré : s'il est rempli, l'API
+répond 201 sans rien stocker.
 
 Toutes les erreurs ont la forme `{ "error": { "code", "message" } }`. Si une collection ne respecte pas son
 schéma, l'API répond 500 `content_unavailable` et consigne le détail dans ses logs. Ce détail n'est jamais
@@ -47,7 +53,7 @@ Règles communes :
 
 ## `hero` — carrousel « À la une »
 
-`slides[]` : `{ id, kicker, title, subtitle, url, cta }`. Ordre d'affichage = ordre de la liste.
+`image` : photo de fond du hero (affichée en monochrome bleu nuit). `slides[]` : `{ id, kicker, title, subtitle, url, cta }`. Ordre d'affichage = ordre de la liste.
 
 ## `programmes` — Nos programmes
 
@@ -82,3 +88,8 @@ Ces services forment la bande « Accès rapide » sous le hero. `highlight: true
 
 `items[]` : `{ id, platform: "youtube", videoId (11 caractères), title, author, description }`.
 Le lecteur YouTube (youtube-nocookie) ne se charge qu'au clic. Si `videoId` est vide, la carte indique « Vidéo bientôt disponible ».
+
+## `gallery` — Vie à la FSBM
+
+`items[]` : `{ id, image, alt, kicker, caption }`. Les trois premières photos forment la grille de la section :
+une grande photo à gauche, deux à droite. `alt` décrit la photo pour les lecteurs d'écran ; ce champ est obligatoire.

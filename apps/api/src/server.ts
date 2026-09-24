@@ -1,9 +1,11 @@
 import { createApp } from './app.js';
 import { config } from './config.js';
 import { JsonFileRepository } from './repository.js';
+import { JsonlMessageStore } from './messages.js';
 
 const app = createApp({
   repo: new JsonFileRepository(config.dataDir),
+  messages: new JsonlMessageStore(config.storageDir),
   corsOrigins: config.corsOrigins,
   webDist: config.webDist,
 });

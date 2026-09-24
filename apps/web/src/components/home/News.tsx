@@ -32,7 +32,7 @@ export function News() {
     <section id="actualites" aria-labelledby="news-title" className="bg-paper py-28 lg:py-36">
       <div className="container-x">
         <SectionHeader
-          index="04"
+          index="05"
           eyebrow="Actualités"
           titleId="news-title"
           title={

@@ -47,7 +47,7 @@ export function MobileMenu({ open, onClose, site }: { open: boolean; onClose: ()
       <div className="relative flex h-full flex-col overflow-hidden">
         <div aria-hidden="true" className="absolute -top-40 -right-40 size-[28rem] rounded-full bg-gold/10 blur-3xl" />
         <div className="container-x relative flex h-20 shrink-0 items-center justify-between border-b border-paper/10">
-          <span className="font-serif text-[1.4rem]">Faculté des Sciences</span>
+          <img src="/images/logo-fsbm-blanc.webp" alt="Faculté des Sciences Ben M’Sik" width={408} height={230} className="h-12 w-auto" />
           <button type="button" onClick={onClose} className="grid size-10 place-items-center" autoFocus>
             <span className="sr-only">Fermer le menu</span>
             <Close className="size-5" />

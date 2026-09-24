@@ -5,11 +5,21 @@ import request from 'supertest';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { createApp } from './app.js';
 import { JsonFileRepository } from './repository.js';
+import type { ContactPayload, MessageStore, StoredMessage } from './messages.js';
+
+class MemoryStore implements MessageStore {
+  saved: StoredMessage[] = [];
+  async save(message: ContactPayload) {
+    const stored = { id: String(this.saved.length + 1), receivedAt: new Date().toISOString(), ...message };
+    this.saved.push(stored);
+    return stored;
+  }
+}
 
 const DATA = resolve(import.meta.dirname, '../data');
 
 describe('API de contenu', () => {
-  const app = createApp({ repo: new JsonFileRepository(DATA) });
+  const app = createApp({ repo: new JsonFileRepository(DATA), messages: new MemoryStore() });
 
   it('répond au contrôle de santé', async () => {
     const res = await request(app).get('/api/v1/health');
@@ -17,7 +27,7 @@ describe('API de contenu', () => {
     expect(res.body.status).toBe('ok');
   });
 
-  it.each(['site', 'hero', 'programmes', 'stats', 'news', 'services', 'dean', 'faculty', 'testimonials'])(
+  it.each(['site', 'hero', 'programmes', 'stats', 'news', 'services', 'dean', 'faculty', 'testimonials', 'gallery'])(
     'sert la collection %s (données valides)',
     async (name) => {
       const res = await request(app).get(`/api/v1/${name}`);
@@ -65,9 +75,61 @@ describe('Validation des données', () => {
 
   it('renvoie 500 sans exposer le détail si une collection est invalide', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    const res = await request(createApp({ repo: new JsonFileRepository(dir) })).get('/api/v1/stats');
+    const res = await request(createApp({ repo: new JsonFileRepository(dir), messages: new MemoryStore() })).get('/api/v1/stats');
     expect(res.status).toBe(500);
     expect(res.body.error.code).toBe('content_unavailable');
     expect(JSON.stringify(res.body)).not.toContain('pas un nombre');
+  });
+});
+
+describe('Formulaire de contact', () => {
+  const valid = { name: 'Amina Benali', email: 'amina@example.ma', subject: 'scolarite', message: 'Bonjour, je souhaite une attestation.' };
+
+  it('enregistre un message valide', async () => {
+    const store = new MemoryStore();
+    const res = await request(createApp({ repo: new JsonFileRepository(DATA), messages: store })).post('/api/v1/contact').send(valid);
+    expect(res.status).toBe(201);
+    expect(res.headers['cache-control']).toBe('no-store');
+    expect(store.saved).toHaveLength(1);
+    expect(store.saved[0]).not.toHaveProperty('website');
+  });
+
+  it('renvoie les erreurs par champ', async () => {
+    const res = await request(createApp({ repo: new JsonFileRepository(DATA), messages: new MemoryStore() }))
+      .post('/api/v1/contact')
+      .send({ ...valid, email: 'pas-un-email', message: 'court' });
+    expect(res.status).toBe(422);
+    expect(Object.keys(res.body.error.fields).sort()).toEqual(['email', 'message']);
+  });
+
+  it('ignore silencieusement les robots (champ piège rempli)', async () => {
+    const store = new MemoryStore();
+    const res = await request(createApp({ repo: new JsonFileRepository(DATA), messages: store })).post('/api/v1/contact').send({ ...valid, website: 'spam.example' });
+    expect(res.status).toBe(201);
+    expect(store.saved).toHaveLength(0);
+  });
+
+  it('limite le nombre de messages par adresse IP', async () => {
+    const app = createApp({ repo: new JsonFileRepository(DATA), messages: new MemoryStore() });
+    const statuses: number[] = [];
+    for (let i = 0; i < 6; i++) statuses.push((await request(app).post('/api/v1/contact').send(valid)).status);
+    expect(statuses.slice(0, 5).every((s) => s === 201)).toBe(true);
+    expect(statuses[5]).toBe(429);
+  });
+
+  it('refuse un corps trop volumineux', async () => {
+    const res = await request(createApp({ repo: new JsonFileRepository(DATA), messages: new MemoryStore() }))
+      .post('/api/v1/contact')
+      .send({ ...valid, message: 'x'.repeat(20_000) });
+    expect(res.status).toBe(413);
+    expect(res.body.error.code).toBe('payload_too_large');
+  });
+
+  it('refuse un JSON mal formé avec une erreur 400', async () => {
+    const res = await request(createApp({ repo: new JsonFileRepository(DATA), messages: new MemoryStore() }))
+      .post('/api/v1/contact')
+      .set('Content-Type', 'application/json')
+      .send('{"name":');
+    expect(res.status).toBe(400);
   });
 });

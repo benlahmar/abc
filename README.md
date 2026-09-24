@@ -29,9 +29,10 @@ npm start          # production : l'API sert aussi le front compilé, sur :4000
 ```
 apps/
   api/                  API Node.js / Express
-    data/*.json         contenu (9 collections), relu à chaud
+    data/*.json         contenu (10 collections), relu à chaud
+    storage/            messages du formulaire de contact (non versionné)
     src/repository.ts   accès aux données (fichiers JSON aujourd'hui, base de données demain)
-    src/routes/         GET /api/v1/{collection}, /news (filtre + pagination), /news/:id
+    src/routes/         GET /api/v1/{collection}, /news (filtre + pagination), /news/:id, POST /contact
     src/app.ts          sécurité (Helmet/CSP), CORS, compression, cache HTTP, service du front
   web/                  Front-end React
     src/components/
@@ -39,7 +40,8 @@ apps/
       home/             sections de l'accueil
       news/             cartes d'actualités, pièces jointes
       ui/               boutons, révélations animées, compteurs, constellation, visuels
-    src/pages/          accueil, détail d'actualité, page « en préparation »
+    public/images/      logo FSBM (couleur et blanc), photo du doyen, photos du campus
+    src/pages/          accueil, détail d'actualité, contact, page « en préparation »
     src/lib/            client API, hooks React Query, formats, navigation
 packages/
   shared/               schémas Zod + types + safeUrl()
@@ -59,9 +61,10 @@ docs/
 
 Polices (auto-hébergées) : Cormorant Garamond (titres), Inter (interface et chiffres), IBM Plex Sans Arabic (contenus en arabe).
 
-Tant que les photos réelles ne sont pas fournies, des **visuels génératifs** les remplacent : la constellation
-animée du hero et des motifs par discipline. Il suffit de renseigner `image` ou `photo` dans les données pour
-afficher les vraies photos.
+Le hero utilise une vraie photo de la Faculté, passée en monochrome bleu nuit, sous la constellation animée.
+Là où une photo manque encore (actualités, enseignants), un **visuel génératif** la remplace. Il suffit de
+renseigner `image` ou `photo` dans les données pour afficher la vraie photo. Les images sont en WebP optimisé
+(logo, doyen, campus : moins de 120 Ko chacune).
 
 ## Qualité
 

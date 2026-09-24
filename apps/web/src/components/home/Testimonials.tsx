@@ -78,7 +78,7 @@ export function Testimonials() {
       <div className="container-x">
         <SectionHeader
           tone="dark"
-          index="07"
+          index="08"
           eyebrow="Témoignages"
           titleId="testimonials-title"
           title={

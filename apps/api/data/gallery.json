@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "id": "conference",
+      "image": "/images/conference-amphi.webp",
+      "alt": "Enseignants, chercheurs et étudiants réunis dans un grand amphithéâtre de la FSBM lors d’une conférence",
+      "kicker": "Recherche",
+      "caption": "Conférences et rencontres scientifiques"
+    },
+    {
+      "id": "facade",
+      "image": "/images/facade-fsbm.webp",
+      "alt": "Entrée principale de la Faculté des Sciences Ben M’Sik, avec son nom en arabe sur la façade",
+      "kicker": "Campus",
+      "caption": "L’entrée de la Faculté, Boulevard Driss El Harti"
+    },
+    {
+      "id": "portes-ouvertes",
+      "image": "/images/amphi-portes-ouvertes.webp",
+      "alt": "Étudiants assis dans un amphithéâtre lors des Journées Portes Ouvertes 2026",
+      "kicker": "Journées Portes Ouvertes 2026",
+      "caption": "Moments, échanges, engagement"
+    }
+  ]
+}

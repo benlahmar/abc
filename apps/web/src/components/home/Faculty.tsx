@@ -15,7 +15,7 @@ export function Faculty() {
     <section id="enseignants" aria-labelledby="faculty-title" className="bg-paper py-28 lg:py-36">
       <div className="container-x">
         <SectionHeader
-          index="06"
+          index="07"
           eyebrow="Corps enseignant"
           titleId="faculty-title"
           title={

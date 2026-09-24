@@ -30,7 +30,7 @@ export function Dean() {
                 <span aria-hidden="true" className="absolute top-5 -right-5 -bottom-5 left-5 border border-gold/60" />
                 <div className="on-dark relative aspect-[4/5] overflow-hidden bg-midnight">
                   {dean.photo ? (
-                    <img src={dean.photo} alt={`Portrait de ${dean.name}`} loading="lazy" decoding="async" className="size-full object-cover" />
+                    <img src={dean.photo} alt={`Portrait de ${dean.name}`} loading="lazy" decoding="async" className="size-full object-cover object-top" />
                   ) : (
                     <div role="img" aria-label={`Portrait de ${dean.name} (photo à venir)`} className="absolute inset-0">
                       <Visual variant="orbit" />
@@ -47,7 +47,7 @@ export function Dean() {
 
             <Reveal delay={0.1} className="lg:col-span-7 lg:pl-6">
               <h2 id="dean-title" className="eyebrow flex items-center gap-4 text-muted">
-                <span className="text-bronze">05</span>
+                <span className="text-bronze">06</span>
                 <span aria-hidden="true" className="h-px w-10 bg-gold" />
                 Mot du Doyen
               </h2>

@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from 'motion/react';
+import { useCollection } from '../../lib/queries';
 import { ButtonLink } from '../ui/Button';
 import { Constellation } from '../ui/Constellation';
 import { MaskLine } from '../ui/Reveal';
@@ -9,16 +10,30 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 export function Hero() {
   const reduced = useReducedMotion();
+  const { data: hero } = useCollection('hero');
   const fade = (delay: number) =>
     reduced ? {} : { initial: { opacity: 0, y: 18 }, animate: { opacity: 1, y: 0 }, transition: { duration: 1.1, ease: EASE, delay } };
 
   return (
     <section aria-labelledby="hero-title" className="on-dark grain relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-midnight-950 text-paper">
       <div aria-hidden="true" className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_60%_at_78%_32%,rgb(29_51_84/0.85),transparent_70%)]" />
+        {hero?.image && (
+          <motion.img
+            src={hero.image}
+            alt=""
+            fetchPriority="high"
+            decoding="async"
+            initial={reduced ? false : { opacity: 0, scale: 1.06 }}
+            animate={{ opacity: 0.55, scale: 1 }}
+            transition={{ duration: 2.2, ease: EASE }}
+            className="absolute inset-0 size-full object-cover mix-blend-luminosity"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-midnight-950 via-midnight-950/85 to-midnight-950/35" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_60%_at_78%_32%,rgb(29_51_84/0.55),transparent_70%)]" />
         <div className="absolute -right-48 -bottom-80 size-[52rem] rounded-full bg-gold/[0.13] blur-[150px]" />
         <div className="absolute -top-40 -left-40 size-[34rem] rounded-full bg-midnight-700/60 blur-[120px]" />
-        <Constellation className="absolute inset-0 size-full" />
+        <Constellation className="absolute inset-0 size-full opacity-70" />
         <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-midnight-950 via-midnight-950/70 to-transparent" />
       </div>
 
