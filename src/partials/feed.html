@@ -1,0 +1,226 @@
+<!-- =====================================================================
+     Dispatches — magazine-style editorial feed.
+     Breakthroughs (filterable by discipline) | International symposia.
+     Behaviour: src/js/modules/feed.js
+     ===================================================================== -->
+<section id="dispatches" aria-labelledby="feed-title" class="py-24 lg:py-32">
+  <div class="container-editorial">
+    <header class="grid gap-8 border-b border-midnight pb-10 lg:grid-cols-12 lg:items-end" data-reveal>
+      <div class="lg:col-span-7">
+        <p class="section-index">03 — Dispatches</p>
+        <h2 id="feed-title" class="mt-6 font-serif text-[clamp(2.4rem,4.6vw,4.25rem)] leading-[1] tracking-[-0.02em] text-balance">
+          From the bench, <em class="text-bronze italic">to the world.</em>
+        </h2>
+      </div>
+      <p class="text-[0.9375rem] leading-relaxed text-muted lg:col-span-4 lg:col-start-9">
+        Research news from our laboratories and the international meetings where it will be debated next.
+      </p>
+    </header>
+
+    <div class="grid gap-16 pt-12 lg:grid-cols-12 lg:gap-0">
+      <!-- ================= Breakthroughs ================= -->
+      <section aria-labelledby="breakthroughs-title" class="lg:col-span-8 lg:pr-14" data-feed>
+        <div class="flex items-baseline justify-between gap-4">
+          <h3 id="breakthroughs-title" class="font-serif text-[1.75rem] leading-none">Scientific Breakthroughs</h3>
+          <a href="/news" class="group hidden items-center gap-2 text-[0.8125rem] font-medium sm:inline-flex">
+            <span class="link-rule">All news</span><span class="arrow-nudge text-bronze" aria-hidden="true">→</span>
+          </a>
+        </div>
+
+        <!-- Lead story -->
+        <article class="group mt-8 grid gap-8 md:grid-cols-2" data-reveal>
+          <a href="/news/room-temperature-spin-liquid" class="plate plate-rings block aspect-[4/3] md:aspect-auto md:min-h-[22rem]" tabindex="-1" aria-hidden="true">
+            <span class="absolute inset-0 bg-gradient-to-t from-midnight/60 to-transparent"></span>
+            <span class="absolute bottom-5 left-5 font-mono text-[0.625rem] tracking-widest text-paper/70 uppercase">Fig. 01 — Neutron scattering map</span>
+            <span class="absolute inset-0 origin-left scale-x-0 border-b-2 border-gold transition-transform duration-700 ease-editorial group-hover:scale-x-100"></span>
+          </a>
+          <div class="flex flex-col">
+            <p class="flex items-center gap-3 text-[0.6875rem] font-semibold tracking-eyebrow uppercase">
+              <span class="text-bronze">Physics</span>
+              <span aria-hidden="true" class="h-px w-6 bg-midnight/20"></span>
+              <span class="text-muted">Lead story</span>
+            </p>
+            <h4 class="mt-5 font-serif text-[2.1rem] leading-[1.05] tracking-[-0.01em] text-balance">
+              <a href="/news/room-temperature-spin-liquid" class="link-rule">
+                A quantum spin liquid, observed at room temperature for the first time
+              </a>
+            </h4>
+            <p class="mt-5 text-[0.9375rem] leading-relaxed text-muted">
+              A team at the Institute for Quantum Materials has detected the long-sought state in a layered copper mineral, opening a route to fault-tolerant quantum memory that works outside the cryostat.
+            </p>
+            <p class="mt-auto flex items-center gap-3 pt-8 text-[0.75rem] text-muted">
+              <span class="font-medium text-midnight">Prof. Amara Okonkwo et al.</span>
+              <span aria-hidden="true">·</span>
+              <time datetime="2026-09-18">18 Sep 2026</time>
+              <span aria-hidden="true">·</span>
+              <span>6 min read</span>
+            </p>
+          </div>
+        </article>
+
+        <!-- Discipline filter -->
+        <div class="mt-14 flex flex-col gap-4 border-t border-midnight/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <h4 id="latest-title" class="eyebrow">Latest</h4>
+          <div role="group" aria-label="Filter breakthroughs by discipline" class="-mx-1 flex flex-wrap gap-1" data-feed-filters>
+            <button type="button" aria-pressed="true" data-filter="all" class="feed-chip">All</button>
+            <button type="button" aria-pressed="false" data-filter="physics" class="feed-chip">Physics</button>
+            <button type="button" aria-pressed="false" data-filter="life" class="feed-chip">Life Sciences</button>
+            <button type="button" aria-pressed="false" data-filter="chemistry" class="feed-chip">Chemistry</button>
+            <button type="button" aria-pressed="false" data-filter="earth" class="feed-chip">Earth &amp; Climate</button>
+            <button type="button" aria-pressed="false" data-filter="maths" class="feed-chip">Mathematics</button>
+          </div>
+        </div>
+        <p class="sr-only" aria-live="polite" data-feed-status></p>
+
+        <ul aria-labelledby="latest-title" class="mt-2 grid gap-x-10 sm:grid-cols-2" data-feed-list>
+          <li data-discipline="life" class="feed-item">
+            <article class="group relative flex gap-5 border-b border-midnight/10 py-6">
+              <div aria-hidden="true" class="plate plate-dots size-20 shrink-0"><span class="absolute bottom-1.5 left-2 font-mono text-[0.5625rem] text-paper/70">02</span></div>
+              <div>
+                <p class="text-[0.6875rem] font-semibold tracking-eyebrow text-bronze uppercase">Life Sciences</p>
+                <h5 class="mt-2 font-serif text-[1.3rem] leading-[1.15]"><a href="/news/immune-memory-atlas" class="link-rule after:absolute after:inset-0">Mapping the immune system’s memory, one cell at a time</a></h5>
+                <p class="mt-2 text-[0.75rem] text-muted"><time datetime="2026-09-16">16 Sep 2026</time> · 4 min</p>
+              </div>
+            </article>
+          </li>
+          <li data-discipline="chemistry" class="feed-item">
+            <article class="group relative flex gap-5 border-b border-midnight/10 py-6">
+              <div aria-hidden="true" class="plate plate-helix size-20 shrink-0"><span class="absolute bottom-1.5 left-2 font-mono text-[0.5625rem] text-paper/70">03</span></div>
+              <div>
+                <p class="text-[0.6875rem] font-semibold tracking-eyebrow text-bronze uppercase">Chemistry</p>
+                <h5 class="mt-2 font-serif text-[1.3rem] leading-[1.15]"><a href="/news/earth-abundant-catalyst" class="link-rule after:absolute after:inset-0">A water-splitting catalyst built only from earth-abundant metals</a></h5>
+                <p class="mt-2 text-[0.75rem] text-muted"><time datetime="2026-09-12">12 Sep 2026</time> · 5 min</p>
+              </div>
+            </article>
+          </li>
+          <li data-discipline="earth" class="feed-item">
+            <article class="group relative flex gap-5 border-b border-midnight/10 py-6">
+              <div aria-hidden="true" class="plate plate-strata size-20 shrink-0"><span class="absolute bottom-1.5 left-2 font-mono text-[0.5625rem] text-paper/70">04</span></div>
+              <div>
+                <p class="text-[0.6875rem] font-semibold tracking-eyebrow text-bronze uppercase">Earth &amp; Climate</p>
+                <h5 class="mt-2 font-serif text-[1.3rem] leading-[1.15]"><a href="/news/ice-core-record" class="link-rule after:absolute after:inset-0">Ice-core record extends Antarctic climate history to 1.5 million years</a></h5>
+                <p class="mt-2 text-[0.75rem] text-muted"><time datetime="2026-09-09">9 Sep 2026</time> · 7 min</p>
+              </div>
+            </article>
+          </li>
+          <li data-discipline="maths" class="feed-item">
+            <article class="group relative flex gap-5 border-b border-midnight/10 py-6">
+              <div aria-hidden="true" class="plate plate-grid size-20 shrink-0"><span class="absolute bottom-1.5 left-2 font-mono text-[0.5625rem] text-paper/70">05</span></div>
+              <div>
+                <p class="text-[0.6875rem] font-semibold tracking-eyebrow text-bronze uppercase">Mathematics</p>
+                <h5 class="mt-2 font-serif text-[1.3rem] leading-[1.15]"><a href="/news/knot-theory-proof" class="link-rule after:absolute after:inset-0">A new proof settles a sixty-year question in knot theory</a></h5>
+                <p class="mt-2 text-[0.75rem] text-muted"><time datetime="2026-09-04">4 Sep 2026</time> · 5 min</p>
+              </div>
+            </article>
+          </li>
+          <li data-discipline="life" class="feed-item">
+            <article class="group relative flex gap-5 border-b border-midnight/10 py-6">
+              <div aria-hidden="true" class="plate plate-rings size-20 shrink-0"><span class="absolute bottom-1.5 left-2 font-mono text-[0.5625rem] text-paper/70">06</span></div>
+              <div>
+                <p class="text-[0.6875rem] font-semibold tracking-eyebrow text-bronze uppercase">Life Sciences</p>
+                <h5 class="mt-2 font-serif text-[1.3rem] leading-[1.15]"><a href="/news/soil-microbe-networks" class="link-rule after:absolute after:inset-0">Soil microbes found trading carbon across forest networks</a></h5>
+                <p class="mt-2 text-[0.75rem] text-muted"><time datetime="2026-08-29">29 Aug 2026</time> · 4 min</p>
+              </div>
+            </article>
+          </li>
+          <li data-discipline="physics" class="feed-item">
+            <article class="group relative flex gap-5 border-b border-midnight/10 py-6">
+              <div aria-hidden="true" class="plate plate-dots size-20 shrink-0 bg-midnight-700"><span class="absolute bottom-1.5 left-2 font-mono text-[0.5625rem] text-paper/70">07</span></div>
+              <div>
+                <p class="text-[0.6875rem] font-semibold tracking-eyebrow text-bronze uppercase">Physics</p>
+                <h5 class="mt-2 font-serif text-[1.3rem] leading-[1.15]"><a href="/news/dark-sector-detector" class="link-rule after:absolute after:inset-0">Detector upgrade sharpens the search for dark-sector particles</a></h5>
+                <p class="mt-2 text-[0.75rem] text-muted"><time datetime="2026-08-25">25 Aug 2026</time> · 6 min</p>
+              </div>
+            </article>
+          </li>
+        </ul>
+        <p hidden data-feed-empty class="py-10 text-[0.9375rem] text-muted">No recent stories in this discipline. <a href="/news" class="font-medium text-midnight underline decoration-gold underline-offset-4">Browse the archive</a>.</p>
+      </section>
+
+      <!-- ================= Symposia ================= -->
+      <aside aria-labelledby="symposia-title" class="lg:col-span-4 lg:border-l lg:border-midnight/10 lg:pl-12" data-reveal style="--reveal-delay: 120ms">
+        <div class="flex items-baseline justify-between gap-4">
+          <h3 id="symposia-title" class="font-serif text-[1.75rem] leading-none">International Symposia</h3>
+        </div>
+        <p class="mt-3 text-[0.8125rem] text-muted">Upcoming meetings convened or co-hosted by the Faculty.</p>
+
+        <ol class="mt-6 border-t border-midnight/10">
+          <li>
+            <article class="group relative grid grid-cols-[4.5rem_1fr] gap-5 border-b border-midnight/10 py-6">
+              <p class="flex flex-col">
+                <time datetime="2026-10-14/2026-10-16" class="font-serif text-[1.75rem] leading-none tabular-nums">14–16</time>
+                <span class="mt-1.5 text-[0.6875rem] font-semibold tracking-eyebrow text-muted uppercase">Oct 2026</span>
+              </p>
+              <div>
+                <h4 class="font-serif text-[1.2rem] leading-snug"><a href="/events/quantum-matter-2026" class="link-rule after:absolute after:inset-0">International Symposium on Quantum Matter</a></h4>
+                <p class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.75rem] text-muted">
+                  <span>Geneva, Switzerland</span>
+                  <span class="border border-midnight/15 px-1.5 py-px text-[0.625rem] font-semibold tracking-wide text-midnight/70 uppercase">Hybrid</span>
+                </p>
+              </div>
+            </article>
+          </li>
+          <li>
+            <article class="group relative grid grid-cols-[4.5rem_1fr] gap-5 border-b border-midnight/10 py-6">
+              <p class="flex flex-col">
+                <time datetime="2026-11-05/2026-11-07" class="font-serif text-[1.75rem] leading-none tabular-nums">05–07</time>
+                <span class="mt-1.5 text-[0.6875rem] font-semibold tracking-eyebrow text-muted uppercase">Nov 2026</span>
+              </p>
+              <div>
+                <h4 class="font-serif text-[1.2rem] leading-snug"><a href="/events/genomic-medicine-2026" class="link-rule after:absolute after:inset-0">Frontiers in Genomic Medicine</a></h4>
+                <p class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.75rem] text-muted">
+                  <span>Singapore</span>
+                  <span class="border border-midnight/15 px-1.5 py-px text-[0.625rem] font-semibold tracking-wide text-midnight/70 uppercase">In person</span>
+                </p>
+              </div>
+            </article>
+          </li>
+          <li>
+            <article class="group relative grid grid-cols-[4.5rem_1fr] gap-5 border-b border-midnight/10 py-6">
+              <p class="flex flex-col">
+                <time datetime="2026-12-02/2026-12-04" class="font-serif text-[1.75rem] leading-none tabular-nums">02–04</time>
+                <span class="mt-1.5 text-[0.6875rem] font-semibold tracking-eyebrow text-muted uppercase">Dec 2026</span>
+              </p>
+              <div>
+                <h4 class="font-serif text-[1.2rem] leading-snug"><a href="/events/polar-systems-2026" class="link-rule after:absolute after:inset-0">Polar Systems &amp; Sea-Level Futures</a></h4>
+                <p class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.75rem] text-muted">
+                  <span>Northvale Campus</span>
+                  <span class="bg-gold/20 px-1.5 py-px text-[0.625rem] font-semibold tracking-wide text-bronze uppercase">Hosted by the Faculty</span>
+                </p>
+              </div>
+            </article>
+          </li>
+          <li>
+            <article class="group relative grid grid-cols-[4.5rem_1fr] gap-5 border-b border-midnight/10 py-6">
+              <p class="flex flex-col">
+                <time datetime="2027-01-20/2027-01-22" class="font-serif text-[1.75rem] leading-none tabular-nums">20–22</time>
+                <span class="mt-1.5 text-[0.6875rem] font-semibold tracking-eyebrow text-muted uppercase">Jan 2027</span>
+              </p>
+              <div>
+                <h4 class="font-serif text-[1.2rem] leading-snug"><a href="/events/geometry-topology-2027" class="link-rule after:absolute after:inset-0">Geometry, Topology &amp; Computation</a></h4>
+                <p class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.75rem] text-muted">
+                  <span>Kyoto, Japan</span>
+                  <span class="border border-midnight/15 px-1.5 py-px text-[0.625rem] font-semibold tracking-wide text-midnight/70 uppercase">Hybrid</span>
+                </p>
+              </div>
+            </article>
+          </li>
+        </ol>
+
+        <!-- Call for papers -->
+        <div class="on-dark mt-10 bg-midnight p-7 text-paper">
+          <p class="text-[0.6875rem] font-semibold tracking-eyebrow text-gold uppercase">Call for abstracts</p>
+          <p class="mt-3 font-serif text-[1.35rem] leading-snug">Polar Systems 2026 accepts abstracts until <time datetime="2026-10-30">30 October</time>.</p>
+          <a href="/events/polar-systems-2026/abstracts" class="group mt-6 inline-flex items-center gap-2 text-[0.8125rem] font-medium text-paper hover:text-gold">
+            Submit an abstract <span class="arrow-nudge" aria-hidden="true">→</span>
+          </a>
+        </div>
+
+        <div class="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-[0.8125rem] font-medium">
+          <a href="/events" class="group inline-flex items-center gap-2"><span class="link-rule">All events</span><span class="arrow-nudge text-bronze" aria-hidden="true">→</span></a>
+          <a href="/events/calendar.ics" class="group inline-flex items-center gap-2"><span class="link-rule">Subscribe to calendar</span><span class="text-muted">(.ics)</span></a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>

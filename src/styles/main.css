@@ -1,0 +1,279 @@
+@import 'tailwindcss';
+
+/* -------------------------------------------------------------------------
+   Design tokens
+   ------------------------------------------------------------------------- */
+@theme {
+  --color-midnight: #0a192f;
+  --color-midnight-950: #06101f;
+  --color-midnight-800: #112240;
+  --color-midnight-700: #1d3354;
+  --color-paper: #f8fafc;
+  --color-paper-dim: #eef2f6;
+  --color-muted: #64748b;
+  --color-gold: #c5a059;
+  /* Darker bronze for gold text on light surfaces (≥ 4.5:1 on paper). */
+  --color-bronze: #85652b;
+  --color-gold-soft: #e9dcc0;
+
+  --font-serif: 'Cormorant Garamond', 'Iowan Old Style', 'Times New Roman', serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --tracking-eyebrow: 0.18em;
+  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-lattice: lattice 48s linear infinite;
+  --animate-scan: scan 6s var(--ease-editorial) infinite;
+  --animate-pulse-dot: pulse-dot 2.4s ease-in-out infinite;
+
+  @keyframes lattice {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes scan {
+    0% { transform: translateY(-10%); opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { transform: translateY(1100%); opacity: 0; }
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Base
+   ------------------------------------------------------------------------- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-paper font-sans text-midnight;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+  /* Lining figures keep statistics and dates on a common baseline. */
+  .font-serif {
+    font-variant-numeric: lining-nums;
+  }
+  ::selection {
+    @apply bg-gold/30 text-midnight;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-4 outline-bronze;
+  }
+  .on-dark :focus-visible,
+  .on-dark:focus-visible {
+    @apply outline-gold;
+  }
+  [inert] {
+    pointer-events: none;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Components
+   ------------------------------------------------------------------------- */
+@layer components {
+  .container-editorial {
+    @apply mx-auto w-full max-w-[88rem] px-5 sm:px-8 lg:px-12;
+  }
+
+  .eyebrow {
+    @apply font-sans text-[0.6875rem] font-semibold tracking-eyebrow text-muted uppercase;
+  }
+
+  /* Section index marker, e.g. "02 — Impact" */
+  .section-index {
+    @apply flex items-center gap-3 font-sans text-[0.6875rem] font-semibold tracking-eyebrow text-muted uppercase;
+  }
+  .section-index::before {
+    content: '';
+    @apply block h-px w-8 bg-gold;
+  }
+
+  /* Link with a gold rule that draws in from the left. */
+  .link-rule {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.45s var(--ease-editorial), color 0.2s;
+  }
+  .link-rule:hover,
+  .link-rule:focus-visible,
+  .group:hover .link-rule,
+  .group:focus-within .link-rule {
+    background-size: 100% 1px;
+  }
+
+  /* Arrow glyph that nudges on parent hover. */
+  .arrow-nudge {
+    @apply inline-block transition-transform duration-300 ease-editorial;
+  }
+  :is(a, button):hover > .arrow-nudge,
+  :is(a, button):focus-visible > .arrow-nudge,
+  .group:hover .arrow-nudge {
+    transform: translateX(4px);
+  }
+
+  /* Bento card: cursor-tracked gold glow that lives only on the 1px border. */
+  .glow-card {
+    --mx: 50%;
+    --my: 50%;
+    --glow: 0;
+    position: relative;
+    isolation: isolate;
+  }
+  .glow-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    padding: 1px;
+    border-radius: inherit;
+    background: radial-gradient(
+      420px circle at var(--mx) var(--my),
+      color-mix(in oklab, var(--color-gold) 95%, transparent),
+      color-mix(in oklab, var(--color-gold) 25%, transparent) 40%,
+      transparent 70%
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    opacity: var(--glow);
+    transition: opacity 0.4s var(--ease-editorial);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .glow-card:hover,
+  .glow-card:focus-within {
+    --glow: 1;
+  }
+
+  /* Hero media: sharp chamfered mask, no soft rounding. */
+  .media-mask {
+    clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%, 0 9%);
+  }
+
+  /* Editorial plates — abstract, typographic figure art instead of stock photos. */
+  .plate {
+    @apply relative overflow-hidden bg-midnight;
+  }
+  .plate-rings {
+    background-image:
+      repeating-radial-gradient(circle at 68% 42%, transparent 0 13px, rgb(197 160 89 / 0.5) 13px 14px),
+      radial-gradient(circle at 68% 42%, rgb(197 160 89 / 0.25), transparent 55%);
+  }
+  .plate-grid {
+    background-image:
+      linear-gradient(rgb(248 250 252 / 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(248 250 252 / 0.08) 1px, transparent 1px),
+      radial-gradient(ellipse at 30% 70%, rgb(197 160 89 / 0.35), transparent 50%);
+    background-size: 24px 24px, 24px 24px, 100% 100%;
+  }
+  .plate-helix {
+    background-image:
+      repeating-linear-gradient(115deg, transparent 0 18px, rgb(248 250 252 / 0.09) 18px 19px),
+      repeating-linear-gradient(65deg, transparent 0 18px, rgb(197 160 89 / 0.35) 18px 19px);
+  }
+  .plate-strata {
+    background-image: repeating-linear-gradient(
+      172deg,
+      var(--color-midnight) 0 10px,
+      var(--color-midnight-800) 10px 22px,
+      rgb(197 160 89 / 0.35) 22px 23px
+    );
+  }
+  .plate-dots {
+    background-image: radial-gradient(rgb(248 250 252 / 0.28) 1px, transparent 1.5px);
+    background-size: 14px 14px;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Motion preferences
+   ------------------------------------------------------------------------- */
+[data-media][data-paused] * {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Header components
+   ------------------------------------------------------------------------- */
+@layer components {
+  .nav-trigger {
+    @apply relative flex cursor-pointer items-center gap-1.5 px-4 text-[0.875rem] font-medium text-midnight/75 transition-colors hover:text-midnight aria-expanded:text-midnight;
+  }
+  .nav-trigger::after {
+    content: '';
+    @apply absolute inset-x-4 bottom-0 h-px origin-left scale-x-0 bg-gold transition-transform duration-500 ease-editorial;
+  }
+  .nav-trigger[aria-expanded='true']::after {
+    @apply scale-x-100;
+  }
+
+  .mega-panel {
+    @apply invisible absolute inset-x-0 top-full hidden lg:block -translate-y-2 border-t border-b border-midnight/10 bg-paper opacity-0 shadow-[0_32px_64px_-32px_rgb(10_25_47/0.35)] transition-[opacity,translate,visibility] duration-300 ease-editorial;
+  }
+  .mega-panel[data-open] {
+    @apply visible translate-y-0 opacity-100;
+  }
+
+  .mega-link {
+    @apply flex items-baseline justify-between gap-4 border-b border-midnight/[0.07] py-2.5 text-[0.9375rem] text-midnight/85 transition-colors hover:text-midnight;
+  }
+  .mega-link::after {
+    content: '→';
+    @apply -translate-x-1 text-bronze opacity-0 transition duration-300 ease-editorial;
+  }
+  .mega-link:hover::after,
+  .mega-link:focus-visible::after {
+    @apply translate-x-0 opacity-100;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Feed components
+   ------------------------------------------------------------------------- */
+@layer components {
+  .feed-chip {
+    @apply cursor-pointer border border-transparent px-3 py-1.5 text-[0.75rem] font-medium text-muted transition-colors duration-300 hover:text-midnight aria-pressed:border-midnight aria-pressed:text-midnight;
+  }
+  .feed-item[hidden] {
+    display: none;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Progressive-enhancement motion (only when JS has booted)
+   ------------------------------------------------------------------------- */
+.js [data-reveal] {
+  transition:
+    opacity 0.9s var(--ease-editorial) var(--reveal-delay, 0ms),
+    translate 0.9s var(--ease-editorial) var(--reveal-delay, 0ms);
+}
+.js [data-reveal]:not([data-visible]) {
+  opacity: 0;
+  translate: 0 24px;
+}
+.js [data-stats]:not([data-visible]) [data-bar] {
+  transform: scaleX(0);
+}
+.js [data-stats]:not([data-visible]) [data-bar='y'] {
+  transform: scaleY(0);
+}

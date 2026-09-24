@@ -1,0 +1,71 @@
+<!-- Mobile navigation: native <dialog> gives focus containment, Esc-to-close and top-layer stacking. -->
+<dialog
+  id="mobile-nav"
+  data-mobile-nav
+  aria-label="Site menu"
+  class="m-0 h-dvh max-h-none w-full max-w-none bg-paper p-0 text-midnight opacity-0 transition-[opacity,display,overlay] transition-discrete duration-300 ease-editorial backdrop:bg-midnight/30 open:opacity-100 starting:open:opacity-0 lg:hidden"
+>
+  <div class="flex h-full flex-col">
+    <div class="container-editorial flex h-[4.5rem] shrink-0 items-center justify-between border-b border-midnight/10">
+      <span class="font-serif text-[1.35rem] font-medium">Faculty of Science</span>
+      <button type="button" data-mobile-close class="grid size-10 place-items-center" autofocus>
+        <span class="sr-only">Close menu</span>
+        <svg aria-hidden="true" viewBox="0 0 20 20" class="size-5"><path d="m4 4 12 12M16 4 4 16" stroke="currentColor" stroke-width="1.25"/></svg>
+      </button>
+    </div>
+
+    <nav aria-label="Primary" class="container-editorial flex-1 overflow-y-auto py-6">
+      <ul class="divide-y divide-midnight/10 border-b border-midnight/10">
+        <li>
+          <details class="group" name="mobile-nav">
+            <summary class="flex cursor-pointer list-none items-center justify-between py-5 font-serif text-[1.75rem] leading-none [&::-webkit-details-marker]:hidden">
+              Academics
+              <span aria-hidden="true" class="text-xl text-bronze transition-transform duration-300 group-open:rotate-45">+</span>
+            </summary>
+            <ul class="grid gap-3 pb-6 pl-1 text-[0.9375rem] text-midnight/80">
+              <li><a href="/academics">All programmes</a></li>
+              <li><a href="/academics/undergraduate">Undergraduate</a></li>
+              <li><a href="/academics/graduate">Graduate &amp; Doctoral</a></li>
+              <li><a href="/admissions/apply" class="text-bronze">Admissions 2027 →</a></li>
+            </ul>
+          </details>
+        </li>
+        <li>
+          <details class="group" name="mobile-nav">
+            <summary class="flex cursor-pointer list-none items-center justify-between py-5 font-serif text-[1.75rem] leading-none [&::-webkit-details-marker]:hidden">
+              Research
+              <span aria-hidden="true" class="text-xl text-bronze transition-transform duration-300 group-open:rotate-45">+</span>
+            </summary>
+            <ul class="grid gap-3 pb-6 pl-1 text-[0.9375rem] text-midnight/80">
+              <li><a href="/research">Research overview</a></li>
+              <li><a href="/research/institutes">Institutes</a></li>
+              <li><a href="/research/facilities">Core facilities</a></li>
+              <li><a href="/research/atlas">Research Atlas</a></li>
+            </ul>
+          </details>
+        </li>
+        <li>
+          <details class="group" name="mobile-nav">
+            <summary class="flex cursor-pointer list-none items-center justify-between py-5 font-serif text-[1.75rem] leading-none [&::-webkit-details-marker]:hidden">
+              Campus Life
+              <span aria-hidden="true" class="text-xl text-bronze transition-transform duration-300 group-open:rotate-45">+</span>
+            </summary>
+            <ul class="grid gap-3 pb-6 pl-1 text-[0.9375rem] text-midnight/80">
+              <li><a href="/campus/societies">Societies &amp; clubs</a></li>
+              <li><a href="/campus/housing">Housing</a></li>
+              <li><a href="/visit/open-days">Open days</a></li>
+              <li><a href="/visit/maps">Maps &amp; directions</a></li>
+            </ul>
+          </details>
+        </li>
+        <li><a href="/about" class="block py-5 font-serif text-[1.75rem] leading-none">About</a></li>
+      </ul>
+    </nav>
+
+    <div class="container-editorial shrink-0 border-t border-midnight/10 py-5">
+      <a href="/portal/login" class="flex w-full items-center justify-center gap-2 border border-midnight py-3.5 text-sm font-medium">
+        Student Portal <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</dialog>

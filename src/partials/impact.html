@@ -1,0 +1,130 @@
+<!-- =====================================================================
+     Impact — bento grid of live institutional statistics.
+     Behaviour: src/js/modules/stats.js, src/js/modules/glow.js
+     Numbers in markup are the real values (no-JS / SEO safe); JS animates to them.
+     Set data-live-endpoint on the section to poll a JSON feed: { "publications": 4813, "updated": "ISO date" }
+     Remove data-live-demo in production (it simulates new publications for demonstration).
+     ===================================================================== -->
+<section id="impact" aria-labelledby="impact-title" class="border-t border-midnight/10 bg-paper-dim/60 py-24 lg:py-32" data-stats data-live-endpoint="" data-live-demo>
+  <div class="container-editorial">
+    <header class="grid gap-8 lg:grid-cols-12 lg:items-end" data-reveal>
+      <div class="lg:col-span-7">
+        <p class="section-index">02 — Institutional Impact</p>
+        <h2 id="impact-title" class="mt-6 font-serif text-[clamp(2.4rem,4.6vw,4.25rem)] leading-[1] tracking-[-0.02em] text-balance">
+          Authority, <em class="text-bronze italic">measured</em> in discovery.
+        </h2>
+      </div>
+      <div class="lg:col-span-4 lg:col-start-9">
+        <p class="text-[0.9375rem] leading-relaxed text-muted">
+          Independent indicators of the Faculty’s research output, global reach and graduate outcomes, refreshed as new records are indexed.
+        </p>
+        <a href="/about/impact-report" class="group mt-5 inline-flex items-center gap-2 text-sm font-medium">
+          <span class="link-rule">Methodology &amp; sources</span> <span class="arrow-nudge text-bronze" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </header>
+
+    <div class="mt-16 grid gap-4 md:grid-cols-6 lg:grid-cols-12 lg:gap-5">
+      <!-- Publications -->
+      <article data-glow data-reveal class="glow-card flex flex-col justify-between border border-midnight/10 bg-paper p-7 sm:p-9 md:col-span-6 lg:col-span-7 lg:row-span-2" aria-labelledby="stat-pubs-label">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h3 id="stat-pubs-label" class="eyebrow">Publications</h3>
+          <p class="flex items-center gap-2 text-[0.75rem] text-muted">
+            <span class="flex items-center gap-1.5 border border-midnight/10 px-2 py-0.5 font-semibold tracking-wide text-midnight uppercase">
+              <span aria-hidden="true" class="size-1.5 animate-pulse-dot rounded-full bg-gold"></span>Live
+            </span>
+            Updated <time data-live-updated datetime="2026-09-24">today</time>
+          </p>
+        </div>
+
+        <div class="mt-10">
+          <p class="font-serif text-[clamp(4.25rem,10vw,8.5rem)] leading-[0.85] tracking-[-0.03em] tabular-nums">
+            <span data-count="4812" data-live-key="publications">4,812</span>
+          </p>
+          <p class="mt-5 max-w-md text-[0.9375rem] leading-relaxed text-muted">
+            Peer-reviewed articles since 2021, with <strong class="font-semibold text-midnight">38%</strong> appearing in top-decile journals by field.
+          </p>
+        </div>
+
+        <figure class="mt-12">
+          <figcaption class="sr-only">Publications per year: 2021, 612; 2022, 704; 2023, 781; 2024, 856; 2025, 902; 2026 to date, 957.</figcaption>
+          <ol aria-hidden="true" class="flex h-40 items-end gap-3 border-b border-midnight/15 sm:gap-5">
+            <li class="flex h-full flex-1 flex-col justify-end"><span data-bar="y" class="block origin-bottom bg-midnight/15 transition-transform duration-1000 ease-editorial" style="height: 64%"></span></li>
+            <li class="flex h-full flex-1 flex-col justify-end"><span data-bar="y" class="block origin-bottom bg-midnight/20 transition-transform delay-75 duration-1000 ease-editorial" style="height: 73.5%"></span></li>
+            <li class="flex h-full flex-1 flex-col justify-end"><span data-bar="y" class="block origin-bottom bg-midnight/30 transition-transform delay-150 duration-1000 ease-editorial" style="height: 81.6%"></span></li>
+            <li class="flex h-full flex-1 flex-col justify-end"><span data-bar="y" class="block origin-bottom bg-midnight/45 transition-transform delay-200 duration-1000 ease-editorial" style="height: 89.4%"></span></li>
+            <li class="flex h-full flex-1 flex-col justify-end"><span data-bar="y" class="block origin-bottom bg-midnight/70 transition-transform delay-300 duration-1000 ease-editorial" style="height: 94.2%"></span></li>
+            <li class="flex h-full flex-1 flex-col justify-end"><span data-bar="y" data-live-bar class="block origin-bottom bg-gold transition-[transform,height] delay-500 duration-1000 ease-editorial" style="height: 100%"></span></li>
+          </ol>
+          <ol aria-hidden="true" class="mt-3 flex gap-3 font-mono text-[0.6875rem] text-muted tabular-nums sm:gap-5">
+            <li class="flex-1">2021</li><li class="flex-1">2022</li><li class="flex-1">2023</li><li class="flex-1">2024</li><li class="flex-1">2025</li><li class="flex-1 text-bronze">2026 YTD</li>
+          </ol>
+        </figure>
+      </article>
+
+      <!-- Research labs -->
+      <article data-glow data-reveal style="--reveal-delay: 80ms" class="glow-card border border-midnight/10 bg-paper p-7 sm:p-9 md:col-span-3 lg:col-span-5" aria-labelledby="stat-labs-label">
+        <h3 id="stat-labs-label" class="eyebrow">Research Laboratories</h3>
+        <p class="mt-6 flex items-baseline gap-4">
+          <span class="font-serif text-7xl leading-none tracking-[-0.03em] tabular-nums" data-count="62">62</span>
+          <span class="text-sm text-muted">across four institutes</span>
+        </p>
+        <div aria-hidden="true" class="mt-8 flex h-1.5 gap-0.5">
+          <span class="bg-midnight" style="flex: 18"></span>
+          <span class="bg-midnight/60" style="flex: 16"></span>
+          <span class="bg-midnight/35" style="flex: 15"></span>
+          <span class="bg-gold" style="flex: 13"></span>
+        </div>
+        <dl class="mt-5 grid grid-cols-2 gap-x-6 gap-y-2.5 text-[0.8125rem]">
+          <div class="flex justify-between border-b border-midnight/[0.07] pb-2"><dt class="text-muted">Quantum Materials</dt><dd class="font-medium tabular-nums">18</dd></div>
+          <div class="flex justify-between border-b border-midnight/[0.07] pb-2"><dt class="text-muted">Genomic Medicine</dt><dd class="font-medium tabular-nums">16</dd></div>
+          <div class="flex justify-between border-b border-midnight/[0.07] pb-2"><dt class="text-muted">Climate &amp; Earth</dt><dd class="font-medium tabular-nums">15</dd></div>
+          <div class="flex justify-between border-b border-midnight/[0.07] pb-2"><dt class="text-muted">Mathematical Sci.</dt><dd class="font-medium tabular-nums">13</dd></div>
+        </dl>
+      </article>
+
+      <!-- International partners -->
+      <article data-glow data-reveal style="--reveal-delay: 160ms" class="glow-card border border-midnight/10 bg-paper p-7 sm:p-9 md:col-span-3 lg:col-span-5" aria-labelledby="stat-partners-label">
+        <h3 id="stat-partners-label" class="eyebrow">International Partners</h3>
+        <p class="mt-6 flex items-baseline gap-4">
+          <span class="font-serif text-7xl leading-none tracking-[-0.03em] tabular-nums"><span data-count="180">180</span><span class="text-bronze">+</span></span>
+          <span class="text-sm text-muted">institutions, 46 countries</span>
+        </p>
+        <dl class="mt-8 space-y-3 text-[0.8125rem]">
+          <div class="grid grid-cols-[7.5rem_1fr_2rem] items-center gap-3"><dt class="text-muted">Europe</dt><dd aria-hidden="true" class="h-px bg-midnight/10"><span data-bar class="block h-px origin-left bg-midnight transition-transform duration-1000 ease-editorial" style="width: 100%"></span></dd><dd class="text-right font-medium tabular-nums">72</dd></div>
+          <div class="grid grid-cols-[7.5rem_1fr_2rem] items-center gap-3"><dt class="text-muted">Americas</dt><dd aria-hidden="true" class="h-px bg-midnight/10"><span data-bar class="block h-px origin-left bg-midnight transition-transform delay-100 duration-1000 ease-editorial" style="width: 57%"></span></dd><dd class="text-right font-medium tabular-nums">41</dd></div>
+          <div class="grid grid-cols-[7.5rem_1fr_2rem] items-center gap-3"><dt class="text-muted">Asia-Pacific</dt><dd aria-hidden="true" class="h-px bg-midnight/10"><span data-bar class="block h-px origin-left bg-midnight transition-transform delay-200 duration-1000 ease-editorial" style="width: 54%"></span></dd><dd class="text-right font-medium tabular-nums">39</dd></div>
+          <div class="grid grid-cols-[7.5rem_1fr_2rem] items-center gap-3"><dt class="text-muted">Africa &amp; Middle East</dt><dd aria-hidden="true" class="h-px bg-midnight/10"><span data-bar class="block h-px origin-left bg-gold transition-transform delay-300 duration-1000 ease-editorial" style="width: 39%"></span></dd><dd class="text-right font-medium tabular-nums">28</dd></div>
+        </dl>
+      </article>
+
+      <!-- Employment rate -->
+      <article data-glow data-reveal style="--reveal-delay: 120ms" class="glow-card on-dark grid gap-10 bg-midnight p-7 text-paper sm:p-9 md:col-span-6 lg:col-span-12 lg:grid-cols-12 lg:items-end" aria-labelledby="stat-employment-label">
+        <div class="lg:col-span-5">
+          <h3 id="stat-employment-label" class="text-[0.6875rem] font-semibold tracking-eyebrow text-gold uppercase">Graduate Employment Rate</h3>
+          <p class="mt-6 font-serif text-[clamp(4rem,8vw,7rem)] leading-[0.85] tracking-[-0.03em] tabular-nums">
+            <span data-count="94.6" data-decimals="1">94.6</span><span class="text-gold">%</span>
+          </p>
+          <p class="mt-5 max-w-sm text-[0.9375rem] leading-relaxed text-paper/65">
+            of graduates in employment or further study within six months of completing their degree.
+          </p>
+        </div>
+
+        <div class="lg:col-span-7">
+          <div aria-hidden="true" class="relative h-px bg-paper/15">
+            <span data-bar class="absolute inset-y-0 left-0 origin-left bg-gold transition-transform duration-[1400ms] ease-editorial" style="width: 94.6%"></span>
+            <span class="absolute -top-1.5 h-3.5 w-px bg-paper/40" style="left: 80%"></span>
+          </div>
+          <p aria-hidden="true" class="mt-2 text-right text-[0.6875rem] text-paper/45" style="padding-right: 20%">National average 80%</p>
+
+          <dl class="mt-8 grid gap-6 sm:grid-cols-3">
+            <div class="border-t border-paper/15 pt-4"><dt class="text-[0.8125rem] text-paper/60">Industry &amp; R&amp;D</dt><dd class="mt-1 font-serif text-3xl tabular-nums">40.8%</dd></div>
+            <div class="border-t border-paper/15 pt-4"><dt class="text-[0.8125rem] text-paper/60">Doctoral &amp; further study</dt><dd class="mt-1 font-serif text-3xl tabular-nums">32.9%</dd></div>
+            <div class="border-t border-paper/15 pt-4"><dt class="text-[0.8125rem] text-paper/60">Public sector &amp; education</dt><dd class="mt-1 font-serif text-3xl tabular-nums">20.9%</dd></div>
+          </dl>
+          <p class="mt-6 text-[0.6875rem] text-paper/40">Source: Graduate Outcomes Survey, class of 2025 (n = 1,284).</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>

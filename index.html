@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en" class="scroll-pt-28">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Faculty of Science — Northvale University</title>
+    <meta
+      name="description"
+      content="The Faculty of Science at Northvale University: undergraduate and graduate programmes, 62 research laboratories, and international partnerships across 46 countries."
+    />
+    <meta name="theme-color" content="#0A192F" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="/src/styles/main.css" />
+    <script>
+      // Enable motion-enhanced styles before first paint; fall back to static content if JS fails to boot.
+      document.documentElement.classList.add('js');
+      setTimeout(() => window.__fsBooted || document.documentElement.classList.remove('js'), 3000);
+    </script>
+  </head>
+  <body class="min-h-dvh">
+    <a
+      href="#main"
+      class="sr-only z-[100] bg-midnight px-5 py-3 text-sm font-medium text-paper focus:not-sr-only focus:fixed focus:top-4 focus:left-4"
+      >Skip to main content</a
+    >
+
+    <include src="header.html" />
+
+    <main id="main" tabindex="-1" class="focus:outline-none">
+      <include src="hero.html" />
+      <include src="impact.html" />
+      <include src="feed.html" />
+    </main>
+
+    <include src="footer.html" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </body>
+</html>
