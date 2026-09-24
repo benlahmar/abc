@@ -7,8 +7,9 @@ Le portail est alimenté par **11 collections**. Leur structure est définie **u
 - le front-end (`apps/web`) en déduit ses types TypeScript ;
 - le futur back-office validera ses formulaires avec les mêmes schémas.
 
-Aujourd'hui, les données sont des fichiers JSON dans `apps/api/data/`. Ils sont relus à chaud dès qu'ils
-changent : pas besoin de redémarrer l'API.
+Les **actualités** sont en base de données et se gèrent dans le back-office (`/admin`), avec leur circuit de
+publication. Les autres collections sont encore des fichiers JSON dans `apps/api/data/`, relus à chaud : pas
+besoin de redémarrer l'API. Elles passeront en base dans les prochaines phases.
 
 ## API (lecture)
 
@@ -17,7 +18,7 @@ changent : pas besoin de redémarrer l'API.
 | GET | `/api/v1/health` | `{ status, uptime }` |
 | GET | `/api/v1/{collection}` | la collection entière (`site`, `hero`, `programmes`, `stats`, `news`, `services`, `dean`, `faculty`, `testimonials`, `gallery`, `explore`) |
 | GET | `/api/v1/news?category=&limit=&offset=` | `{ categories, counts, items, total, limit, offset }`, trié par date décroissante (`limit` ≤ 100) |
-| GET | `/api/v1/news/{id}` | `{ item, category }`, ou 404 |
+| GET | `/api/v1/news/{id}` | `{ item, category }`, ou 404 (`id` = identifiant d'URL du contenu) |
 | POST | `/api/v1/contact` | `{ name, email, phone?, subject, message }` → 201. Erreurs : 422 `{ error: { fields } }`, 413 si le corps est trop volumineux, 429 au-delà de 5 messages par IP en 15 min |
 
 Les messages de contact sont enregistrés dans `apps/api/storage/messages.jsonl`, un message JSON par ligne
@@ -36,6 +37,32 @@ Règles communes :
 - Les dates sont au format ISO `AAAA-MM-JJ`.
 - Un texte en arabe est détecté automatiquement : il s'affiche de droite à gauche, avec une police arabe.
 - Les champs `image` et `photo` sont optionnels. S'ils sont vides, un visuel graphique aux couleurs FSBM les remplace.
+
+## API d'administration (`/api/admin`)
+
+Toutes les routes exigent une session (cookie `fsbm_admin`), sauf la connexion. Les requêtes d'écriture doivent
+porter l'en-tête `x-fsbm-csrf: 1` et venir de la même origine. Les réponses ne sont jamais mises en cache.
+
+| Méthode | Route | Rôle |
+| --- | --- | --- |
+| POST | `/auth/login` · `/auth/logout` · `/auth/password` | Connexion, déconnexion, changement de mot de passe |
+| GET | `/auth/me` | Utilisateur connecté et ses rôles par catégorie |
+| GET | `/dashboard` | « En attente de mon action », mes brouillons, programmés, activité récente |
+| GET / POST | `/contents` | Liste filtrée (`status` — dont `trash` pour la corbeille —, `category`, `q`, `mine=1`) · création d'un brouillon |
+| GET / PATCH / DELETE | `/contents/{id}` | Lecture (avec les permissions de l'utilisateur) · modification (`{ version, data }`) · suppression définitive (admin, corbeille) |
+| POST | `/contents/{id}/transitions` | `{ action, comment, version }` : `submit`, `approve_review`, `return`, `validate`, `publish_urgent`, `withdraw`, `archive`, `restore`, `reopen`, `trash` |
+| POST | `/contents/{id}/revision` · `/contents/{id}/restore` | Révision d'un contenu publié · sortie de corbeille (admin) |
+| POST | `/uploads` | Image (JPEG, PNG, WebP) ou PDF, servi ensuite sous `/uploads/…` |
+| GET / POST / PATCH | `/categories`, `/categories/{id}` | Catégories et circuit (admin pour l'écriture) |
+| POST / DELETE | `/categories/{id}/members`, `/categories/{id}/members/{userId}/{role}` | Affectation des rôles (admin) |
+| GET / POST / PATCH | `/users`, `/users/{id}`, `/users/{id}/reset-password` | Comptes (admin) |
+| GET | `/audit` | Journal d'audit (admin) |
+
+Codes utiles : 401 non connecté, 403 action non permise, 409 conflit de version (`stale`) ou identifiant déjà pris,
+422 validation (`{ error: { fields } }`), 429 trop de tentatives de connexion.
+
+Seuls les contenus **publiés** dont la date de publication est passée, hors corbeille et hors révision en cours,
+apparaissent dans `/api/v1/news`.
 
 ## `site` — identité et coordonnées
 
@@ -66,7 +93,9 @@ L'élément `featured: true` occupe la grande carte. Le hero affiche les trois p
 
 ## `news` — Actualités et annonces
 
-- `categories[]` : `{ id, label }`. Seules les catégories qui contiennent au moins une actualité apparaissent dans les filtres.
+Géré dans le back-office. La réponse publique garde la même forme qu'avant :
+
+- `categories[]` : `{ id, label }`, issues des catégories du back-office. Seules celles qui contiennent au moins une actualité publiée apparaissent dans les filtres.
 - `items[]` : `{ id, title, excerpt, body[] (paragraphes de la page détail), category, date, image, url, featured, attachments[] }`.
   - `featured: true` place l'actualité en « une » ; sinon, c'est la plus récente.
   - `attachments[]` : `{ label, url }` (PDF des listes, etc.), dans un volet repliable sur l'accueil et en grille sur la page détail `/actualites/{id}`.

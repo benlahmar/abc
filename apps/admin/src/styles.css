@@ -1,0 +1,47 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-midnight: #0b1d3a;
+  --color-midnight-950: #06112a;
+  --color-midnight-800: #13294f;
+  --color-brand: #2a5494;
+  --color-brand-700: #1f4279;
+  --color-brand-50: #eef3fb;
+  --color-gold: #c5a059;
+  --color-canvas: #f4f6f9;
+  --color-line: #e2e7ee;
+  --color-muted: #5f6b7a;
+
+  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-canvas font-sans text-[0.875rem] text-midnight;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand;
+  }
+  ::selection {
+    @apply bg-brand/20;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg border border-line bg-white;
+  }
+  .label {
+    @apply mb-1.5 block text-[0.8125rem] font-medium text-midnight;
+  }
+  .input {
+    @apply block w-full rounded-md border border-line bg-white px-3 py-2 text-[0.875rem] text-midnight placeholder:text-muted/60 transition-colors focus:border-brand focus:ring-2 focus:ring-brand/15 focus:outline-none disabled:bg-canvas disabled:text-muted aria-invalid:border-red-600;
+  }
+  .table-head {
+    @apply border-b border-line bg-canvas/60 text-left text-[0.75rem] font-semibold tracking-wide text-muted uppercase;
+  }
+}

@@ -6,6 +6,8 @@ export class HttpError extends Error {
     readonly status: number,
     readonly code: string,
     message: string,
+    /** Erreurs par champ (formulaires). */
+    readonly fields?: Record<string, string>,
   ) {
     super(message);
     this.name = 'HttpError';
@@ -15,7 +17,7 @@ export class HttpError extends Error {
 /** Format d'erreur unique : { error: { code, message } }. Les détails internes ne sont jamais exposés. */
 export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   if (error instanceof HttpError) {
-    res.status(error.status).json({ error: { code: error.code, message: error.message } });
+    res.status(error.status).json({ error: { code: error.code, message: error.message, ...(error.fields ? { fields: error.fields } : {}) } });
     return;
   }
   // Erreurs de lecture du corps (express.json) : corps trop volumineux, JSON mal formé…
@@ -24,6 +26,12 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
     const code = status === 413 ? 'payload_too_large' : 'invalid_request';
     const message = status === 413 ? 'Le message est trop volumineux.' : 'Requête invalide.';
     res.status(status).json({ error: { code, message } });
+    return;
+  }
+  // Violation d'unicité PostgreSQL (e-mail ou identifiant déjà utilisé…).
+  const pgCode = (error as { code?: string; cause?: { code?: string } }).cause?.code ?? (error as { code?: string }).code;
+  if (pgCode === '23505') {
+    res.status(409).json({ error: { code: 'conflict', message: 'Cette valeur est déjà utilisée.' } });
     return;
   }
   if (error instanceof ContentError) {

@@ -51,6 +51,12 @@ export class RateLimiter {
     return entry.count <= this.max;
   }
 
+  /** Vrai si la clé a dépassé la limite (sans compter cette consultation). */
+  isLimited(key: string, now = Date.now()): boolean {
+    const entry = this.hits.get(key);
+    return Boolean(entry && entry.resetAt > now && entry.count >= this.max);
+  }
+
   private prune(now: number) {
     for (const [key, entry] of this.hits) if (entry.resetAt <= now) this.hits.delete(key);
   }

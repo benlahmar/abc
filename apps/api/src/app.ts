@@ -8,17 +8,39 @@ import type { ContentRepository } from './repository.js';
 import { contentRouter } from './routes/content.js';
 import { contactRouter } from './routes/contact.js';
 import type { MessageStore } from './messages.js';
+import type { Db } from './db/index.js';
+import { NewsService } from './news.js';
+import { adminRouter } from './admin/router.js';
+import { serveUploads } from './admin/uploads.js';
 
 export interface AppOptions {
   repo: ContentRepository;
   /** Stockage des messages du formulaire de contact. */
   messages: MessageStore;
+  /** Base de données (actualités, back-office). */
+  db: Db;
+  /** Dossier des fichiers téléversés depuis le back-office. */
+  uploadsDir: string;
   corsOrigins?: string[];
   /** Dossier du front-end compilé à servir (production). */
   webDist?: string | null;
+  /** Dossier du back-office compilé, servi sur /admin (production). */
+  adminDist?: string | null;
+  secureCookies?: boolean;
+  sessionTtlHours?: number;
 }
 
-export function createApp({ repo, messages, corsOrigins = [], webDist = null }: AppOptions): Express {
+export function createApp({
+  repo,
+  messages,
+  db,
+  uploadsDir,
+  corsOrigins = [],
+  webDist = null,
+  adminDist = null,
+  secureCookies = false,
+  sessionTtlHours = 12,
+}: AppOptions): Express {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
@@ -55,10 +77,20 @@ export function createApp({ repo, messages, corsOrigins = [], webDist = null }: 
     res.set('Cache-Control', 'no-store');
     res.json({ status: 'ok', uptime: Math.round(process.uptime()) });
   });
-  api.use(contentRouter(repo));
+  api.use(contentRouter(repo, new NewsService(db)));
   api.use((_req, _res, next) => next(new HttpError(404, 'not_found', 'Ressource introuvable')));
 
   app.use('/api/v1', api);
+  app.use('/api/admin', adminRouter(db, { uploadsDir, secureCookies, sessionTtlHours }));
+  app.use('/uploads', serveUploads(uploadsDir), (_req, res) => void res.status(404).end());
+
+  if (adminDist) {
+    app.use('/admin', express.static(adminDist, { index: false }));
+    app.get(['/admin', '/admin/{*path}'], (_req, res) => {
+      res.setHeader('Cache-Control', 'no-cache');
+      res.sendFile(join(adminDist, 'index.html'));
+    });
+  }
 
   if (webDist) {
     const assetsDir = join(webDist, 'assets');

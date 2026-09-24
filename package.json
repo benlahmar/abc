@@ -8,11 +8,12 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "concurrently -k -n api,web -c yellow,cyan \"npm run dev -w @fsbm/api\" \"npm run dev -w @fsbm/web\"",
-    "build": "npm run build -w @fsbm/web && npm run build -w @fsbm/api",
+    "dev": "concurrently -k -n api,web,admin -c yellow,cyan,magenta \"npm run dev -w @fsbm/api\" \"npm run dev -w @fsbm/web\" \"npm run dev -w @fsbm/admin\"",
+    "build": "npm run build -w @fsbm/web && npm run build -w @fsbm/admin && npm run build -w @fsbm/api",
     "start": "npm run start -w @fsbm/api",
     "test": "npm run test --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "seed:demo": "npm run seed:demo -w @fsbm/api"
   },
   "engines": {
     "node": ">=20.19"
