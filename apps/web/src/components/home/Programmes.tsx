@@ -28,7 +28,7 @@ export function Programmes() {
           <div className="lg:sticky lg:top-32">
             <Reveal>
               <p className="eyebrow flex items-center gap-4 text-muted">
-                <span className="text-bronze">02</span>
+                <span className="text-brand">03</span>
                 <span aria-hidden="true" className="h-px w-10 bg-gold" />
                 Formation
               </p>
@@ -90,7 +90,7 @@ export function Programmes() {
                 <span aria-hidden="true" className={cn('absolute bottom-[-1px] left-0 h-px w-full origin-left bg-gold transition-transform duration-700 ease-out-expo', active === i ? 'scale-x-100' : 'scale-x-0')} />
                 <span className="font-mono text-[0.75rem] text-muted" aria-hidden="true">{pad2(i + 1)}</span>
                 <span>
-                  <span className={cn('display block text-[clamp(1.9rem,3.6vw,3.35rem)] leading-none transition-[color,translate] duration-500 ease-out-expo', active === i && 'text-bronze lg:translate-x-2')}>
+                  <span className={cn('display block text-[clamp(1.9rem,3.6vw,3.35rem)] leading-none transition-[color,translate] duration-500 ease-out-expo', active === i && 'text-brand lg:translate-x-2')}>
                     {p.title}
                   </span>
                   <span className="mt-3 block max-w-lg text-[0.875rem] leading-relaxed text-muted lg:hidden">{p.description}</span>

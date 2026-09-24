@@ -53,7 +53,7 @@ export function ContactPage() {
 
             <dl className="mt-14 grid gap-8">
               <div className="flex gap-5">
-                <MapPin className="mt-1 size-5 shrink-0 text-bronze" />
+                <MapPin className="mt-1 size-5 shrink-0 text-brand" />
                 <div>
                   <dt className="eyebrow text-muted">Adresse</dt>
                   <dd className="mt-2 font-serif text-[1.4rem] leading-snug">
@@ -63,12 +63,12 @@ export function ContactPage() {
                   </dd>
                   <SmartLink href={MAPS_URL} className="group mt-3 inline-flex items-center gap-2 text-[0.8125rem] font-medium">
                     <span className="link-draw">Itinéraire</span>
-                    <ArrowUpRight className="size-3.5 text-bronze" />
+                    <ArrowUpRight className="size-3.5 text-brand" />
                   </SmartLink>
                 </div>
               </div>
               <div className="flex gap-5">
-                <Phone className="mt-1 size-5 shrink-0 text-bronze" />
+                <Phone className="mt-1 size-5 shrink-0 text-brand" />
                 <div>
                   <dt className="eyebrow text-muted">Téléphone</dt>
                   <dd className="mt-2 font-serif text-[1.4rem]">
@@ -77,7 +77,7 @@ export function ContactPage() {
                 </div>
               </div>
               <div className="flex gap-5">
-                <Mail className="mt-1 size-5 shrink-0 text-bronze" />
+                <Mail className="mt-1 size-5 shrink-0 text-brand" />
                 <div>
                   <dt className="eyebrow text-muted">E-mail</dt>
                   <dd className="mt-2 font-serif text-[1.4rem] break-all">

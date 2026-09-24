@@ -8,7 +8,7 @@ const noRetryOn404 = (failureCount: number, error: Error) =>
 export const useCollection = <N extends CollectionName>(name: N) =>
   useQuery({ queryKey: ['collection', name], queryFn: ({ signal }) => api.collection(name, signal) });
 
-export const NEWS_PAGE_SIZE = 7;
+export const NEWS_PAGE_SIZE = 6;
 
 /** Actualités paginées par catégorie (« Afficher plus » charge la page suivante). */
 export const useNewsFeed = (category: string) =>

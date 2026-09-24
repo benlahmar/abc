@@ -20,7 +20,7 @@ export function SectionHeader({ index, eyebrow, title, titleId, intro, action, t
     <Reveal as="header" className={cn('grid gap-8 lg:grid-cols-12 lg:items-end', className)}>
       <div className="lg:col-span-7">
         <p className={cn('eyebrow flex items-center gap-4', dark ? 'text-paper/55' : 'text-muted')}>
-          <span className={dark ? 'text-gold' : 'text-bronze'}>{index}</span>
+          <span className={dark ? 'text-gold' : 'text-brand'}>{index}</span>
           <span aria-hidden="true" className={cn('h-px w-10', dark ? 'bg-gold/60' : 'bg-gold')} />
           {eyebrow}
         </p>
@@ -40,5 +40,5 @@ export function SectionHeader({ index, eyebrow, title, titleId, intro, action, t
 
 /** Mot mis en valeur dans un titre (italique or). */
 export const Accent = ({ children, tone = 'light' }: { children: ReactNode; tone?: 'light' | 'dark' }) => (
-  <em className={cn('font-medium italic', tone === 'dark' ? 'text-gold' : 'text-bronze')}>{children}</em>
+  <em className={cn('font-medium italic', tone === 'dark' ? 'text-brand-light' : 'text-brand')}>{children}</em>
 );

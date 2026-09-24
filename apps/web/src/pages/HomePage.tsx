@@ -1,5 +1,6 @@
-import { Campus } from '../components/home/Campus';
+import { CampusMosaic } from '../components/home/CampusMosaic';
 import { Dean } from '../components/home/Dean';
+import { Explore } from '../components/home/Explore';
 import { Faculty } from '../components/home/Faculty';
 import { Hero } from '../components/home/Hero';
 import { JoinCta } from '../components/home/JoinCta';
@@ -16,13 +17,14 @@ export function HomePage() {
     <>
       <Hero />
       <QuickAccess />
+      <Explore />
       <Programmes />
       <KeyFigures />
-      <Campus />
       <News />
       <Dean />
       <Faculty />
       <Testimonials />
+      <CampusMosaic />
       <JoinCta />
     </>
   );

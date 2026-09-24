@@ -9,9 +9,9 @@ import { ErrorNote, Skeleton } from '../ui/States';
 
 const Figure = ({ stat, className }: { stat: Stat; className?: string }) => (
   <p className={cn('figure leading-[0.82]', className)}>
-    {stat.prefix && <span className="text-gold">{stat.prefix}</span>}
+    {stat.prefix && <span className="text-brand-light">{stat.prefix}</span>}
     <Counter value={stat.value} />
-    {stat.suffix && <span className="text-gold">{stat.suffix}</span>}
+    {stat.suffix && <span className="text-brand-light">{stat.suffix}</span>}
   </p>
 );
 
@@ -25,12 +25,12 @@ export function KeyFigures() {
   return (
     <section id="chiffres-cles" aria-labelledby="figures-title" className="on-dark grain relative isolate overflow-hidden bg-midnight py-28 text-paper lg:py-36">
       <div aria-hidden="true" className="absolute -top-60 -left-40 -z-10 size-[42rem] rounded-full bg-midnight-700/70 blur-[130px]" />
-      <div aria-hidden="true" className="absolute -right-40 -bottom-60 -z-10 size-[36rem] rounded-full bg-gold/10 blur-[130px]" />
+      <div aria-hidden="true" className="absolute -right-40 -bottom-60 -z-10 size-[36rem] rounded-full bg-brand/25 blur-[130px]" />
 
       <div className="container-x">
         <SectionHeader
           tone="dark"
-          index="03"
+          index="04"
           eyebrow={`Chiffres clés${data?.year ? ` ${data.year}` : ''}`}
           titleId="figures-title"
           title={

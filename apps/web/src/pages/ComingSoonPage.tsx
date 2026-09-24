@@ -20,7 +20,7 @@ export function ComingSoonPage({ title = 'Page en préparation', message }: { ti
           {message ?? 'Cette rubrique du nouveau portail de la FSBM est en cours de réalisation. Elle sera disponible très prochainement.'}
         </p>
         <div className="mt-11">
-          <ButtonLink href="/" variant="gold">
+          <ButtonLink href="/" variant="light">
             Retour à l’accueil
           </ButtonLink>
         </div>

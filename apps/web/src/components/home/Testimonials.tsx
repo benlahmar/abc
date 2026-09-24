@@ -36,7 +36,7 @@ function VideoCard({ video }: { video: Testimonial }) {
               className="size-full object-cover opacity-75 transition duration-[1.2s] ease-out-expo group-hover:scale-[1.04] group-hover:opacity-100"
             />
             <span className="absolute inset-0 grid place-items-center">
-              <span className="grid size-16 place-items-center rounded-full bg-gold text-midnight-950 transition-transform duration-500 ease-out-expo group-hover:scale-110">
+              <span className="grid size-16 place-items-center rounded-full bg-paper text-brand transition-transform duration-500 ease-out-expo group-hover:scale-110">
                 <Play className="ml-0.5 size-5" />
               </span>
             </span>

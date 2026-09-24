@@ -223,14 +223,14 @@ export function Header() {
               to="/portail-etudiant"
               className={cn(
                 'group relative hidden items-center gap-2.5 overflow-hidden border px-5 py-3 text-[0.8125rem] font-medium tracking-wide whitespace-nowrap transition-colors duration-500 sm:inline-flex',
-                solid ? 'border-midnight/70 hover:text-paper' : 'border-paper/40 hover:border-gold hover:text-midnight-950',
+                solid ? 'border-brand/70 text-brand hover:text-paper' : 'border-paper/40 hover:border-paper hover:text-midnight-950',
               )}
             >
               <span
                 aria-hidden="true"
-                className={cn('absolute inset-0 -z-10 origin-bottom scale-y-0 transition-transform duration-700 ease-out-expo group-hover:scale-y-100', solid ? 'bg-midnight' : 'bg-gold')}
+                className={cn('absolute inset-0 -z-10 origin-bottom scale-y-0 transition-transform duration-700 ease-out-expo group-hover:scale-y-100', solid ? 'bg-brand' : 'bg-paper')}
               />
-              <Lock className={cn('size-3.5 transition-colors', solid ? 'text-bronze group-hover:text-gold' : 'text-gold group-hover:text-midnight-950')} />
+              <Lock className={cn('size-3.5 transition-colors', solid ? 'text-brand group-hover:text-paper' : 'text-paper/80 group-hover:text-brand')} />
               Portail Étudiant
             </Link>
             <button

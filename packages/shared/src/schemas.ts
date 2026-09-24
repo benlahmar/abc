@@ -159,6 +159,31 @@ export const GallerySchema = z.object({
   ),
 });
 
+/** « La FSBM de l'intérieur » : onglets de cartes (départements, recherche, vie étudiante…). */
+export const ExploreSchema = z.object({
+  tabs: z
+    .array(
+      z.object({
+        id: text,
+        label: text,
+        /** Lien « Voir tout » affiché en dernière carte. */
+        more: z.object({ label: text, url: link }).optional(),
+        items: z.array(
+          z.object({
+            id: text,
+            title: text,
+            description: optionalText,
+            image: optionalText,
+            /** Motif de remplacement si pas de photo : rings, grid, helix, strata, dots, orbit. */
+            visual: z.enum(['rings', 'grid', 'helix', 'strata', 'dots', 'orbit']).optional(),
+            url: link,
+          }),
+        ),
+      }),
+    )
+    .min(1),
+});
+
 /** Sujets proposés dans le formulaire de contact. */
 export const contactSubjects = ['scolarite', 'formation', 'recherche', 'partenariat', 'autre'] as const;
 export const contactSubjectLabels: Record<(typeof contactSubjects)[number], string> = {
@@ -197,6 +222,7 @@ export const collections = {
   faculty: FacultySchema,
   testimonials: TestimonialsSchema,
   gallery: GallerySchema,
+  explore: ExploreSchema,
 } as const;
 
 export type CollectionName = keyof typeof collections;
@@ -224,6 +250,8 @@ export type Testimonial = Testimonials['items'][number];
 
 export type Gallery = z.infer<typeof GallerySchema>;
 export type GalleryItem = Gallery['items'][number];
+export type Explore = z.infer<typeof ExploreSchema>;
+export type ExploreTab = Explore['tabs'][number];
 export type ContactMessage = z.input<typeof ContactMessageSchema>;
 export type ContactSubject = (typeof contactSubjects)[number];
 
@@ -238,6 +266,7 @@ export interface CollectionMap {
   faculty: Faculty;
   testimonials: Testimonials;
   gallery: Gallery;
+  explore: Explore;
 }
 
 /** Réponse paginée de GET /api/v1/news. */

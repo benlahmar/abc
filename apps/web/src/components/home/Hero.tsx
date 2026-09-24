@@ -31,7 +31,7 @@ export function Hero() {
         )}
         <div className="absolute inset-0 bg-gradient-to-r from-midnight-950 via-midnight-950/85 to-midnight-950/35" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_60%_at_78%_32%,rgb(29_51_84/0.55),transparent_70%)]" />
-        <div className="absolute -right-48 -bottom-80 size-[52rem] rounded-full bg-gold/[0.13] blur-[150px]" />
+        <div className="absolute -right-48 -bottom-80 size-[52rem] rounded-full bg-brand/25 blur-[150px]" />
         <div className="absolute -top-40 -left-40 size-[34rem] rounded-full bg-midnight-700/60 blur-[120px]" />
         <Constellation className="absolute inset-0 size-full opacity-70" />
         <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-midnight-950 via-midnight-950/70 to-transparent" />
@@ -59,7 +59,7 @@ export function Hero() {
             </motion.p>
 
             <motion.div {...fade(0.75)} className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
-              <ButtonLink href="/formation" variant="gold">
+              <ButtonLink href="/formation" variant="light">
                 Découvrir nos formations
               </ButtonLink>
               <ButtonLink href="/pre-candidature" variant="outline-light">

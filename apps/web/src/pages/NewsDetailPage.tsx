@@ -76,7 +76,7 @@ export function NewsDetailPage() {
                 <p className="text-muted">Les documents officiels liés à cette annonce sont disponibles au téléchargement.</p>
               )}
               <Link to="/#actualites" className="group mt-8 inline-flex items-center gap-2.5 text-[0.875rem] font-medium">
-                <ArrowLeft className="size-3.5 text-bronze transition-transform duration-500 group-hover:-translate-x-1" />
+                <ArrowLeft className="size-3.5 text-brand transition-transform duration-500 group-hover:-translate-x-1" />
                 <span className="link-draw">Retour aux actualités</span>
               </Link>
             </div>
@@ -90,7 +90,7 @@ export function NewsDetailPage() {
                   {item.attachments.map((doc, i) => (
                     <li key={`${doc.url}-${i}`} className="border-r border-b border-midnight/10">
                       <SmartLink href={doc.url} className="group flex items-center gap-3 p-4 text-[0.875rem] transition-colors hover:bg-midnight hover:text-paper">
-                        <Download className="size-4 text-bronze group-hover:text-gold" />
+                        <Download className="size-4 text-brand group-hover:text-gold" />
                         {doc.label}
                         <span className="sr-only"> — {item.title}</span>
                       </SmartLink>

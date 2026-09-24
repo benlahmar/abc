@@ -29,7 +29,7 @@ npm start          # production : l'API sert aussi le front compilé, sur :4000
 ```
 apps/
   api/                  API Node.js / Express
-    data/*.json         contenu (10 collections), relu à chaud
+    data/*.json         contenu (11 collections), relu à chaud
     storage/            messages du formulaire de contact (non versionné)
     src/repository.ts   accès aux données (fichiers JSON aujourd'hui, base de données demain)
     src/routes/         GET /api/v1/{collection}, /news (filtre + pagination), /news/:id, POST /contact

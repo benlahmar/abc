@@ -63,7 +63,7 @@ export function ContactForm() {
   if (mutation.isSuccess) {
     return (
       <div ref={successRef} tabIndex={-1} role="status" className="border-t-2 border-gold bg-paper p-10 focus:outline-none">
-        <p className="eyebrow text-bronze">Message envoyé</p>
+        <p className="eyebrow text-brand">Message envoyé</p>
         <p className="display mt-5 text-[2.2rem] leading-tight">Merci, votre message a bien été reçu.</p>
         <p className="mt-4 max-w-md text-muted">Le service concerné de la Faculté vous répondra par e-mail dans les meilleurs délais.</p>
         <button type="button" onClick={() => mutation.reset()} className="mt-8 cursor-pointer text-[0.875rem] font-medium underline decoration-gold underline-offset-4">
@@ -150,7 +150,7 @@ export function ContactForm() {
         >
           <span aria-hidden="true" className="absolute inset-0 origin-bottom scale-y-0 bg-midnight-700 transition-transform duration-700 ease-out-expo group-hover:scale-y-100" />
           <span className="relative">{mutation.isPending ? 'Envoi en cours…' : 'Envoyer le message'}</span>
-          <span aria-hidden="true" className="relative grid size-10 place-items-center bg-gold text-midnight-950">
+          <span aria-hidden="true" className="relative grid size-10 place-items-center bg-brand text-paper">
             <ArrowRight className="size-3.5 transition-transform duration-500 group-hover:translate-x-0.5" />
           </span>
         </button>

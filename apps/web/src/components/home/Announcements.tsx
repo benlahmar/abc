@@ -38,7 +38,7 @@ export function Announcements() {
       onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && setHold(false)}
       className="relative overflow-hidden border border-paper/[0.12] bg-paper/[0.045] p-7 shadow-[0_40px_80px_-40px_rgb(0_0_0/0.6)] backdrop-blur-xl sm:p-8"
     >
-      <div aria-hidden="true" className="absolute -top-20 -right-20 size-48 rounded-full bg-gold/20 blur-3xl" />
+      <div aria-hidden="true" className="absolute -top-20 -right-20 size-48 rounded-full bg-brand/30 blur-3xl" />
 
       <div className="relative flex items-center justify-between gap-4">
         <p className="eyebrow flex items-center gap-2.5 text-gold">

@@ -27,7 +27,7 @@ describe('API de contenu', () => {
     expect(res.body.status).toBe('ok');
   });
 
-  it.each(['site', 'hero', 'programmes', 'stats', 'news', 'services', 'dean', 'faculty', 'testimonials', 'gallery'])(
+  it.each(['site', 'hero', 'programmes', 'stats', 'news', 'services', 'dean', 'faculty', 'testimonials', 'gallery', 'explore'])(
     'sert la collection %s (données valides)',
     async (name) => {
       const res = await request(app).get(`/api/v1/${name}`);

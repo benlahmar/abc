@@ -15,7 +15,7 @@ export function QuickAccess() {
       <div className="container-x py-16 lg:py-20">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <h2 id="quick-title" className="eyebrow flex items-center gap-4 text-muted">
-            <span className="text-bronze">Accès rapide</span>
+            <span className="text-brand">Accès rapide</span>
             <span aria-hidden="true" className="h-px w-10 bg-gold" />
             Services en ligne
           </h2>
@@ -33,7 +33,7 @@ export function QuickAccess() {
                   <span aria-hidden="true" className="absolute inset-0 translate-y-full bg-midnight transition-transform duration-700 ease-out-expo group-hover:translate-y-0 group-focus-visible:translate-y-0" />
                   {service.highlight && <span aria-hidden="true" className="absolute inset-x-0 top-0 h-[2px] bg-gold" />}
                   <span className="relative flex items-start justify-between">
-                    <Icon className="size-8 text-bronze transition-colors duration-500 group-hover:text-gold" />
+                    <Icon className="size-8 text-brand transition-colors duration-500 group-hover:text-gold" />
                     <span className="font-mono text-[0.6875rem] text-muted transition-colors duration-500 group-hover:text-paper/40" aria-hidden="true">
                       {pad2(i + 1)}
                     </span>
@@ -41,7 +41,7 @@ export function QuickAccess() {
                   <span className="relative mt-auto pt-10">
                     <span className="flex items-center justify-between gap-3">
                       <span className="font-serif text-[1.5rem] leading-tight transition-colors duration-500 group-hover:text-paper">{service.title}</span>
-                      <ArrowUpRight className={cn('size-4 shrink-0 text-bronze transition duration-500 ease-out-expo group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-gold')} />
+                      <ArrowUpRight className={cn('size-4 shrink-0 text-brand transition duration-500 ease-out-expo group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-gold')} />
                     </span>
                     {service.description && (
                       <span className="mt-2 block text-[0.8125rem] leading-relaxed text-muted transition-colors duration-500 group-hover:text-paper/60">

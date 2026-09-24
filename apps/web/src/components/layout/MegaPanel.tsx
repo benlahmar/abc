@@ -60,7 +60,7 @@ export function MegaPanel({ item, open, onNavigate }: MegaPanelProps) {
         ))}
 
         <aside className={cn('relative flex flex-col justify-between overflow-hidden border border-gold/25 p-8', columns.length === 1 ? 'col-span-4' : 'col-span-3')} aria-label={feature.eyebrow}>
-          <div aria-hidden="true" className="absolute -top-24 -right-24 size-64 rounded-full bg-gold/10 blur-3xl" />
+          <div aria-hidden="true" className="absolute -top-24 -right-24 size-64 rounded-full bg-brand/30 blur-3xl" />
           <div className="relative">
             <p className="eyebrow text-gold">{feature.eyebrow}</p>
             <p className="display mt-5 text-[1.65rem] leading-snug">{feature.title}</p>

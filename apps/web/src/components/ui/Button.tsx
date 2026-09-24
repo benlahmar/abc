@@ -3,11 +3,12 @@ import { cn } from '../../lib/format';
 import { ArrowRight } from './Icons';
 import { SmartLink } from './SmartLink';
 
-type Variant = 'gold' | 'dark' | 'outline-light' | 'outline-dark';
+type Variant = 'light' | 'brand' | 'dark' | 'outline-light' | 'outline-dark';
 
 const variants: Record<Variant, { root: string; fill: string; arrow: string }> = {
-  gold: { root: 'bg-gold text-midnight-950 hover:text-midnight-950', fill: 'bg-gold-light', arrow: 'bg-midnight-950 text-gold' },
-  dark: { root: 'bg-midnight text-paper', fill: 'bg-midnight-700', arrow: 'bg-gold text-midnight-950' },
+  light: { root: 'bg-paper text-midnight-950', fill: 'bg-white', arrow: 'bg-brand text-paper' },
+  brand: { root: 'bg-brand text-paper', fill: 'bg-brand-700', arrow: 'bg-paper text-brand' },
+  dark: { root: 'bg-midnight text-paper', fill: 'bg-midnight-700', arrow: 'bg-brand text-paper' },
   'outline-light': { root: 'border border-paper/30 text-paper hover:border-paper/60', fill: 'bg-paper/[0.07]', arrow: 'border border-paper/30 text-paper' },
   'outline-dark': { root: 'border border-midnight/25 text-midnight hover:border-midnight', fill: 'bg-midnight/[0.04]', arrow: 'border border-midnight/20 text-midnight' },
 };
@@ -46,7 +47,7 @@ export function ArrowLink({ href, children, tone = 'light', className }: { href:
   return (
     <SmartLink href={href} className={cn('group inline-flex items-center gap-2.5 text-[0.875rem] font-medium', tone === 'dark' ? 'text-paper' : 'text-midnight', className)}>
       <span className="link-draw pb-0.5">{children}</span>
-      <ArrowRight className={cn('size-3.5 transition-transform duration-500 ease-out-expo group-hover:translate-x-1', tone === 'dark' ? 'text-gold' : 'text-bronze')} />
+      <ArrowRight className={cn('size-3.5 transition-transform duration-500 ease-out-expo group-hover:translate-x-1', tone === 'dark' ? 'text-brand-light' : 'text-brand')} />
     </SmartLink>
   );
 }

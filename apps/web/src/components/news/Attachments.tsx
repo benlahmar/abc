@@ -29,11 +29,11 @@ export function Attachments({ items, context, compact = false, defaultOpen }: At
         aria-expanded={open}
         aria-controls={id}
         onClick={() => setOpen((o) => !o)}
-        className="group flex w-full cursor-pointer items-center gap-2.5 text-left text-[0.8125rem] font-medium text-midnight transition-colors hover:text-bronze"
+        className="group flex w-full cursor-pointer items-center gap-2.5 text-left text-[0.8125rem] font-medium text-midnight transition-colors hover:text-brand"
       >
-        <Document className="size-4 text-bronze" />
+        <Document className="size-4 text-brand" />
         {label}
-        <Plus className={cn('ml-auto size-3.5 text-bronze transition-transform duration-500', open && 'rotate-45')} />
+        <Plus className={cn('ml-auto size-3.5 text-brand transition-transform duration-500', open && 'rotate-45')} />
       </button>
       <AnimatePresence initial={false}>
         {open && (
@@ -49,7 +49,7 @@ export function Attachments({ items, context, compact = false, defaultOpen }: At
             {items.map((doc, i) => (
               <li key={`${doc.url}-${i}`} className={cn(i < (compact ? 2 : 3) && 'pt-3')}>
                 <SmartLink href={doc.url} className="group flex items-center gap-2 py-1.5 transition-colors hover:text-midnight">
-                  <Download className="size-3.5 shrink-0 text-bronze" />
+                  <Download className="size-3.5 shrink-0 text-brand" />
                   <span className="link-draw">{doc.label}</span>
                   <span className="sr-only"> — {context}</span>
                 </SmartLink>

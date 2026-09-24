@@ -1,0 +1,125 @@
+{
+  "tabs": [
+    {
+      "id": "departements",
+      "label": "Départements",
+      "more": {
+        "label": "Tous les départements",
+        "url": "/departements"
+      },
+      "items": [
+        {
+          "id": "maths-info",
+          "title": "Mathématiques et Informatique",
+          "description": "Algèbre, analyse, statistiques, génie logiciel et science des données.",
+          "visual": "grid",
+          "url": "/departements/mathematiques-informatique"
+        },
+        {
+          "id": "physique",
+          "title": "Physique",
+          "description": "Physique fondamentale, énergies renouvelables, matériaux et électronique.",
+          "visual": "rings",
+          "url": "/departements/physique"
+        },
+        {
+          "id": "chimie",
+          "title": "Chimie",
+          "description": "Chimie organique, analytique, des matériaux et de l’environnement.",
+          "visual": "helix",
+          "url": "/departements/chimie"
+        },
+        {
+          "id": "biologie",
+          "title": "Biologie",
+          "description": "Biologie cellulaire, écologie, biotechnologies et santé.",
+          "visual": "dots",
+          "url": "/departements/biologie"
+        },
+        {
+          "id": "geologie",
+          "title": "Géologie",
+          "description": "Géosciences, ressources naturelles et prospection.",
+          "visual": "strata",
+          "url": "/departements/geologie"
+        }
+      ]
+    },
+    {
+      "id": "recherche",
+      "label": "Recherche",
+      "more": {
+        "label": "Toute la recherche",
+        "url": "/recherche"
+      },
+      "items": [
+        {
+          "id": "laboratoires",
+          "title": "Laboratoires de recherche",
+          "description": "12 laboratoires couvrant l’ensemble des disciplines de la Faculté.",
+          "visual": "rings",
+          "url": "/recherche/laboratoires"
+        },
+        {
+          "id": "conferences",
+          "title": "Conférences scientifiques",
+          "description": "Colloques nationaux et internationaux accueillis à la FSBM.",
+          "image": "/images/conference-amphi.webp",
+          "url": "/recherche/conferences"
+        },
+        {
+          "id": "doctorat",
+          "title": "Formation doctorale",
+          "description": "Thèses et encadrement des doctorants au sein des laboratoires.",
+          "visual": "orbit",
+          "url": "/formation/doctorats"
+        },
+        {
+          "id": "publications",
+          "title": "Publications",
+          "description": "Articles, ouvrages et productions scientifiques des enseignants-chercheurs.",
+          "visual": "helix",
+          "url": "/publications"
+        }
+      ]
+    },
+    {
+      "id": "vie-etudiante",
+      "label": "Vie étudiante",
+      "more": {
+        "label": "Toute la vie étudiante",
+        "url": "/etudiant"
+      },
+      "items": [
+        {
+          "id": "portes-ouvertes",
+          "title": "Journées Portes Ouvertes",
+          "description": "Découvrir les filières, rencontrer les enseignants et les étudiants.",
+          "image": "/images/amphi-portes-ouvertes.webp",
+          "url": "/etudiant/portes-ouvertes"
+        },
+        {
+          "id": "campus",
+          "title": "Le campus",
+          "description": "Amphithéâtres, salles de travaux pratiques et espaces de vie à Ben M’Sik.",
+          "image": "/images/facade-fsbm.webp",
+          "url": "/etudiant/campus"
+        },
+        {
+          "id": "clubs",
+          "title": "Clubs et associations",
+          "description": "Clubs scientifiques, culturels et sportifs animés par les étudiants.",
+          "visual": "dots",
+          "url": "/etudiant/clubs"
+        },
+        {
+          "id": "bibliotheque",
+          "title": "Bibliothèque",
+          "description": "Ressources documentaires, espaces de travail et accès numériques.",
+          "visual": "grid",
+          "url": "/bibliotheque"
+        }
+      ]
+    }
+  ]
+}

@@ -59,6 +59,9 @@ export const Close = (p: IconProps) => (
 export const Document = (p: IconProps) => (
   <svg {...base(p)} strokeWidth={1.1}><path d="M4 1.5h5.5L12.5 4.5v10h-8.5zM9.5 1.5v3h3M6 8h4.5M6 10.5h4.5" /></svg>
 );
+export const Calendar = (p: IconProps) => (
+  <svg {...base(p)}><rect x="2" y="3" width="12" height="11" /><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3" /></svg>
+);
 export const Download = (p: IconProps) => (
   <svg {...base(p)}><path d="M8 2v8.5M4.5 7 8 10.5 11.5 7M2.5 13.5h11" /></svg>
 );

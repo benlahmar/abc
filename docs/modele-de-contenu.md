@@ -1,6 +1,6 @@
 # Modèle de contenu — référence pour le back-office
 
-Le portail est alimenté par **10 collections**. Leur structure est définie **une seule fois**, en Zod, dans
+Le portail est alimenté par **11 collections**. Leur structure est définie **une seule fois**, en Zod, dans
 `packages/shared/src/schemas.ts`. Cette définition sert trois fois :
 
 - l'API (`apps/api`) valide chaque fichier avant de le servir ;
@@ -15,7 +15,7 @@ changent : pas besoin de redémarrer l'API.
 | Méthode | Route | Réponse |
 | --- | --- | --- |
 | GET | `/api/v1/health` | `{ status, uptime }` |
-| GET | `/api/v1/{collection}` | la collection entière (`site`, `hero`, `programmes`, `stats`, `news`, `services`, `dean`, `faculty`, `testimonials`, `gallery`) |
+| GET | `/api/v1/{collection}` | la collection entière (`site`, `hero`, `programmes`, `stats`, `news`, `services`, `dean`, `faculty`, `testimonials`, `gallery`, `explore`) |
 | GET | `/api/v1/news?category=&limit=&offset=` | `{ categories, counts, items, total, limit, offset }`, trié par date décroissante (`limit` ≤ 100) |
 | GET | `/api/v1/news/{id}` | `{ item, category }`, ou 404 |
 | POST | `/api/v1/contact` | `{ name, email, phone?, subject, message }` → 201. Erreurs : 422 `{ error: { fields } }`, 413 si le corps est trop volumineux, 429 au-delà de 5 messages par IP en 15 min |
@@ -92,4 +92,11 @@ Le lecteur YouTube (youtube-nocookie) ne se charge qu'au clic. Si `videoId` est 
 ## `gallery` — Vie à la FSBM
 
 `items[]` : `{ id, image, alt, kicker, caption }`. Les trois premières photos forment la grille de la section :
-une grande photo à gauche, deux à droite. `alt` décrit la photo pour les lecteurs d'écran ; ce champ est obligatoire.
+toutes les photos forment la mosaïque pleine largeur affichée avant le pied de page. `alt` décrit la photo pour les lecteurs d'écran ; ce champ est obligatoire.
+
+## `explore` — La FSBM de l'intérieur
+
+`tabs[]` : `{ id, label, more?: { label, url }, items[] }`, avec `items[]` : `{ id, title, description, image, visual, url }`.
+Chaque onglet (Départements, Recherche, Vie étudiante…) affiche ses cartes. La carte « Voir tout » (`more`) vient
+en dernier. Une carte sans `image` affiche le motif `visual` (rings, grid, helix, strata, dots, orbit).
+La colonne **Avis officiels** n'a pas de collection propre : elle reprend les 3 dernières actualités qui ont des pièces jointes.

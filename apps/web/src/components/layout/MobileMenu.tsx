@@ -45,7 +45,7 @@ export function MobileMenu({ open, onClose, site }: { open: boolean; onClose: ()
       className="on-dark m-0 h-dvh max-h-none w-full max-w-none bg-midnight-950 p-0 text-paper backdrop:bg-midnight-950/60 xl:hidden"
     >
       <div className="relative flex h-full flex-col overflow-hidden">
-        <div aria-hidden="true" className="absolute -top-40 -right-40 size-[28rem] rounded-full bg-gold/10 blur-3xl" />
+        <div aria-hidden="true" className="absolute -top-40 -right-40 size-[28rem] rounded-full bg-brand/25 blur-3xl" />
         <div className="container-x relative flex h-20 shrink-0 items-center justify-between border-b border-paper/10">
           <img src="/images/logo-fsbm-blanc.webp" alt="Faculté des Sciences Ben M’Sik" width={408} height={230} className="h-12 w-auto" />
           <button type="button" onClick={onClose} className="grid size-10 place-items-center" autoFocus>
@@ -91,7 +91,7 @@ export function MobileMenu({ open, onClose, site }: { open: boolean; onClose: ()
         </nav>
 
         <div className="container-x relative shrink-0 border-t border-paper/10 py-5">
-          <SmartLink href="/portail-etudiant" className="flex w-full items-center justify-center gap-2.5 bg-gold py-4 text-sm font-medium text-midnight-950">
+          <SmartLink href="/portail-etudiant" className="flex w-full items-center justify-center gap-2.5 bg-paper py-4 text-sm font-medium text-midnight-950">
             <Lock className="size-3.5" /> Portail Étudiant
           </SmartLink>
         </div>

@@ -6,11 +6,10 @@ import { ArrowLink } from '../ui/Button';
 import { Reveal } from '../ui/Reveal';
 import { Accent, SectionHeader } from '../ui/Section';
 import { ErrorNote, Skeleton } from '../ui/States';
-import { FeaturedNews, NewsBrief, NewsCard } from '../news/NewsCards';
+import { NewsRow } from '../news/NewsCards';
 
-const SIDE = 3;
 
-/** Actualités et annonces : filtres par catégorie, une + brèves, puis « Afficher plus ». */
+/** Actualités et annonces : filtres par catégorie, cartes horizontales, puis « Afficher plus ». */
 export function News() {
   const [category, setCategory] = useState('all');
   const { data, isPending, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage, isPlaceholderData } = useNewsFeed(category);
@@ -22,10 +21,6 @@ export function News() {
   const tabs = [{ id: 'all', label: 'Toutes' }, ...(first?.categories ?? []).filter((c) => counts[c.id])];
   const labelOf = (id: string) => labels[id] ?? id;
 
-  const featured = items.find((item) => item.featured) ?? items[0];
-  const rest = items.filter((item) => item !== featured);
-  const side = rest.slice(0, SIDE);
-  const grid = rest.slice(SIDE);
   const total = first?.total ?? 0;
 
   return (
@@ -69,38 +64,20 @@ export function News() {
         </div>
 
         {isPending && (
-          <div className="grid gap-14 pt-14 lg:grid-cols-12">
-            <Skeleton className="aspect-[16/10] lg:col-span-7" />
-            <div className="space-y-6 lg:col-span-5"><Skeleton className="h-32" /><Skeleton className="h-32" /><Skeleton className="h-32" /></div>
+          <div className="grid gap-6 pt-12 lg:grid-cols-2">
+            <Skeleton className="h-64" /><Skeleton className="h-64" /><Skeleton className="h-64" /><Skeleton className="h-64" />
           </div>
         )}
         {isError && <ErrorNote className="mt-14" onRetry={() => refetch()} />}
-        {data && !featured && <p className="py-20 text-center text-muted">Aucune actualité publiée dans cette catégorie pour le moment.</p>}
+        {data && items.length === 0 && <p className="py-20 text-center text-muted">Aucune actualité publiée dans cette catégorie pour le moment.</p>}
 
-        {featured && (
-          <div className={cn('transition-opacity duration-300', isPlaceholderData && 'opacity-50')}>
-            <div className="grid gap-16 pt-14 lg:grid-cols-12 lg:gap-0">
-              <Reveal className="lg:col-span-7 lg:pr-14">
-                <FeaturedNews item={featured} category={labelOf(featured.category)} />
+        {items.length > 0 && (
+          <div className={cn('grid gap-6 pt-12 lg:grid-cols-2', isPlaceholderData && 'opacity-50 transition-opacity')}>
+            {items.map((item, i) => (
+              <Reveal key={item.id} delay={(i % 2) * 0.08}>
+                <NewsRow item={item} category={labelOf(item.category)} />
               </Reveal>
-              {side.length > 0 && (
-                <Reveal delay={0.1} className="lg:col-span-5 lg:border-l lg:border-midnight/10 lg:pl-14">
-                  {side.map((item) => (
-                    <NewsBrief key={item.id} item={item} category={labelOf(item.category)} />
-                  ))}
-                </Reveal>
-              )}
-            </div>
-
-            {grid.length > 0 && (
-              <div className="mt-20 grid gap-x-10 gap-y-16 border-t border-midnight/10 pt-16 md:grid-cols-2 xl:grid-cols-3">
-                {grid.map((item, i) => (
-                  <Reveal key={item.id} delay={(i % 3) * 0.08}>
-                    <NewsCard item={item} category={labelOf(item.category)} />
-                  </Reveal>
-                ))}
-              </div>
-            )}
+            ))}
           </div>
         )}
 
