@@ -9,6 +9,9 @@ import com.universite.esign.document.dto.DocumentResponse;
 import com.universite.esign.document.dto.RevokeRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
@@ -37,6 +40,40 @@ class DocumentController {
 
     private final DocumentService service;
 
+    private static final String ATTESTATION_EXAMPLE = """
+            {
+              "type": "ATTESTATION_SCOLARITE",
+              "student": {
+                "cne": "R130456789",
+                "nom": "El Amrani",
+                "prenom": "Yasmine",
+                "dateNaissance": "2003-05-14",
+                "lieuNaissance": "Fès",
+                "filiere": "Sciences Mathématiques et Informatique",
+                "niveau": "Licence 3"
+              },
+              "academicYear": "2025-2026"
+            }""";
+
+    private static final String RELEVE_EXAMPLE = """
+            {
+              "type": "RELEVE_NOTES",
+              "student": {
+                "cne": "R130456789",
+                "nom": "El Amrani",
+                "prenom": "Yasmine",
+                "filiere": "Sciences Mathématiques et Informatique",
+                "niveau": "Licence 3"
+              },
+              "academicYear": "2025-2026",
+              "semester": "S5",
+              "grades": [
+                { "code": "M51", "intitule": "Réseaux informatiques", "note": 14.5, "credits": 6 },
+                { "code": "M52", "intitule": "Bases de données avancées", "note": 9.25, "credits": 6 },
+                { "code": "M53", "intitule": "Génie logiciel", "note": 16, "credits": 4 }
+              ]
+            }""";
+
     DocumentController(DocumentService service) {
         this.service = service;
     }
@@ -45,7 +82,18 @@ class DocumentController {
     @Operation(summary = "Générer et signer un document",
             description = "Retourne 201 à la création, 200 si la même requête a déjà été traitée avec cette "
                     + "Idempotency-Key, 409 si la clé a servi pour une requête différente.")
+    @ApiResponse(responseCode = "201", description = "Document généré et signé")
+    @ApiResponse(responseCode = "200", description = "Requête déjà traitée (même Idempotency-Key)")
+    @ApiResponse(responseCode = "400", description = "Requête invalide : la liste « errors » détaille chaque champ",
+            content = @Content(mediaType = "application/problem+json"))
+    @ApiResponse(responseCode = "401", description = "Jeton absent ou invalide", content = @Content)
+    @ApiResponse(responseCode = "403", description = "Scope documents:write manquant", content = @Content)
+    @ApiResponse(responseCode = "409", description = "Idempotency-Key déjà utilisée pour une autre requête",
+            content = @Content(mediaType = "application/problem+json"))
     ResponseEntity<DocumentResponse> create(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
+                    @ExampleObject(name = "Attestation de scolarité", value = ATTESTATION_EXAMPLE),
+                    @ExampleObject(name = "Relevé de notes", value = RELEVE_EXAMPLE)}))
             @Valid @RequestBody CreateDocumentRequest request,
             @Parameter(description = "Clé unique côté client pour rejouer une requête sans doublon")
             @RequestHeader(name = "Idempotency-Key", required = false) @Size(min = 8, max = 100) String idempotencyKey,

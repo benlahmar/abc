@@ -147,6 +147,22 @@ class DocumentApiIntegrationTest {
     }
 
     @Test
+    void validationErrorsListEachInvalidField() throws Exception {
+        String body = ATTESTATION.replace("2003-05-14", "2999-01-01").replace("\"2025-2026\"", "\"2025\"");
+        mvc.perform(post("/api/v1/documents").with(client("scolarite-app", "documents:write"))
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.length()").value(2))
+                .andExpect(jsonPath("$.errors[*].field").value(org.hamcrest.Matchers.containsInAnyOrder(
+                        "student.dateNaissance", "academicYear")));
+
+        mvc.perform(post("/api/v1/documents").with(client("scolarite-app", "documents:write"))
+                        .contentType(MediaType.APPLICATION_JSON).content(ATTESTATION.replace("ATTESTATION_SCOLARITE", "X")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.cause").value(org.hamcrest.Matchers.containsString("DocumentType")));
+    }
+
+    @Test
     void idempotencyKeyReturnsSameDocumentAndRejectsDifferentPayload() throws Exception {
         String key = "idem-" + UUID.randomUUID();
         MvcResult first = mvc.perform(post("/api/v1/documents").with(client("scolarite-app", "documents:write"))
