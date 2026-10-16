@@ -1,6 +1,7 @@
 package com.universite.esign.document;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,11 +13,14 @@ import com.universite.esign.common.NotFoundException;
 import com.universite.esign.common.VerificationCodes;
 import com.universite.esign.config.EsignProperties;
 import com.universite.esign.document.dto.CreateDocumentRequest;
+import com.universite.esign.identity.Agent;
 import com.universite.esign.pdf.PdfRenderer;
 import com.universite.esign.signature.PadesSigningService;
 import com.universite.esign.signature.SignatureRequest;
 import com.universite.esign.signature.SignedPdf;
 import com.universite.esign.storage.DocumentStorage;
+import com.universite.esign.workflow.DocumentApproval;
+import com.universite.esign.workflow.WorkflowService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
@@ -29,16 +33,19 @@ public class DocumentService {
     private final PadesSigningService signer;
     private final DocumentStorage storage;
     private final AuditService audit;
+    private final WorkflowService workflow;
     private final EsignProperties properties;
     private final JsonMapper json;
 
     DocumentService(DocumentRepository documents, PdfRenderer renderer, PadesSigningService signer,
-                    DocumentStorage storage, AuditService audit, EsignProperties properties, JsonMapper json) {
+                    DocumentStorage storage, AuditService audit, WorkflowService workflow,
+                    EsignProperties properties, JsonMapper json) {
         this.documents = documents;
         this.renderer = renderer;
         this.signer = signer;
         this.storage = storage;
         this.audit = audit;
+        this.workflow = workflow;
         this.properties = properties;
         this.json = json;
     }
@@ -47,13 +54,14 @@ public class DocumentService {
     }
 
     /**
-     * Génère, signe (PAdES) et enregistre un document.
+     * Établit un document. Sans étape d'approbation applicable (cas par défaut), il est signé (PAdES)
+     * immédiatement ; sinon il attend les approbations prévues par le circuit paramétré.
      * <p>
      * Avec une clé d'idempotence, un nouvel envoi de la même requête renvoie le document déjà créé
      * au lieu d'en délivrer un second ; une requête différente avec la même clé est refusée (409).
      */
     @Transactional
-    public CreationResult create(CreateDocumentRequest request, String clientId, String idempotencyKey) {
+    public CreationResult create(CreateDocumentRequest request, Agent issuer, String clientId, String idempotencyKey) {
         validateBusinessRules(request);
         String requestHash = Hashes.sha256Hex(json.writeValueAsBytes(request));
 
@@ -71,24 +79,48 @@ public class DocumentService {
         String code = VerificationCodes.generate();
         Document document = new Document(id, code, request.type(), request.student().cne(),
                 request.student().fullName(), request.academicYear(), request.semester(), clientId,
-                idempotencyKey, requestHash, Instant.now());
-
+                idempotencyKey, requestHash, issuer, request.purpose(), request.escalated(), Instant.now());
         PdfRenderer.RenderedPdf pdf = renderer.render(request, code, verificationUrl(code));
+        String actor = issuer.auditLabel(clientId);
+        String summary = request.type() + " " + request.academicYear()
+                + (request.purpose() == null ? "" : " usage=" + request.purpose());
+
+        // Le document doit exister avant ses étapes d'approbation (clé étrangère).
+        documents.saveAndFlush(document);
+        List<DocumentApproval> plan = workflow.start(id, request.type(), request.purpose(), request.escalated());
+        if (WorkflowService.current(plan) == null) {
+            audit.record("DOCUMENT_ISSUED", id, actor, summary);
+            sign(document, pdf.content(), pdf.pageCount());
+        } else {
+            document.markPending(storage.store(id + "-non-signe", pdf.content()));
+            audit.record("DOCUMENT_ISSUED", id, actor, summary + " en attente : "
+                    + WorkflowService.current(plan).getName());
+        }
+        return new CreationResult(documents.save(document), true);
+    }
+
+    /** Signe le PDF avec le cachet de l'établissement et enregistre le document signé. */
+    void sign(Document document, byte[] pdf, int pageCount) {
         EsignProperties.Institution inst = properties.institution();
-        SignedPdf signed = signer.sign(pdf.content(), new SignatureRequest(
-                request.type().label(),
+        SignedPdf signed = signer.sign(pdf, new SignatureRequest(
+                document.getType().label(),
                 inst.faculty() + " - " + inst.university(),
                 inst.city(),
-                pdf.pageCount(),
+                pageCount,
                 PdfRenderer.SIGNATURE_BOX));
-
-        String storageKey = storage.store(id.toString(), signed.content());
+        String storageKey = storage.store(document.getId().toString(), signed.content());
         document.markSigned(Hashes.sha256Hex(signed.content()), storageKey, signed.level().name(),
                 signed.signerSubject(), signed.signingTime());
+        audit.record("DOCUMENT_SIGNED", document.getId(), "cachet-electronique",
+                "sha256=" + document.getSha256());
+    }
+
+    /** Signe un document dont toutes les étapes d'approbation sont terminées. */
+    @Transactional
+    public void signApproved(Document document) {
+        byte[] unsigned = storage.load(document.getUnsignedStorageKey());
+        sign(document, unsigned, PdfRenderer.pageCount(unsigned));
         documents.save(document);
-        audit.record("DOCUMENT_SIGNED", id, clientId,
-                request.type() + " " + request.academicYear() + " sha256=" + document.getSha256());
-        return new CreationResult(document, true);
     }
 
     @Transactional(readOnly = true)
@@ -97,7 +129,15 @@ public class DocumentService {
     }
 
     public byte[] content(Document document) {
+        if (document.getStorageKey() == null) {
+            throw new ConflictException("Le document n'est pas signé (statut " + document.getStatus() + ")");
+        }
         return storage.load(document.getStorageKey());
+    }
+
+    /** PDF non signé, consulté par les validateurs pendant le circuit d'approbation. */
+    public byte[] unsignedContent(Document document) {
+        return storage.load(document.getUnsignedStorageKey());
     }
 
     @Transactional

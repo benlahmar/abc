@@ -17,6 +17,14 @@ class OpenApiConfig {
 
     @Bean
     OpenAPI openApi(@Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") String issuer) {
+        SecurityScheme person = new SecurityScheme()
+                .type(SecurityScheme.Type.OAUTH2)
+                .description("Connexion d'une personne (agent, validateur, administrateur) avec son compte : "
+                        + "client_id esign-swagger, sans secret")
+                .flows(new OAuthFlows().authorizationCode(new OAuthFlow()
+                        .authorizationUrl(issuer + "/protocol/openid-connect/auth")
+                        .tokenUrl(issuer + "/protocol/openid-connect/token")
+                        .scopes(new Scopes().addString("openid", "Identité").addString("profile", "Nom"))));
         SecurityScheme oauth2 = new SecurityScheme()
                 .type(SecurityScheme.Type.OAUTH2)
                 .description("Jeton obtenu par l'application cliente (grant client_credentials)")
@@ -27,7 +35,8 @@ class OpenApiConfig {
                                 .addString("documents:read", "Consulter et télécharger ses documents")
                                 .addString("documents:revoke", "Révoquer ses documents")
                                 .addString("documents:admin", "Accès à tous les documents")
-                                .addString("audit:read", "Consulter le journal d'audit"))));
+                                .addString("audit:read", "Consulter le journal d'audit")
+                                .addString("workflow:admin", "Paramétrer le circuit d'approbation"))));
         // Alternative : coller directement un jeton obtenu hors du navigateur (curl, requests.http…)
         SecurityScheme bearer = new SecurityScheme()
                 .type(SecurityScheme.Type.HTTP)
@@ -42,8 +51,10 @@ class OpenApiConfig {
                                 + "des attestations de scolarité et relevés de notes, avec vérification publique "
                                 + "par QR code."))
                 .components(new Components()
+                        .addSecuritySchemes("personne", person)
                         .addSecuritySchemes("oauth2", oauth2)
                         .addSecuritySchemes("bearerAuth", bearer))
+                .addSecurityItem(new SecurityRequirement().addList("personne"))
                 .addSecurityItem(new SecurityRequirement().addList("oauth2"))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
     }

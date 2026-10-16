@@ -57,6 +57,14 @@ esign:
   storage:
     base-dir: ${ESIGN_STORAGE_DIR:./data/storage}
 
+springdoc:
+  swagger-ui:
+    oauth:
+      # Connexion des personnes depuis Swagger UI (bloc « personne »)
+      client-id: esign-swagger
+      use-pkce-with-authorization-code-grant: true
+    persist-authorization: true
+
 management:
   endpoints:
     web:

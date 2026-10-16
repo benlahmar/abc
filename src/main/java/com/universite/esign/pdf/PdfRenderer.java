@@ -16,6 +16,7 @@ import com.universite.esign.document.dto.CreateDocumentRequest;
 import com.universite.esign.document.dto.GradeLine;
 import com.universite.esign.document.dto.StudentInfo;
 import com.universite.esign.signature.SignatureRequest;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -54,6 +55,14 @@ public class PdfRenderer {
     }
 
     public record RenderedPdf(byte[] content, int pageCount) {
+    }
+
+    public static int pageCount(byte[] pdf) {
+        try (PDDocument doc = Loader.loadPDF(pdf)) {
+            return doc.getNumberOfPages();
+        } catch (IOException e) {
+            throw new UncheckedIOException("PDF illisible", e);
+        }
     }
 
     public RenderedPdf render(CreateDocumentRequest request, String verificationCode, String verificationUrl) {

@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
+import com.universite.esign.identity.EsignAuthoritiesConverter;
 import com.universite.esign.signature.PadesValidationService;
 import com.universite.esign.signature.PadesValidationService.SignatureReport;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
@@ -46,7 +47,8 @@ class DocumentApiIntegrationTest {
                 "dateNaissance": "2003-05-14", "lieuNaissance": "Fès",
                 "filiere": "Sciences Mathématiques et Informatique", "niveau": "Licence 3"
               },
-              "academicYear": "2025-2026"
+              "academicYear": "2025-2026",
+              "issuedBy": { "id": "agent.apogee", "name": "Karim Bennani" }
             }
             """;
 
@@ -63,7 +65,8 @@ class DocumentApiIntegrationTest {
                 {"code": "M51", "intitule": "Réseaux informatiques", "note": 14.5, "credits": 6},
                 {"code": "M52", "intitule": "Bases de données avancées", "note": 9.25, "credits": 6},
                 {"code": "M53", "intitule": "Génie logiciel", "note": 16, "credits": 4, "resultat": "V"}
-              ]
+              ],
+              "issuedBy": { "id": "agent.apogee", "name": "Karim Bennani" }
             }
             """;
 
@@ -76,8 +79,10 @@ class DocumentApiIntegrationTest {
     @Autowired
     PadesValidationService validator;
 
-    private static JwtRequestPostProcessor client(String clientId, String scopes) {
-        return jwt().jwt(j -> j.claim("azp", clientId).claim("scope", scopes));
+    static JwtRequestPostProcessor client(String clientId, String scopes) {
+        return jwt().jwt(j -> j.claim("azp", clientId).claim("scope", scopes)
+                        .claim("preferred_username", "service-account-" + clientId))
+                .authorities(new EsignAuthoritiesConverter());
     }
 
     private JsonNode create(String body, String clientId) throws Exception {
@@ -249,13 +254,13 @@ class DocumentApiIntegrationTest {
 
         mvc.perform(post("/api/v1/documents/{id}/revoke", id)
                         .with(client("scolarite-app", "documents:revoke"))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"reason\": \"Erreur de saisie\"}"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"reason\": \"Erreur de saisie\", \"by\": {\"id\": \"agent.apogee\", \"name\": \"Karim Bennani\"}}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REVOKED"));
 
         mvc.perform(post("/api/v1/documents/{id}/revoke", id)
                         .with(client("scolarite-app", "documents:revoke"))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"reason\": \"Encore\"}"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"reason\": \"Encore\", \"by\": {\"id\": \"agent.apogee\", \"name\": \"Karim Bennani\"}}"))
                 .andExpect(status().isConflict());
 
         mvc.perform(get("/api/v1/verify/{code}", doc.get("verificationCode").asString()))
@@ -264,8 +269,10 @@ class DocumentApiIntegrationTest {
 
         mvc.perform(get("/api/v1/audit/documents/{id}", id).with(client("audit-app", "audit:read")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].eventType").value("DOCUMENT_SIGNED"))
-                .andExpect(jsonPath("$[1].eventType").value("DOCUMENT_REVOKED"));
+                .andExpect(jsonPath("$[0].eventType").value("DOCUMENT_ISSUED"))
+                .andExpect(jsonPath("$[0].actor").value("agent.apogee (déclaré via scolarite-app)"))
+                .andExpect(jsonPath("$[1].eventType").value("DOCUMENT_SIGNED"))
+                .andExpect(jsonPath("$[2].eventType").value("DOCUMENT_REVOKED"));
         mvc.perform(get("/api/v1/audit/verify").with(client("audit-app", "audit:read")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(true));

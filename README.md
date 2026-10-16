@@ -112,7 +112,8 @@ curl -s -X POST http://localhost:8080/api/v1/documents \
     "grades": [
       { "code": "M51", "intitule": "Réseaux informatiques", "note": 14.5, "credits": 6 },
       { "code": "M52", "intitule": "Bases de données avancées", "note": 9.25, "credits": 6 }
-    ]
+    ],
+    "issuedBy": { "id": "agent.apogee", "name": "Karim Bennani" }
   }'
 
 # 3. Téléchargement du PDF signé
@@ -132,10 +133,71 @@ curl -s -F file=@releve.pdf http://localhost:8080/api/v1/verify
 | `POST` | `/api/v1/documents/{id}/revoke` | `documents:revoke` |
 | `GET` | `/api/v1/templates` | authentifié |
 | `GET` | `/api/v1/audit/verify`, `/api/v1/audit/documents/{id}` | `audit:read` |
+| `GET`, `PUT` | `/api/v1/admin/workflows[/{type}]` | `workflow:admin` ou rôle `ESIGN_ADMIN` |
+| `GET` | `/api/v1/approvals`, `/api/v1/approvals/{id}/preview` | personne connectée (rôle de l'étape) |
+| `POST` | `/api/v1/approvals/{id}/approve`, `/reject` | personne connectée (rôle de l'étape) |
 | `GET` | `/verify/{code}` (HTML), `/api/v1/verify/{code}` | public |
 | `POST` | `/api/v1/verify` (multipart `file`) | public |
 
 Une application ne voit que les documents qu'elle a créés, sauf avec le scope `documents:admin`.
+
+## Traçabilité de l'agent
+
+Chaque document enregistre **la personne qui l'a établi** (`issuedBy`), en plus de l'application :
+
+| Appel | Identité enregistrée | `issuedBy.source` |
+|---|---|---|
+| L'agent est connecté avec son compte (jeton utilisateur, rôle `AGENT_SCOLARITE`) | Celle du jeton (le champ `issuedBy` de la requête est ignoré) | `AUTHENTICATED` |
+| Une application (ex. Apogée) appelle avec son jeton `client_credentials` | Celle déclarée dans `issuedBy` (**obligatoire**) | `DECLARED` |
+
+La révocation suit la même règle (champ `by`). Toutes les actions figurent dans le journal d'audit
+(`agent.apogee (déclaré via apogee-app)`, `vice.doyen (authentifié via approbation)`…).
+
+## Circuit d'approbation paramétrable
+
+Par défaut, **aucun circuit** : les données venant d'Apogée sont déjà validées et les documents sont
+signés immédiatement. Si l'organisation change, un administrateur (rôle `ESIGN_ADMIN`) ajoute des étapes
+par type de document, **sans modifier le code** :
+
+```http
+PUT /api/v1/admin/workflows/RELEVE_NOTES
+{
+  "steps": [
+    { "name": "Validation du vice-doyen à la pédagogie", "role": "VICE_DOYEN_PEDAGOGIE",
+      "condition": "IF_PURPOSE", "purposes": ["ETRANGER"] },
+    { "name": "Validation du doyen (sur demande)", "role": "DOYEN", "condition": "IF_ESCALATED" }
+  ]
+}
+```
+
+| Condition | L'étape s'applique… |
+|---|---|
+| `ALWAYS` | toujours |
+| `IF_PURPOSE` | si l'usage déclaré du document (`purpose`, ex. `ETRANGER`) est dans `purposes` |
+| `IF_ESCALATED` | si l'agent (`"escalate": true` à la création) ou un validateur précédent demande une validation supplémentaire |
+
+Déroulement :
+
+1. Le document est établi au statut `PENDING_APPROVAL` (ni téléchargeable, ni vérifiable publiquement).
+2. Chaque validateur connecté avec son compte voit ses dossiers (`GET /api/v1/approvals`), prévisualise
+   le PDF (`/preview`), puis approuve ou rejette (`/approve`, `/reject` avec motif).
+3. Après la dernière approbation, le document est **signé automatiquement** ; un rejet le passe en `REJECTED`.
+
+Règles : seul le rôle de l'étape en cours peut décider ; une application ne peut pas approuver ; l'agent
+qui a établi un document ne peut pas l'approuver ; un changement de circuit ne concerne que les nouvelles
+demandes. Les personnes ne sont jamais écrites dans le circuit, seulement des **rôles** Keycloak.
+
+### Comptes de démonstration (Docker)
+
+| Login | Mot de passe | Rôle |
+|---|---|---|
+| `agent.apogee` | `agent123` | `AGENT_SCOLARITE` |
+| `vice.doyen` | `vicedoyen123` | `VICE_DOYEN_PEDAGOGIE` |
+| `doyen` | `doyen123` | `DOYEN` |
+| `admin.esign` | `admin123` | `ESIGN_ADMIN` |
+
+Dans Swagger UI, **Authorize** → bloc `personne` (client `esign-swagger`, sans secret) → page de
+connexion Keycloak. Le scénario complet est dans [`requests.http`](requests.http) (étapes 12 à 20).
 
 ## Passage en production
 
@@ -168,7 +230,10 @@ Une application ne voit que les documents qu'elle a créés, sauf avec le scope 
 ## Feuille de route
 
 - [x] MVP : attestation + relevé, PAdES, QR code, vérification, révocation, audit, OAuth2
-- [ ] Circuit de validation multi-signataires (chef de département → doyen) avec OTP
+- [x] Traçabilité de l'agent qui établit / révoque chaque document
+- [x] Circuit d'approbation paramétrable (désactivé par défaut)
+- [ ] Authentification forte (OTP) des validateurs, à activer dans Keycloak
+- [ ] Notifications aux validateurs (e-mail) et webhooks vers les applications
 - [ ] Signature en masse asynchrone (fin de semestre) + webhooks `document.signed`
 - [ ] Stockage objet S3/MinIO, conversion PDF/A-3
 - [ ] Connecteur vers le système de scolarité (Apogée…), modèles personnalisables

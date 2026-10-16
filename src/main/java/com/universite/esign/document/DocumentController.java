@@ -7,6 +7,9 @@ import com.universite.esign.config.CallerContext;
 import com.universite.esign.document.dto.CreateDocumentRequest;
 import com.universite.esign.document.dto.DocumentResponse;
 import com.universite.esign.document.dto.RevokeRequest;
+import com.universite.esign.identity.Agent;
+import com.universite.esign.identity.AgentResolver;
+import com.universite.esign.workflow.WorkflowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -39,6 +42,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 class DocumentController {
 
     private final DocumentService service;
+    private final WorkflowService workflow;
+    private final AgentResolver agents;
 
     private static final String ATTESTATION_EXAMPLE = """
             {
@@ -52,7 +57,8 @@ class DocumentController {
                 "filiere": "Sciences Mathématiques et Informatique",
                 "niveau": "Licence 3"
               },
-              "academicYear": "2025-2026"
+              "academicYear": "2025-2026",
+              "issuedBy": { "id": "agent.apogee", "name": "Karim Bennani" }
             }""";
 
     private static final String RELEVE_EXAMPLE = """
@@ -71,17 +77,29 @@ class DocumentController {
                 { "code": "M51", "intitule": "Réseaux informatiques", "note": 14.5, "credits": 6 },
                 { "code": "M52", "intitule": "Bases de données avancées", "note": 9.25, "credits": 6 },
                 { "code": "M53", "intitule": "Génie logiciel", "note": 16, "credits": 4 }
-              ]
+              ],
+              "purpose": "ETRANGER",
+              "issuedBy": { "id": "agent.apogee", "name": "Karim Bennani" }
             }""";
 
-    DocumentController(DocumentService service) {
+    DocumentController(DocumentService service, WorkflowService workflow, AgentResolver agents) {
         this.service = service;
+        this.workflow = workflow;
+        this.agents = agents;
+    }
+
+    private DocumentResponse response(Document doc) {
+        return DocumentResponse.of(doc, workflow.approvals(doc.getId()),
+                service.verificationUrl(doc.getVerificationCode()));
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Générer et signer un document",
             description = "Retourne 201 à la création, 200 si la même requête a déjà été traitée avec cette "
-                    + "Idempotency-Key, 409 si la clé a servi pour une requête différente.")
+                    + "Idempotency-Key, 409 si la clé a servi pour une requête différente. "
+                    + "Le document est signé immédiatement (statut SIGNED), sauf si le circuit paramétré pour "
+                    + "ce type prévoit des approbations (statut PENDING_APPROVAL). "
+                    + "Avec un jeton applicatif, issuedBy (agent qui établit le document) est obligatoire.")
     @ApiResponse(responseCode = "201", description = "Document généré et signé")
     @ApiResponse(responseCode = "200", description = "Requête déjà traitée (même Idempotency-Key)")
     @ApiResponse(responseCode = "400", description = "Requête invalide : la liste « errors » détaille chaque champ",
@@ -98,9 +116,11 @@ class DocumentController {
             @Parameter(description = "Clé unique côté client pour rejouer une requête sans doublon")
             @RequestHeader(name = "Idempotency-Key", required = false) @Size(min = 8, max = 100) String idempotencyKey,
             @AuthenticationPrincipal Jwt jwt) {
-        DocumentService.CreationResult result = service.create(request, CallerContext.clientId(jwt), idempotencyKey);
+        Agent issuer = agents.issuer(jwt, request.issuedBy());
+        DocumentService.CreationResult result =
+                service.create(request, issuer, CallerContext.clientId(jwt), idempotencyKey);
         Document doc = result.document();
-        DocumentResponse body = DocumentResponse.of(doc, service.verificationUrl(doc.getVerificationCode()));
+        DocumentResponse body = response(doc);
         if (!result.created()) {
             return ResponseEntity.ok(body);
         }
@@ -112,8 +132,7 @@ class DocumentController {
     @GetMapping("/{id}")
     @Operation(summary = "Consulter un document")
     DocumentResponse get(@PathVariable UUID id, Authentication auth, @AuthenticationPrincipal Jwt jwt) {
-        Document doc = owned(id, auth, jwt);
-        return DocumentResponse.of(doc, service.verificationUrl(doc.getVerificationCode()));
+        return response(owned(id, auth, jwt));
     }
 
     @GetMapping(value = "/{id}/download", produces = MediaType.APPLICATION_PDF_VALUE)
@@ -135,8 +154,9 @@ class DocumentController {
     DocumentResponse revoke(@PathVariable UUID id, @Valid @RequestBody RevokeRequest request,
                             Authentication auth, @AuthenticationPrincipal Jwt jwt) {
         owned(id, auth, jwt);
-        Document doc = service.revoke(id, request.reason(), CallerContext.clientId(jwt));
-        return DocumentResponse.of(doc, service.verificationUrl(doc.getVerificationCode()));
+        Agent agent = agents.issuer(jwt, request.by());
+        Document doc = service.revoke(id, request.reason(), agent.auditLabel(CallerContext.clientId(jwt)));
+        return response(doc);
     }
 
     /** Une application ne voit que les documents qu'elle a créés, sauf avec le scope documents:admin. */

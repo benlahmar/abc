@@ -17,7 +17,15 @@ public record EsignProperties(
         Institution institution,
         Signing signing,
         Validation validation,
-        Storage storage) {
+        Storage storage,
+        @DefaultValue Issuance issuance) {
+
+    /**
+     * @param requireAgent une application qui appelle l'API avec son propre jeton (ex. Apogée) doit
+     *                     déclarer l'agent qui établit le document ({@code issuedBy})
+     */
+    public record Issuance(@DefaultValue("true") boolean requireAgent) {
+    }
 
     public record Institution(
             @DefaultValue("Université Exemple") String university,

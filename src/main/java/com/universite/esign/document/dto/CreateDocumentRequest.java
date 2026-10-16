@@ -18,7 +18,17 @@ public record CreateDocumentRequest(
         /** Semestre (S1…S10), obligatoire pour un relevé de notes. */
         @Size(max = 10) String semester,
         /** Notes des modules, obligatoires pour un relevé de notes. */
-        @Size(max = 60) List<@Valid @NotNull GradeLine> grades) {
+        @Size(max = 60) List<@Valid @NotNull GradeLine> grades,
+        /** Agent qui établit le document, obligatoire quand une application appelle avec son propre jeton. */
+        @Valid IssuedBy issuedBy,
+        /** Usage du document (ex. ETRANGER, INSCRIPTION), peut déclencher une étape du circuit. */
+        @Pattern(regexp = "[A-Z][A-Z0-9_]{0,39}", message = "majuscules, chiffres et _ uniquement") String purpose,
+        /** Demande une validation supplémentaire (active les étapes IF_ESCALATED du circuit). */
+        Boolean escalate) {
+
+    public boolean escalated() {
+        return Boolean.TRUE.equals(escalate);
+    }
 
     public List<GradeLine> gradesOrEmpty() {
         return grades == null ? List.of() : grades;

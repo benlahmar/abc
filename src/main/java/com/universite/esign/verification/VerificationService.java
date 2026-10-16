@@ -33,6 +33,11 @@ public class VerificationService {
                     "Aucun document ne correspond à cette référence.", null, List.of());
         }
         Document doc = found.get();
+        if (doc.getSignedAt() == null) {
+            // En attente d'approbation ou refusé : aucune information divulguée
+            return new VerificationResult(false, false, null,
+                    "Ce document n'a pas été délivré par l'établissement.", null, List.of());
+        }
         boolean valid = doc.getStatus() == DocumentStatus.SIGNED;
         return new VerificationResult(valid, true, null,
                 valid ? "Document authentique délivré par l'établissement."
