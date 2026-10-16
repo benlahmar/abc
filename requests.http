@@ -1,0 +1,99 @@
+### Scénario de test complet de l'API.
+### IntelliJ IDEA (natif) ou VS Code (extension « REST Client ») :
+### cliquer sur « Send Request » au-dessus de chaque requête, dans l'ordre.
+
+@api = http://localhost:8080
+@keycloak = http://localhost:8180/realms/universite
+
+### 1. Obtenir un jeton pour l'application « scolarite-app »
+# @name token
+POST {{keycloak}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=scolarite-app&client_secret=scolarite-secret-dev
+
+### 2. Lister les types de documents
+GET {{api}}/api/v1/templates
+Authorization: Bearer {{token.response.body.access_token}}
+
+### 3. Créer et signer une attestation de scolarité
+# @name attestation
+POST {{api}}/api/v1/documents
+Authorization: Bearer {{token.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "type": "ATTESTATION_SCOLARITE",
+  "student": {
+    "cne": "R130456789", "nom": "El Amrani", "prenom": "Yasmine",
+    "dateNaissance": "2003-05-14", "lieuNaissance": "Fès",
+    "filiere": "Sciences Mathématiques et Informatique", "niveau": "Licence 3"
+  },
+  "academicYear": "2025-2026"
+}
+
+### 4. Créer et signer un relevé de notes
+# @name releve
+POST {{api}}/api/v1/documents
+Authorization: Bearer {{token.response.body.access_token}}
+Content-Type: application/json
+Idempotency-Key: releve-R130456789-S5-2025-2026
+
+{
+  "type": "RELEVE_NOTES",
+  "student": {
+    "cne": "R130456789", "nom": "El Amrani", "prenom": "Yasmine",
+    "filiere": "Sciences Mathématiques et Informatique", "niveau": "Licence 3"
+  },
+  "academicYear": "2025-2026",
+  "semester": "S5",
+  "grades": [
+    { "code": "M51", "intitule": "Réseaux informatiques", "note": 14.5, "credits": 6 },
+    { "code": "M52", "intitule": "Bases de données avancées", "note": 9.25, "credits": 6 },
+    { "code": "M53", "intitule": "Génie logiciel", "note": 16, "credits": 4 }
+  ]
+}
+
+### 5. Télécharger le PDF signé (IntelliJ l'enregistre dans releve.pdf)
+GET {{api}}/api/v1/documents/{{releve.response.body.id}}/download
+Authorization: Bearer {{token.response.body.access_token}}
+
+>> releve.pdf
+
+### 6. Vérification publique par référence (sans jeton)
+GET {{api}}/api/v1/verify/{{attestation.response.body.verificationCode}}
+
+### 7. Page HTML ouverte par le QR code (ouvrir aussi l'URL dans un navigateur)
+GET {{api}}/verify/{{attestation.response.body.verificationCode}}
+
+### 8. Vérifier un fichier PDF (IntelliJ : fichier enregistré à l'étape 5)
+POST {{api}}/api/v1/verify
+Content-Type: multipart/form-data; boundary=limite
+
+--limite
+Content-Disposition: form-data; name="file"; filename="releve.pdf"
+Content-Type: application/pdf
+
+< ./releve.pdf
+--limite--
+
+### 9. Révoquer l'attestation
+POST {{api}}/api/v1/documents/{{attestation.response.body.id}}/revoke
+Authorization: Bearer {{token.response.body.access_token}}
+Content-Type: application/json
+
+{ "reason": "Erreur de saisie" }
+
+### 10. Revérifier : authentic = false, status = REVOKED
+GET {{api}}/api/v1/verify/{{attestation.response.body.verificationCode}}
+
+### 11. Journal d'audit (application « audit-app »)
+# @name auditToken
+POST {{keycloak}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=audit-app&client_secret=audit-secret-dev
+
+###
+GET {{api}}/api/v1/audit/verify
+Authorization: Bearer {{auditToken.response.body.access_token}}

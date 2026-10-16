@@ -30,12 +30,13 @@ for scope in documents:write documents:read documents:revoke documents:admin aud
 done
 
 # create_client <clientId> <secret> <scopes...>
+# webOrigins : autorise Swagger UI (http://localhost:8080) à demander un jeton (CORS)
 create_client() {
   local client_id=$1 secret=$2
   shift 2
   $KC create clients -r $REALM -s clientId="$client_id" -s enabled=true -s publicClient=false \
     -s serviceAccountsEnabled=true -s standardFlowEnabled=false -s directAccessGrantsEnabled=false \
-    -s secret="$secret"
+    -s secret="$secret" -s 'webOrigins=["http://localhost:8080"]'
   local cid
   cid=$($KC get clients -r $REALM -q clientId="$client_id" --fields id --format csv --noquotes)
   for scope in "$@"; do

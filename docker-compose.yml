@@ -51,6 +51,8 @@ services:
       keycloak-init:
         condition: service_completed_successfully
     environment:
+      # Port interne fixé explicitement : doit correspondre au mapping "ports" ci-dessous
+      SERVER_PORT: 8080
       DB_URL: jdbc:postgresql://postgres:5432/esign
       DB_USER: esign
       DB_PASSWORD: esign
