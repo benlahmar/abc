@@ -1,0 +1,70 @@
+# Environnement de DÉMONSTRATION : PostgreSQL + Keycloak + API.
+# Le certificat de cachet est généré automatiquement (PKI de test) : ne pas utiliser en production.
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: esign
+      POSTGRES_USER: esign
+      POSTGRES_PASSWORD: esign
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U esign"]
+      interval: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # Émetteur public des jetons (claim "iss"), identique pour l'hôte et pour l'API
+      KC_HOSTNAME: http://localhost:8180
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "8180:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 10s
+      retries: 30
+
+  # Crée le realm "universite", les scopes et les applications clientes de démonstration
+  keycloak-init:
+    image: quay.io/keycloak/keycloak:26.4
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "/init/init-realm.sh"]
+    volumes:
+      - ./docker/keycloak:/init:ro
+
+  esign-api:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak-init:
+        condition: service_completed_successfully
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/esign
+      DB_USER: esign
+      DB_PASSWORD: esign
+      OAUTH2_ISSUER_URI: http://localhost:8180/realms/universite
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/universite/protocol/openid-connect/certs
+      ESIGN_PUBLIC_BASE_URL: http://localhost:8080
+      ESIGN_P12_PATH: /data/pki/cachet.p12
+      ESIGN_P12_PASSWORD: demo-password
+      ESIGN_P12_ALIAS: cachet
+      ESIGN_SIGNING_DEV_AUTO_GENERATE: "true"
+      ESIGN_STORAGE_DIR: /data/storage
+    ports:
+      - "8080:8080"
+    volumes:
+      - esigndata:/data
+
+volumes:
+  pgdata:
+  esigndata:

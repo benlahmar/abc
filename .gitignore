@@ -1,0 +1,9 @@
+target/
+data/
+*.p12
+*.pfx
+*.key
+.idea/
+*.iml
+.vscode/
+.DS_Store

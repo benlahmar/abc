@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:esign-test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:0/realms/test
+
+esign:
+  public-base-url: https://esign.universite.test
+  institution:
+    university: Université de Test
+    faculty: Faculté des Sciences
+    city: Testville
+  signing:
+    pkcs12:
+      path: target/test-pki/cachet.p12
+      password: test-password
+      alias: cachet
+    dev-auto-generate: true
+  storage:
+    base-dir: target/test-storage

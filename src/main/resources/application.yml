@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: esign-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/esign}
+    username: ${DB_USER:esign}
+    password: ${DB_PASSWORD:esign}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  mvc:
+    problemdetails:
+      enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Émetteur des jetons (Keycloak de l'université). La claim "iss" est vérifiée.
+          issuer-uri: ${OAUTH2_ISSUER_URI:http://localhost:8180/realms/universite}
+          # Optionnel : URL interne des clés publiques, utile en Docker quand l'émetteur public diffère
+          # (variable SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI).
+
+esign:
+  # URL publique imprimée dans le QR code
+  public-base-url: ${ESIGN_PUBLIC_BASE_URL:http://localhost:8080}
+  institution:
+    university: ${ESIGN_UNIVERSITY:Université Exemple}
+    faculty: ${ESIGN_FACULTY:Faculté des Sciences}
+    city: ${ESIGN_CITY:Ville}
+    signatory-title: ${ESIGN_SIGNATORY_TITLE:Le Doyen}
+    zone: ${ESIGN_ZONE:Africa/Casablanca}
+  signing:
+    # PKCS12 (fichier .p12) ou PKCS11 (HSM)
+    token-type: ${ESIGN_TOKEN_TYPE:PKCS12}
+    # PAdES_BASELINE_B | PAdES_BASELINE_T | PAdES_BASELINE_LT | PAdES_BASELINE_LTA
+    level: ${ESIGN_SIGNATURE_LEVEL:PAdES_BASELINE_B}
+    tsa-url: ${ESIGN_TSA_URL:}
+    pkcs12:
+      path: ${ESIGN_P12_PATH:./data/pki/cachet.p12}
+      password: ${ESIGN_P12_PASSWORD:}
+      alias: ${ESIGN_P12_ALIAS:}
+    pkcs11:
+      library: ${ESIGN_PKCS11_LIBRARY:}
+      slot-index: ${ESIGN_PKCS11_SLOT_INDEX:0}
+      pin: ${ESIGN_PKCS11_PIN:}
+      alias: ${ESIGN_PKCS11_ALIAS:}
+    dev-auto-generate: false
+  validation:
+    # Ancres de confiance supplémentaires (fichiers PEM), ex. variable
+    # ESIGN_VALIDATION_TRUSTED_CERTIFICATES=/pki/ac-racine.pem,/pki/ac-intermediaire.pem
+    online: ${ESIGN_VALIDATION_ONLINE:false}
+  storage:
+    base-dir: ${ESIGN_STORAGE_DIR:./data/storage}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

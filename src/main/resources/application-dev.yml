@@ -1,0 +1,16 @@
+# Profil de développement : base H2 en mémoire et PKI de test générée automatiquement.
+spring:
+  datasource:
+    url: jdbc:h2:mem:esign;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+
+esign:
+  signing:
+    pkcs12:
+      path: ./data/dev-pki/cachet.p12
+      password: changeit
+      alias: cachet
+    dev-auto-generate: true
+  storage:
+    base-dir: ./data/dev-storage
