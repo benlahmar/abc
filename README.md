@@ -79,6 +79,18 @@ et trois applications clientes de démonstration :
 | `ent-app` | `ent-secret-dev` | `documents:write documents:read` |
 | `audit-app` | `audit-secret-dev` | `audit:read documents:admin` |
 
+### Tester avec Swagger UI
+
+1. Ouvrir http://localhost:8080/swagger-ui.html (utiliser `localhost` ou `127.0.0.1`, origines autorisées par Keycloak).
+2. **Authorize** → bloc `oauth2` : `client_id` = `scolarite-app`, `client_secret` = `scolarite-secret-dev`,
+   cocher les scopes → **Authorize**.
+3. En cas de « Failed to fetch » : le realm Keycloak n'autorise pas l'origine du navigateur (CORS).
+   Relancer `docker compose up` (le script d'init réapplique la configuration) ou utiliser le bloc
+   `bearerAuth` en y collant un jeton obtenu avec `requests.http` ou curl.
+
+Le fichier [`requests.http`](requests.http) (IntelliJ, ou VS Code + extension REST Client) contient un
+scénario complet : jeton, attestation, relevé, téléchargement, vérification, révocation, audit.
+
 ## Utilisation de l'API
 
 ```bash

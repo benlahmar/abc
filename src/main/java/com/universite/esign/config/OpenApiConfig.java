@@ -28,6 +28,12 @@ class OpenApiConfig {
                                 .addString("documents:revoke", "Révoquer ses documents")
                                 .addString("documents:admin", "Accès à tous les documents")
                                 .addString("audit:read", "Consulter le journal d'audit"))));
+        // Alternative : coller directement un jeton obtenu hors du navigateur (curl, requests.http…)
+        SecurityScheme bearer = new SecurityScheme()
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT")
+                .description("Jeton d'accès déjà obtenu (sans le préfixe « Bearer »)");
         return new OpenAPI()
                 .info(new Info()
                         .title("API de signature électronique - Université")
@@ -35,7 +41,10 @@ class OpenApiConfig {
                         .description("Génération et signature électronique avancée (PAdES, certificat X.509) "
                                 + "des attestations de scolarité et relevés de notes, avec vérification publique "
                                 + "par QR code."))
-                .components(new Components().addSecuritySchemes("oauth2", oauth2))
-                .addSecurityItem(new SecurityRequirement().addList("oauth2"));
+                .components(new Components()
+                        .addSecuritySchemes("oauth2", oauth2)
+                        .addSecuritySchemes("bearerAuth", bearer))
+                .addSecurityItem(new SecurityRequirement().addList("oauth2"))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
     }
 }
