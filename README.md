@@ -132,6 +132,9 @@ curl -s -F file=@releve.pdf http://localhost:8080/api/v1/verify
 | `GET` | `/api/v1/documents/{id}/download` | `documents:read` |
 | `POST` | `/api/v1/documents/{id}/revoke` | `documents:revoke` |
 | `GET` | `/api/v1/templates` | authentifié |
+| `POST` | `/api/v1/batches/import`, `/api/v1/batches/apogee` | `documents:write` ou rôle `AGENT_SCOLARITE` |
+| `GET` | `/api/v1/batches/{id}`, `/items`, `/report.csv`, `/archive.zip` | idem |
+| `POST` | `/api/v1/apogee/documents` | idem |
 | `GET` | `/api/v1/audit/verify`, `/api/v1/audit/documents/{id}` | `audit:read` |
 | `GET`, `PUT` | `/api/v1/admin/workflows[/{type}]` | `workflow:admin` ou rôle `ESIGN_ADMIN` |
 | `GET` | `/api/v1/approvals`, `/api/v1/approvals/{id}/preview` | personne connectée (rôle de l'étape) |
@@ -199,6 +202,56 @@ demandes. Les personnes ne sont jamais écrites dans le circuit, seulement des *
 Dans Swagger UI, **Authorize** → bloc `personne` (client `esign-swagger`, sans secret) → page de
 connexion Keycloak. Le scénario complet est dans [`requests.http`](requests.http) (étapes 12 à 20).
 
+## Données Apogée et traitements en masse
+
+Deux sources, au choix ou ensemble :
+
+| Source | Utilisation |
+|---|---|
+| **Export Apogée** (CSV ou Excel) | `POST /api/v1/batches/import` : toute une promotion à partir d'un fichier |
+| **Vue Oracle d'Apogée** (lecture seule) | `POST /api/v1/apogee/documents` : **un** relevé, l'agent saisit seulement CNE + année + semestre<br>`POST /api/v1/batches/apogee` : toute une promotion (année, semestre, filière) |
+
+Format attendu : **une ligne par étudiant et par module** (voir [`docs/modele-export-apogee.csv`](docs/modele-export-apogee.csv)).
+Les lignes sont regroupées automatiquement en un relevé par étudiant/année/semestre (une attestation par
+étudiant/année). Sont acceptés : séparateur `;` `,` ou tabulation, virgule décimale (`14,5`), dates
+`14/05/2003` ou `2003-05-14`, année `2025` (COD_ANU) ou `2025-2026`, fichiers UTF-8 ou Windows-1252.
+
+**Correspondance des colonnes** : si vos exports ou votre vue utilisent d'autres noms
+(ex. `COD_NNE_IND`, `LIB_NOM_PAT_IND`, `COD_ANU`), il suffit de les indiquer, sans modifier le code :
+
+```properties
+APOGEE_COL_CNE=COD_NNE_IND
+APOGEE_COL_NOM=LIB_NOM_PAT_IND
+APOGEE_COL_ANNEE=COD_ANU
+```
+
+Les en-têtes de fichier sont reconnus sans tenir compte de la casse, des espaces ni des accents.
+
+**Vue Oracle** : le contrat de la vue et le compte en lecture seule sont décrits dans
+[`docs/vue-apogee.sql`](docs/vue-apogee.sql). Activation :
+
+```properties
+APOGEE_VIEW_ENABLED=true
+APOGEE_VIEW_URL=jdbc:oracle:thin:@//serveur-apogee:1521/APOGEE
+APOGEE_VIEW_USER=ESIGN_READER
+APOGEE_VIEW_PASSWORD=...
+APOGEE_VIEW_NAME=APOGEE.V_ESIGN_NOTES
+APOGEE_VIEW_YEAR_FORMAT=START   # ANNEE = '2025' ; FULL si '2025-2026'
+```
+
+**Déroulement d'un traitement en masse** :
+
+1. `dryRun=true` : vérification sans rien signer, erreurs listées **ligne par ligne**
+   (ex. `ligne 6 : note manquante ou illisible « ABI » (module M51)`).
+2. Lancement : réponse immédiate `202` ; le traitement se fait en arrière-plan.
+3. Suivi : `GET /api/v1/batches/{id}` (signés, en erreur, restants), détail `GET /{id}/items?status=FAILED`.
+4. Résultat : `GET /{id}/report.csv` (rapport ouvrable dans Excel) et `GET /{id}/archive.zip`
+   (tous les PDF signés + le rapport).
+
+Une ligne en erreur ne bloque pas les autres. Après un arrêt de l'application (même brutal), le traitement
+**reprend automatiquement** au redémarrage, sans créer de doublon. Chaque document garde l'agent qui l'a
+établi, et le circuit d'approbation paramétré s'applique aussi aux documents produits en masse.
+
 ## Passage en production
 
 1. **Certificat** : obtenir un certificat de **cachet électronique** de l'établissement auprès d'un
@@ -234,7 +287,9 @@ connexion Keycloak. Le scénario complet est dans [`requests.http`](requests.htt
 - [x] Circuit d'approbation paramétrable (désactivé par défaut)
 - [ ] Authentification forte (OTP) des validateurs, à activer dans Keycloak
 - [ ] Notifications aux validateurs (e-mail) et webhooks vers les applications
-- [ ] Signature en masse asynchrone (fin de semestre) + webhooks `document.signed`
+- [x] Import des exports Apogée (CSV/Excel) et lecture de la vue Oracle
+- [x] Traitements en masse en arrière-plan, rapport, archive ZIP, reprise après arrêt
+- [ ] Webhooks `document.signed` vers les applications
 - [ ] Stockage objet S3/MinIO, conversion PDF/A-3
 - [ ] Connecteur vers le système de scolarité (Apogée…), modèles personnalisables
 - [ ] SDK clients (générés depuis l'OpenAPI)

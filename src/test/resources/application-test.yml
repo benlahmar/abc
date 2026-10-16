@@ -23,3 +23,12 @@ esign:
     dev-auto-generate: true
   storage:
     base-dir: target/test-storage
+  apogee:
+    view:
+      # Base H2 en mode Oracle qui simule la vue Apogée (créée par BatchIntegrationTest)
+      enabled: true
+      url: jdbc:h2:mem:apogee;MODE=Oracle;DB_CLOSE_DELAY=-1
+      username: sa
+      password: ""
+      name: V_ESIGN_NOTES
+      year-format: START

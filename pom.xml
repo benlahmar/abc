@@ -23,6 +23,8 @@
         <springdoc.version>3.1.1</springdoc.version>
         <zxing.version>3.5.4</zxing.version>
         <bouncycastle.version>1.86</bouncycastle.version>
+        <commons-csv.version>1.14.1</commons-csv.version>
+        <poi.version>5.5.1</poi.version>
     </properties>
 
     <dependencyManagement>
@@ -135,6 +137,23 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk18on</artifactId>
             <version>${bouncycastle.version}</version>
+        </dependency>
+
+        <!-- Import des exports Apogée (CSV, Excel) et lecture de la vue Oracle -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>${commons-csv.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc11</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- QR code -->

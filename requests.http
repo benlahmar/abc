@@ -172,3 +172,62 @@ Authorization: Bearer {{adminToken.response.body.access_token}}
 Content-Type: application/json
 
 { "steps": [] }
+
+### ===================================================================
+### Données Apogée et traitements en masse
+### ===================================================================
+
+### 21. Vérifier un export Apogée sans rien signer (erreurs ligne par ligne)
+POST {{api}}/api/v1/batches/import?type=RELEVE_NOTES&dryRun=true&issuedById=agent.apogee&issuedByName=Karim%20Bennani
+Authorization: Bearer {{token.response.body.access_token}}
+Content-Type: multipart/form-data; boundary=limite
+
+--limite
+Content-Disposition: form-data; name="file"; filename="modele-export-apogee.csv"
+Content-Type: text/csv
+
+< ./docs/modele-export-apogee.csv
+--limite--
+
+### 22. Lancer le traitement (réponse 202, traitement en arrière-plan)
+# @name lot
+POST {{api}}/api/v1/batches/import?type=RELEVE_NOTES&issuedById=agent.apogee&issuedByName=Karim%20Bennani
+Authorization: Bearer {{token.response.body.access_token}}
+Content-Type: multipart/form-data; boundary=limite
+
+--limite
+Content-Disposition: form-data; name="file"; filename="modele-export-apogee.csv"
+Content-Type: text/csv
+
+< ./docs/modele-export-apogee.csv
+--limite--
+
+### 23. Avancement
+GET {{api}}/api/v1/batches/{{lot.response.body.id}}
+Authorization: Bearer {{token.response.body.access_token}}
+
+### 24. Rapport (CSV)
+GET {{api}}/api/v1/batches/{{lot.response.body.id}}/report.csv
+Authorization: Bearer {{token.response.body.access_token}}
+
+### 25. Tous les PDF signés + rapport (ZIP)
+GET {{api}}/api/v1/batches/{{lot.response.body.id}}/archive.zip
+Authorization: Bearer {{token.response.body.access_token}}
+
+>> lot.zip
+
+### 26. (Vue Oracle activée) Un relevé à partir du seul CNE
+POST {{api}}/api/v1/apogee/documents
+Authorization: Bearer {{token.response.body.access_token}}
+Content-Type: application/json
+
+{ "type": "RELEVE_NOTES", "cne": "R130456789", "academicYear": "2025-2026", "semester": "S5",
+  "issuedBy": { "id": "agent.apogee", "name": "Karim Bennani" } }
+
+### 27. (Vue Oracle activée) Toute une promotion, vérification d'abord
+POST {{api}}/api/v1/batches/apogee
+Authorization: Bearer {{token.response.body.access_token}}
+Content-Type: application/json
+
+{ "type": "RELEVE_NOTES", "academicYear": "2025-2026", "semester": "S5", "filiere": "SMI",
+  "issuedBy": { "id": "agent.apogee", "name": "Karim Bennani" }, "dryRun": true }

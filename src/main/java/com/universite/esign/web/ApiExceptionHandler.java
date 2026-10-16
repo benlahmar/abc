@@ -2,6 +2,7 @@ package com.universite.esign.web;
 
 import com.universite.esign.common.BadRequestException;
 import com.universite.esign.common.ConflictException;
+import com.universite.esign.common.FeatureDisabledException;
 import com.universite.esign.common.NotFoundException;
 import com.universite.esign.signature.PadesValidationService.UnsupportedDocumentException;
 import java.util.List;
@@ -87,6 +88,11 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     ProblemDetail forbidden(AccessDeniedException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
+    }
+
+    @ExceptionHandler(FeatureDisabledException.class)
+    ProblemDetail disabled(FeatureDisabledException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_IMPLEMENTED, e.getMessage());
     }
 
     @ExceptionHandler(ConflictException.class)

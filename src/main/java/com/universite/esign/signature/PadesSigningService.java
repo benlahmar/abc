@@ -106,7 +106,10 @@ public class PadesSigningService {
         SignatureImageTextParameters text = new SignatureImageTextParameters();
         text.setText("Signé électroniquement par\n" + request.signerName() + "\nle "
                 + DISPLAY.format(signingTime.atZone(properties.institution().zone())));
-        text.setFont(new DSSFileFont(new InMemoryDocument(font), 8));
+        DSSFileFont dssFont = new DSSFileFont(new InMemoryDocument(font), 8);
+        // N'embarquer que les caractères utilisés (sinon ~400 Ko de police par document)
+        dssFont.setEmbedFontSubset(true);
+        text.setFont(dssFont);
         text.setTextColor(new Color(0x1F, 0x3A, 0x68));
         text.setBackgroundColor(new Color(0xEE, 0xF3, 0xFA));
         text.setTextWrapping(TextWrapping.FILL_BOX);

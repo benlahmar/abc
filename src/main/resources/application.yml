@@ -11,8 +11,8 @@ spring:
       ddl-auto: validate
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 20MB
+      max-request-size: 20MB
   mvc:
     problemdetails:
       enabled: true
@@ -56,6 +56,33 @@ esign:
     online: ${ESIGN_VALIDATION_ONLINE:false}
   storage:
     base-dir: ${ESIGN_STORAGE_DIR:./data/storage}
+  apogee:
+    # Correspondance donnée -> nom de colonne dans les exports CSV/Excel et dans la vue Oracle.
+    # Adapter aux noms réels de vos exports (ex. cne: COD_NNE_IND, nom: LIB_NOM_PAT_IND, annee: COD_ANU).
+    columns:
+      cne: ${APOGEE_COL_CNE:CNE}
+      nom: ${APOGEE_COL_NOM:NOM}
+      prenom: ${APOGEE_COL_PRENOM:PRENOM}
+      date-naissance: ${APOGEE_COL_DATE_NAISSANCE:DATE_NAISSANCE}
+      lieu-naissance: ${APOGEE_COL_LIEU_NAISSANCE:LIEU_NAISSANCE}
+      filiere: ${APOGEE_COL_FILIERE:FILIERE}
+      niveau: ${APOGEE_COL_NIVEAU:NIVEAU}
+      annee: ${APOGEE_COL_ANNEE:ANNEE}
+      semestre: ${APOGEE_COL_SEMESTRE:SEMESTRE}
+      code-module: ${APOGEE_COL_CODE_MODULE:CODE_MODULE}
+      module: ${APOGEE_COL_MODULE:MODULE}
+      note: ${APOGEE_COL_NOTE:NOTE}
+      credits: ${APOGEE_COL_CREDITS:CREDITS}
+      resultat: ${APOGEE_COL_RESULTAT:RESULTAT}
+    view:
+      # Vue Oracle d'Apogée, en lecture seule (compte avec le seul droit SELECT sur la vue)
+      enabled: ${APOGEE_VIEW_ENABLED:false}
+      url: ${APOGEE_VIEW_URL:}
+      username: ${APOGEE_VIEW_USER:}
+      password: ${APOGEE_VIEW_PASSWORD:}
+      name: ${APOGEE_VIEW_NAME:V_ESIGN_NOTES}
+      # FULL : "2025-2026" ; START : "2025" (comme COD_ANU)
+      year-format: ${APOGEE_VIEW_YEAR_FORMAT:FULL}
 
 springdoc:
   swagger-ui:

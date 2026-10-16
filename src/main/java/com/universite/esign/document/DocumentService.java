@@ -62,7 +62,7 @@ public class DocumentService {
      */
     @Transactional
     public CreationResult create(CreateDocumentRequest request, Agent issuer, String clientId, String idempotencyKey) {
-        validateBusinessRules(request);
+        checkBusinessRules(request);
         String requestHash = Hashes.sha256Hex(json.writeValueAsBytes(request));
 
         if (idempotencyKey != null) {
@@ -157,7 +157,8 @@ public class DocumentService {
         return (base.endsWith("/") ? base.substring(0, base.length() - 1) : base) + "/verify/" + code;
     }
 
-    private static void validateBusinessRules(CreateDocumentRequest request) {
+    /** Règles qui dépassent la validation des champs (utilisées aussi par l'import Apogée). */
+    public static void checkBusinessRules(CreateDocumentRequest request) {
         if (request.type() == DocumentType.RELEVE_NOTES) {
             if (request.semester() == null || request.semester().isBlank()) {
                 throw new BadRequestException("Le semestre est obligatoire pour un relevé de notes");

@@ -1,0 +1,43 @@
+-- =====================================================================================
+-- Contrat de la vue Oracle lue par esign-api (lecture seule)
+-- =====================================================================================
+-- Une ligne par étudiant ET par module (élément pédagogique) noté.
+-- Les noms de colonnes ci-dessous sont ceux attendus par défaut ; s'ils diffèrent,
+-- adapter esign.apogee.columns.* (variables APOGEE_COL_*) plutôt que la vue.
+--
+--   CNE              code national de l'étudiant (CNE / INE)
+--   NOM, PRENOM      identité
+--   DATE_NAISSANCE   DATE
+--   LIEU_NAISSANCE   facultatif
+--   FILIERE, NIVEAU  ex. « Sciences Mathématiques et Informatique », « Licence 3 »
+--   ANNEE            année universitaire : '2025' (comme COD_ANU, APOGEE_VIEW_YEAR_FORMAT=START)
+--                    ou '2025-2026' (APOGEE_VIEW_YEAR_FORMAT=FULL)
+--   SEMESTRE         ex. 'S5'
+--   CODE_MODULE, MODULE, NOTE (NUMBER, /20), CREDITS (NUMBER, facultatif), RESULTAT (facultatif)
+--
+-- Seules les notes VALIDÉES (après délibération) doivent figurer dans la vue :
+-- l'API signe ce qu'elle lit.
+-- =====================================================================================
+
+-- Exemple de structure, à écrire par l'équipe Apogée à partir de son propre schéma :
+-- CREATE OR REPLACE VIEW APOGEE.V_ESIGN_NOTES AS
+-- SELECT ind.cod_nne_ind      AS CNE,
+--        ind.lib_nom_pat_ind  AS NOM,
+--        ind.lib_pr1_ind      AS PRENOM,
+--        ind.date_nai_ind     AS DATE_NAISSANCE,
+--        ...                  AS LIEU_NAISSANCE,
+--        ...                  AS FILIERE,
+--        ...                  AS NIVEAU,
+--        res.cod_anu          AS ANNEE,
+--        ...                  AS SEMESTRE,
+--        elp.cod_elp          AS CODE_MODULE,
+--        elp.lib_elp          AS MODULE,
+--        res.not_elp          AS NOTE,
+--        ...                  AS CREDITS,
+--        res.cod_tre          AS RESULTAT
+--   FROM ...;
+
+-- Compte technique dédié, avec le seul droit de lecture sur la vue :
+-- CREATE USER ESIGN_READER IDENTIFIED BY "<mot de passe fort>";
+-- GRANT CREATE SESSION TO ESIGN_READER;
+-- GRANT SELECT ON APOGEE.V_ESIGN_NOTES TO ESIGN_READER;

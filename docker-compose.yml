@@ -64,6 +64,13 @@ services:
       ESIGN_P12_ALIAS: cachet
       ESIGN_SIGNING_DEV_AUTO_GENERATE: "true"
       ESIGN_STORAGE_DIR: /data/storage
+      # Vue Oracle d'Apogée (désactivée) : voir docs/vue-apogee.sql
+      APOGEE_VIEW_ENABLED: "false"
+      # APOGEE_VIEW_URL: jdbc:oracle:thin:@//serveur-apogee:1521/APOGEE
+      # APOGEE_VIEW_USER: ESIGN_READER
+      # APOGEE_VIEW_PASSWORD: ...
+      # APOGEE_VIEW_NAME: APOGEE.V_ESIGN_NOTES
+      # APOGEE_VIEW_YEAR_FORMAT: START
     ports:
       - "8080:8080"
     volumes:
