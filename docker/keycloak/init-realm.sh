@@ -13,8 +13,15 @@ fi
 
 $KC create realms -s realm=$REALM -s enabled=true
 
+# scope_id <nom> : identifiant du client scope (bash pur, l'image Keycloak n'a pas awk)
 scope_id() {
-  $KC get client-scopes -r $REALM --fields id,name --format csv --noquotes | awk -F, -v n="$1" '$2==n {print $1}'
+  local id name
+  while IFS=, read -r id name; do
+    if [[ "$name" == "$1" ]]; then
+      echo "$id"
+      return
+    fi
+  done < <($KC get client-scopes -r $REALM --fields id,name --format csv --noquotes)
 }
 
 for scope in documents:write documents:read documents:revoke documents:admin audit:read; do

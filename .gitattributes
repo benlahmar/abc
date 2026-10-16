@@ -1,0 +1,5 @@
+# Les scripts exécutés dans les conteneurs Linux doivent garder des fins de ligne LF,
+# même sur un poste Windows (core.autocrlf=true).
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf

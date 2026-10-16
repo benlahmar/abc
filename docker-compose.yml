@@ -37,7 +37,9 @@ services:
     depends_on:
       keycloak:
         condition: service_healthy
-    entrypoint: ["/bin/bash", "/init/init-realm.sh"]
+    # Supprime les éventuels \r (script extrait en CRLF sous Windows), en bash pur :
+    # l'image Keycloak ne contient ni tr ni sed.
+    entrypoint: ["/bin/bash", "-c", "script=$$(< /init/init-realm.sh); bash -c \"$${script//$$'\\r'/}\""]
     volumes:
       - ./docker/keycloak:/init:ro
 
