@@ -79,6 +79,12 @@ et trois applications clientes de démonstration :
 | `ent-app` | `ent-secret-dev` | `documents:write documents:read` |
 | `audit-app` | `audit-secret-dev` | `audit:read documents:admin` |
 
+### Vérifier la version qui tourne
+
+http://localhost:8080/actuator/info affiche la date de construction de l'API. Si elle est ancienne après
+un `git pull`, reconstruire l'image sans cache : `docker compose build --no-cache esign-api`, puis
+`docker compose up --force-recreate`.
+
 ### Tester avec Swagger UI
 
 1. Ouvrir http://localhost:8080/swagger-ui.html (utiliser `localhost` ou `127.0.0.1`, origines autorisées par Keycloak).
