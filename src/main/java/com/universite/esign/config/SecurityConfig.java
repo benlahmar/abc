@@ -62,6 +62,8 @@ class SecurityConfig {
                         // Le rôle exigé dépend de l'étape en cours : contrôlé par ApprovalService
                         .requestMatchers("/api/v1/approvals/**").authenticated()
                         .requestMatchers("/api/v1/admin/**").hasAnyAuthority("SCOPE_workflow:admin", ESIGN_ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/audit/documents/**")
+                        .hasAnyAuthority("SCOPE_audit:read", ESIGN_ADMIN, AGENT)
                         .requestMatchers("/api/v1/audit/**").hasAnyAuthority("SCOPE_audit:read", ESIGN_ADMIN)
                         .requestMatchers("/api/v1/templates").authenticated()
                         .anyRequest().denyAll())

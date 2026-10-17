@@ -5,7 +5,9 @@ import java.util.UUID;
 import com.universite.esign.common.NotFoundException;
 import com.universite.esign.config.CallerContext;
 import com.universite.esign.document.dto.CreateDocumentRequest;
+import com.universite.esign.common.PageResponse;
 import com.universite.esign.document.dto.DocumentResponse;
+import com.universite.esign.document.dto.DocumentSummary;
 import com.universite.esign.document.dto.RevokeRequest;
 import com.universite.esign.identity.Agent;
 import com.universite.esign.identity.AgentResolver;
@@ -17,6 +19,8 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -32,6 +36,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -129,6 +134,22 @@ class DocumentController {
                 .body(body);
     }
 
+    @GetMapping
+    @Operation(summary = "Rechercher des documents",
+            description = "q : CNE, nom de l'étudiant ou référence (partiel). Du plus récent au plus ancien.")
+    PageResponse<DocumentSummary> search(
+            @RequestParam(required = false) @Size(max = 100) String q,
+            @RequestParam(required = false) DocumentType type,
+            @RequestParam(required = false) DocumentStatus status,
+            @RequestParam(required = false) String academicYear,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "25") @Min(1) @Max(100) int size,
+            Authentication auth, @AuthenticationPrincipal Jwt jwt) {
+        String clientId = CallerContext.seesAllDocuments(auth) ? null : CallerContext.clientId(jwt);
+        return PageResponse.of(service.search(new DocumentSearch(q, type, status, academicYear, clientId), page, size),
+                DocumentSummary::of);
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Consulter un document")
     DocumentResponse get(@PathVariable UUID id, Authentication auth, @AuthenticationPrincipal Jwt jwt) {
@@ -159,10 +180,13 @@ class DocumentController {
         return response(doc);
     }
 
-    /** Une application ne voit que les documents qu'elle a créés, sauf avec le scope documents:admin. */
+    /**
+     * Une application ne voit que les documents qu'elle a créés ; les agents de scolarité, les administrateurs
+     * et le scope documents:admin voient tous les documents de l'établissement.
+     */
     private Document owned(UUID id, Authentication auth, Jwt jwt) {
         Document doc = service.get(id);
-        if (!CallerContext.isAdmin(auth) && !doc.getClientId().equals(CallerContext.clientId(jwt))) {
+        if (!CallerContext.seesAllDocuments(auth) && !doc.getClientId().equals(CallerContext.clientId(jwt))) {
             // 404 plutôt que 403 : ne pas révéler l'existence du document
             throw new NotFoundException("Document introuvable : " + id);
         }

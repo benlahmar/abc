@@ -16,5 +16,7 @@ interface StudentRequestRepository extends JpaRepository<StudentRequest, UUID> {
 
     List<StudentRequest> findByStatusOrderByCreatedAtAsc(StudentRequestStatus status);
 
+    List<StudentRequest> findTop200ByStatusOrderByHandledAtDesc(StudentRequestStatus status);
+
     long countByStudentCneAndDocumentTypeAndCreatedAtAfter(String cne, DocumentType type, Instant since);
 }

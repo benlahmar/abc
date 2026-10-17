@@ -24,4 +24,15 @@ public final class CallerContext {
     public static boolean isAdmin(Authentication authentication) {
         return authentication.getAuthorities().stream().anyMatch(a -> ADMIN_AUTHORITY.equals(a.getAuthority()));
     }
+
+    /**
+     * Voit tous les documents de l'établissement : scope documents:admin (application de contrôle) ou personne
+     * du service de scolarité / administrateur. Une application cliente ne voit que les documents qu'elle a créés.
+     */
+    public static boolean seesAllDocuments(Authentication authentication) {
+        return authentication.getAuthorities().stream().anyMatch(a -> switch (a.getAuthority()) {
+            case ADMIN_AUTHORITY, "ROLE_AGENT_SCOLARITE", "ROLE_ESIGN_ADMIN" -> true;
+            default -> false;
+        });
+    }
 }

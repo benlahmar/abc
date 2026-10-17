@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** File des demandes étudiantes, traitée par le service de scolarité (Apogée). */
@@ -56,9 +57,13 @@ class StudentRequestController {
     }
 
     @GetMapping
-    @Operation(summary = "Demandes en attente, de la plus ancienne à la plus récente")
-    List<RequestView> pending() {
-        return requests.pending().stream().map(RequestView::of).toList();
+    @Operation(summary = "Demandes en attente (par défaut, de la plus ancienne à la plus récente) ou traitées",
+            description = "status=FULFILLED, REJECTED ou FAILED : les 200 dernières, de la plus récente à la plus ancienne.")
+    List<RequestView> list(@RequestParam(required = false) StudentRequestStatus status) {
+        List<StudentRequest> list = status == null || status == StudentRequestStatus.PENDING
+                ? requests.pending()
+                : requests.handled(status);
+        return list.stream().map(RequestView::of).toList();
     }
 
     @GetMapping("/{id}")

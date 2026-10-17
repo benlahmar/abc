@@ -106,6 +106,12 @@ public class StudentRequestService {
         return requests.findByStatusOrderByCreatedAtAsc(StudentRequestStatus.PENDING);
     }
 
+    /** Demandes traitées (les 200 plus récentes) : historique consultable par les agents. */
+    @Transactional(readOnly = true)
+    public List<StudentRequest> handled(StudentRequestStatus status) {
+        return requests.findTop200ByStatusOrderByHandledAtDesc(status);
+    }
+
     @Transactional(readOnly = true)
     public StudentRequest get(UUID id) {
         return requests.findById(id).orElseThrow(() -> new NotFoundException("Demande introuvable : " + id));

@@ -21,6 +21,9 @@ import com.universite.esign.signature.SignedPdf;
 import com.universite.esign.storage.DocumentStorage;
 import com.universite.esign.workflow.DocumentApproval;
 import com.universite.esign.workflow.WorkflowService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
@@ -126,6 +129,12 @@ public class DocumentService {
     @Transactional(readOnly = true)
     public Document get(UUID id) {
         return documents.findById(id).orElseThrow(() -> new NotFoundException("Document introuvable : " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Document> search(DocumentSearch criteria, int page, int size) {
+        return documents.findAll(criteria.toSpecification(),
+                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
     }
 
     /** Documents d'un étudiant, du plus récent au plus ancien. */

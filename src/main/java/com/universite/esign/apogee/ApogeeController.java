@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -52,6 +53,16 @@ class ApogeeController {
         this.documents = documents;
         this.workflow = workflow;
         this.agents = agents;
+    }
+
+    record Status(boolean viewEnabled) {
+    }
+
+    @GetMapping("/status")
+    @Operation(summary = "Raccordement Apogée disponible ?",
+            description = "viewEnabled : la vue Oracle est activée (établissement d'un document sans ressaisie).")
+    Status status() {
+        return new Status(apogee.viewEnabled());
     }
 
     @PostMapping("/documents")

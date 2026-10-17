@@ -9,6 +9,7 @@ import com.universite.esign.signature.PadesValidationService.UnsupportedDocument
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -89,6 +90,20 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     ProblemDetail forbidden(AccessDeniedException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
+    }
+
+    /** Paramètre de requête hors limites (ex. size=500) validé au niveau de la méthode. */
+    @ExceptionHandler(ConstraintViolationException.class)
+    ProblemDetail constraint(ConstraintViolationException e) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Paramètre(s) invalide(s)");
+        problem.setProperty("errors", e.getConstraintViolations().stream()
+                .map(v -> {
+                    String path = v.getPropertyPath().toString();
+                    return Map.<String, Object>of("field", path.substring(path.lastIndexOf('.') + 1),
+                            "message", v.getMessage());
+                })
+                .toList());
+        return problem;
     }
 
     @ExceptionHandler(TooManyRequestsException.class)
