@@ -29,10 +29,13 @@ esign:
   # URL publique imprimée dans le QR code
   public-base-url: ${ESIGN_PUBLIC_BASE_URL:http://localhost:8080}
   institution:
-    university: ${ESIGN_UNIVERSITY:Université Exemple}
-    faculty: ${ESIGN_FACULTY:Faculté des Sciences}
-    city: ${ESIGN_CITY:Ville}
+    university: ${ESIGN_UNIVERSITY:Université Hassan II de Casablanca}
+    faculty: ${ESIGN_FACULTY:Faculté des Sciences Ben M'Sick}
+    short-name: ${ESIGN_SHORT_NAME:FSBM}
+    city: ${ESIGN_CITY:Casablanca}
     signatory-title: ${ESIGN_SIGNATORY_TITLE:Le Doyen}
+    # Logo (PNG) sur les documents et les applications ; ex. ESIGN_LOGO=file:/config/logo.png
+    logo: ${ESIGN_LOGO:classpath:static/branding/logo.png}
     zone: ${ESIGN_ZONE:Africa/Casablanca}
   signing:
     # PKCS12 (fichier .p12) ou PKCS11 (HSM)

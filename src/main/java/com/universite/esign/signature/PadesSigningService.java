@@ -110,8 +110,8 @@ public class PadesSigningService {
         // N'embarquer que les caractères utilisés (sinon ~400 Ko de police par document)
         dssFont.setEmbedFontSubset(true);
         text.setFont(dssFont);
-        text.setTextColor(new Color(0x1F, 0x3A, 0x68));
-        text.setBackgroundColor(new Color(0xEE, 0xF3, 0xFA));
+        text.setTextColor(new Color(0x25, 0x54, 0x92)); // bleu de l'établissement
+        text.setBackgroundColor(new Color(0xED, 0xF2, 0xF9));
         text.setTextWrapping(TextWrapping.FILL_BOX);
         text.setSignerTextPosition(SignerTextPosition.LEFT);
         text.setSignerTextHorizontalAlignment(SignerTextHorizontalAlignment.CENTER);

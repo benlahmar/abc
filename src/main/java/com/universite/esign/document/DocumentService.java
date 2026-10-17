@@ -104,7 +104,7 @@ public class DocumentService {
         EsignProperties.Institution inst = properties.institution();
         SignedPdf signed = signer.sign(pdf, new SignatureRequest(
                 document.getType().label(),
-                inst.faculty() + " - " + inst.university(),
+                inst.faculty(),
                 inst.city(),
                 pageCount,
                 PdfRenderer.SIGNATURE_BOX));

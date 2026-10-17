@@ -50,7 +50,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
   display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap;
   padding: 1rem clamp(1rem, 3vw, 2rem); border-bottom: 2px solid var(--encre);
 }
-.etablissement { display: flex; flex-direction: column; }
+.etablissement { display: flex; align-items: center; gap: 1rem; }
+.etablissement > div { display: flex; flex-direction: column; }
+/* Logo de l'établissement : sur une plaque claire en mode sombre pour rester lisible */
+.etablissement-logo { height: 3.25rem; width: auto; display: block; }
+@media (prefers-color-scheme: dark) {
+  .etablissement-logo { background: #fbfbf8; padding: .25rem .5rem; border-radius: 3px; }
+}
 .etablissement-nom { font-weight: 700; font-size: var(--t1); letter-spacing: -.01em; }
 .etablissement-fac { color: var(--encre-douce); }
 .identite { display: flex; align-items: baseline; gap: 1.25rem; flex-wrap: wrap; }
@@ -144,7 +150,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   box-shadow: 0 1px 0 #cfd4c8, 0 12px 28px -18px rgba(31, 43, 69, .55);
   display: flex; flex-direction: column; overflow: hidden;
 }
-.feuille-entete { text-align: center; border-bottom: 1px solid #1f2b45; padding-bottom: .9em; margin-bottom: 2.2em; }
+.feuille-entete { text-align: center; border-bottom: 1px solid #255492; padding-bottom: .9em; margin-bottom: 2.2em; }
+.feuille-logo { height: 6.2em; width: auto; display: block; margin: 0 auto; }
 .feuille-univ { font-weight: 600; font-size: 1.15em; }
 .feuille-fac { font-style: italic; }
 .feuille-titre { text-align: center; font-size: 1.7em; font-weight: 600; letter-spacing: .04em; margin: 0 0 .3em; }

@@ -14,6 +14,14 @@ if ! $KC get "realms/$REALM" >/dev/null 2>&1; then
   $KC create realms -s realm=$REALM -s enabled=true
 fi
 
+# Page de connexion : nom de l'établissement, en français par défaut (arabe et anglais disponibles)
+# (valeurs passées en JSON sur l'entrée standard : toujours lu en UTF-8, contrairement aux arguments
+# de commande qui dépendent de la langue du système et abîmeraient les accents)
+$KC update "realms/$REALM" -f - <<'JSON'
+{ "displayName": "FSBM - Faculté des Sciences Ben M'Sick",
+  "internationalizationEnabled": true, "supportedLocales": ["fr", "ar", "en"], "defaultLocale": "fr" }
+JSON
+
 # scope_id <nom> : identifiant du client scope (bash pur, l'image Keycloak n'a pas awk)
 scope_id() {
   local id name

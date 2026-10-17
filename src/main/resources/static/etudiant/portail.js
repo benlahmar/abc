@@ -176,9 +176,10 @@
 
   async function start() {
     config = await (await fetch('config.json')).json();
-    $('univ').textContent = config.university;
-    $('fac').textContent = config.faculty;
-    document.title = 'Mes documents — ' + config.university;
+    $('univ').textContent = config.faculty;
+    $('fac').textContent = config.university;
+    if (config.logoUrl) { $('logo').src = config.logoUrl; $('logo').alt = config.shortName || ''; $('logo').hidden = false; }
+    document.title = 'Mes documents — ' + (config.shortName || config.faculty);
     oidc = await (await fetch(config.issuer + '/.well-known/openid-configuration')).json();
     $('login-btn').addEventListener('click', login);
     $('logout').addEventListener('click', logout);

@@ -55,19 +55,23 @@ class VerificationPageController {
                   body{font-family:system-ui,sans-serif;background:#f4f6fa;margin:0;padding:24px 16px;color:#1b2430}
                   .card{max-width:560px;margin:auto;background:#fff;border-radius:12px;padding:24px;
                         box-shadow:0 2px 12px rgba(0,0,0,.08)}
-                  h1{font-size:1rem;margin:0 0 4px;color:#1f3a68} .sub{color:#667;margin:0 0 20px;font-size:.9rem}
+                  h1{font-size:1rem;margin:0 0 4px;color:#255492} .sub{color:#667;margin:0 0 20px;font-size:.9rem}
+                  .logo{display:block;height:84px;width:auto;margin:0 auto 16px}
+                  .entete{text-align:center;border-bottom:2px solid #255492;padding-bottom:14px;margin-bottom:20px}
                   .status{padding:14px 16px;border-radius:8px;font-weight:600;margin-bottom:20px}
                   .ok{background:#e6f6ec;color:#11683a} .ko{background:#fdeaea;color:#9b1c1c}
                   table{width:100%%;border-collapse:collapse} td{padding:8px 0;border-bottom:1px solid #eef;font-size:.92rem}
                   td:first-child{color:#667;width:45%%} .note{color:#889;font-size:.8rem;margin-top:20px}
                 </style></head><body><div class="card">
-                <h1>%s</h1><p class="sub">%s</p>
+                <div class="entete"><img class="logo" src="/branding/logo.png" alt="%s">
+                <h1>%s</h1><p class="sub">%s</p></div>
                 <div class="status %s">%s %s</div>
                 <table>%s</table>
                 <p class="note">Vérifiez que les informations ci-dessus correspondent exactement au document présenté.
                 Pour un contrôle complet, déposez le fichier PDF sur <code>POST /api/v1/verify</code>.</p>
                 </div></body></html>
-                """.formatted(esc(institution.university()), esc(institution.faculty()), statusClass, icon,
+                """.formatted(esc(institution.faculty() + ", " + institution.university()), esc(institution.faculty()),
+                esc(institution.university()), statusClass, icon,
                 esc(r.message()), rows);
     }
 

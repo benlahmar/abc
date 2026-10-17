@@ -45,7 +45,7 @@ class OpenApiConfig {
                 .description("Jeton d'accès déjà obtenu (sans le préfixe « Bearer »)");
         return new OpenAPI()
                 .info(new Info()
-                        .title("API de signature électronique - Université")
+                        .title("API de signature électronique - FSBM, Université Hassan II de Casablanca")
                         .version("v1")
                         .description("Génération et signature électronique avancée (PAdES, certificat X.509) "
                                 + "des attestations de scolarité et relevés de notes, avec vérification publique "

@@ -280,7 +280,7 @@
       annule: ['ANNULÉ', 'par la faculté'],
     }[type];
     // Texte circulaire du tampon : université et faculté, comme sur un cachet réel
-    const univ = [config.university, config.faculty].filter(Boolean).join(' · ').toUpperCase();
+    const univ = [config.faculty, config.city].filter(Boolean).join(' · ').toUpperCase();
     const pointille = type === 'attente' ? ' stroke-dasharray="5 6"' : '';
     return el('div', { class: `cachet cachet-${type === 'signe' ? 'signe' : type}${poser ? ' cachet-pose' : ''}`, 'aria-hidden': 'true',
       html: `<svg viewBox="0 0 200 200">
@@ -314,9 +314,10 @@
 
     return el('article', { class: 'feuille' + (statut === 'REVOKED' ? ' feuille-annulee' : ''), 'aria-label': 'Aperçu du document' },
       brouillon ? el('div', { class: 'feuille-brouillon', 'aria-hidden': 'true' }, 'Aperçu') : null,
-      el('div', { class: 'feuille-entete' },
-        el('div', { class: 'feuille-univ' }, config.university),
-        el('div', { class: 'feuille-fac' }, config.faculty)),
+      el('div', { class: 'feuille-entete' }, config.logoUrl
+        // Comme sur le PDF : le logo porte les noms de l'université et de la faculté
+        ? el('img', { class: 'feuille-logo', src: config.logoUrl, alt: config.faculty + ', ' + config.university })
+        : [el('div', { class: 'feuille-univ' }, config.university), el('div', { class: 'feuille-fac' }, config.faculty)]),
       el('h3', { class: 'feuille-titre' }, TYPES[type].titre),
       el('div', { class: 'feuille-sous' }, 'Année universitaire ' + annee + (releve && semestre ? ', semestre ' + semestre.slice(1) : '')),
       releve
@@ -618,9 +619,15 @@
     } else {
       config = demo.config;
     }
-    $('#univ').textContent = config.university;
-    $('#fac').textContent = config.faculty;
-    document.title = 'Mes documents officiels, ' + config.university;
+    $('#univ').textContent = config.faculty;
+    $('#fac').textContent = config.university;
+    if (config.logoUrl) {
+      const logo = $('#logo');
+      logo.src = config.logoUrl;
+      logo.alt = config.shortName || '';
+      logo.hidden = false;
+    }
+    document.title = 'Mes documents officiels, ' + (config.shortName || config.faculty);
 
     $('#connexion').addEventListener('click', seConnecter);
     $('#deconnexion').addEventListener('click', seDeconnecter);
@@ -666,7 +673,8 @@
 
   const ilYa = (jours, heures = 0) => new Date(Date.now() - (jours * 24 + heures) * 3600e3).toISOString();
   const demo = {
-    config: { university: 'Université Exemple', faculty: 'Faculté des Sciences', clientId: 'demo', issuer: '' },
+    config: { university: 'Université Hassan II de Casablanca', faculty: 'Faculté des Sciences Ben M\'Sick',
+      shortName: 'FSBM', city: 'Casablanca', logoUrl: '../branding/logo.png', clientId: 'demo', issuer: '' },
     profil: { cne: 'R130456789', username: 'etudiant', name: 'Yasmine El Amrani',
       documentTypes: [
         { type: 'ATTESTATION_SCOLARITE', label: 'Attestation de scolarité', mode: 'AUTO', dailyLimit: 3 },
@@ -675,16 +683,16 @@
     documents: [
       { id: 'd1', type: 'RELEVE_NOTES', label: 'Relevé de notes', status: 'SIGNED', academicYear: '2025-2026', semester: 'S5',
         createdAt: ilYa(2), signedAt: ilYa(2), verificationCode: 'PYZVH-Z3830-X9B28-CQ19P',
-        verificationUrl: 'https://esign.universite.ma/verify/PYZVH-Z3830-X9B28-CQ19P', downloadUrl: '#' },
+        verificationUrl: 'https://esign.fsbm.ma/verify/PYZVH-Z3830-X9B28-CQ19P', downloadUrl: '#' },
       { id: 'd2', type: 'ATTESTATION_SCOLARITE', label: 'Attestation de scolarité', status: 'SIGNED', academicYear: '2025-2026',
         semester: null, createdAt: ilYa(21), signedAt: ilYa(21), verificationCode: 'KFFH8-SSNTP-3GYNG-XC28A',
-        verificationUrl: 'https://esign.universite.ma/verify/KFFH8-SSNTP-3GYNG-XC28A', downloadUrl: '#' },
+        verificationUrl: 'https://esign.fsbm.ma/verify/KFFH8-SSNTP-3GYNG-XC28A', downloadUrl: '#' },
       { id: 'd3', type: 'RELEVE_NOTES', label: 'Relevé de notes', status: 'REVOKED', academicYear: '2024-2025', semester: 'S4',
         createdAt: ilYa(160), signedAt: ilYa(160), verificationCode: 'M2Q7D-8TRWA-4KXNB-J61PZ', revokedAt: ilYa(150),
         revocationReason: 'note du module M42 corrigée après réclamation, un nouveau relevé a été établi' },
       { id: 'd4', type: 'RELEVE_NOTES', label: 'Relevé de notes', status: 'SIGNED', academicYear: '2024-2025', semester: 'S4',
         createdAt: ilYa(149), signedAt: ilYa(149), verificationCode: 'C7HN2-QW4ZE-9MBXT-5RD8K',
-        verificationUrl: 'https://esign.universite.ma/verify/C7HN2-QW4ZE-9MBXT-5RD8K', downloadUrl: '#' },
+        verificationUrl: 'https://esign.fsbm.ma/verify/C7HN2-QW4ZE-9MBXT-5RD8K', downloadUrl: '#' },
     ],
     demandes: [
       { id: 'r1', type: 'RELEVE_NOTES', label: 'Relevé de notes', academicYear: '2025-2026', semester: 'S6', status: 'PENDING',

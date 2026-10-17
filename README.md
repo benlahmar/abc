@@ -1,5 +1,7 @@
 # esign-api — Signature électronique des documents universitaires
 
+**Faculté des Sciences Ben M'Sick (FSBM), Université Hassan II de Casablanca**
+
 API REST (Spring Boot 4) qui **génère** et **signe électroniquement** les attestations de scolarité
 et les relevés de notes, avec une **signature électronique avancée au format PAdES** (certificat X.509),
 et permet à n'importe qui de **vérifier** l'authenticité d'un document via son QR code.
@@ -319,6 +321,20 @@ directement `src/main/resources/static/demandes/index.html` dans un navigateur.
 Côté Keycloak, pour chaque application : un client OIDC, le rôle `ETUDIANT` pour les étudiants, et un
 *mapper* qui place l'attribut `cne` du compte dans le jeton (voir `docker/keycloak/init-realm.sh`).
 Compte de démonstration : `etudiant` / `etudiant123` (CNE `R130456789`).
+
+## Identité de l'établissement
+
+Le nom, la ville et le logo figurent sur les PDF, la page de vérification, les applications étudiant et la
+page de connexion. Valeurs par défaut : FSBM, Université Hassan II de Casablanca, Casablanca, logo
+`src/main/resources/static/branding/logo.png`. Pour un autre établissement :
+
+```properties
+ESIGN_UNIVERSITY=Université Hassan II de Casablanca
+ESIGN_FACULTY=Faculté des Sciences Ben M'Sick
+ESIGN_SHORT_NAME=FSBM
+ESIGN_CITY=Casablanca
+ESIGN_LOGO=file:/config/logo.png      # PNG, fond transparent de préférence ; vide = en-tête textuel
+```
 
 ## Passage en production
 

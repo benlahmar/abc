@@ -25,6 +25,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
 /**
@@ -41,17 +42,36 @@ public class PdfRenderer {
     private static final float CONTENT_WIDTH = PAGE.getWidth() - 2 * MARGIN;
     /** Hauteur réservée en bas de la dernière page au QR code et à la signature visible. */
     private static final float FOOTER_HEIGHT = 170;
-    private static final Color PRIMARY = new Color(0x1F, 0x3A, 0x68);
+    /** Bleu de l'établissement (logo FSBM). */
+    private static final Color PRIMARY = new Color(0x25, 0x54, 0x92);
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     /** Zone de la signature visible (coordonnées DSS : origine en haut à gauche). */
     public static final SignatureRequest.Box SIGNATURE_BOX =
             new SignatureRequest.Box(345, PAGE.getHeight() - 50 - 75, 200, 75);
 
-    private final EsignProperties.Institution institution;
+    /** Hauteur du logo dans l'en-tête, en points. */
+    private static final float LOGO_HEIGHT = 66;
 
-    public PdfRenderer(EsignProperties properties) {
+    private final EsignProperties.Institution institution;
+    private final byte[] logo;
+
+    public PdfRenderer(EsignProperties properties, ResourceLoader resources) {
         this.institution = properties.institution();
+        this.logo = loadLogo(institution.logo(), resources);
+    }
+
+    private static byte[] loadLogo(String location, ResourceLoader resources) {
+        if (location == null || location.isBlank()) {
+            return null;
+        }
+        String uri = location.contains(":") ? location : "file:" + location;
+        try (InputStream in = resources.getResource(uri).getInputStream()) {
+            return in.readAllBytes();
+        } catch (IOException e) {
+            throw new IllegalStateException("Logo introuvable : " + location
+                    + " (esign.institution.logo ; laisser vide pour un en-tête sans logo)", e);
+        }
     }
 
     public record RenderedPdf(byte[] content, int pageCount) {
@@ -92,12 +112,20 @@ public class PdfRenderer {
     }
 
     private void header(Writer w, CreateDocumentRequest request, String code) throws IOException {
-        w.centered(institution.university().toUpperCase(), 13, true, PRIMARY);
-        w.y -= 17;
-        w.centered(institution.faculty(), 11, false, PRIMARY);
-        w.y -= 10;
+        if (logo != null) {
+            // Le logo porte déjà les noms de l'université et de la faculté (arabe et français)
+            PDImageXObject image = PDImageXObject.createFromByteArray(w.doc, logo, "logo");
+            float width = image.getWidth() * LOGO_HEIGHT / image.getHeight();
+            w.stream.drawImage(image, (PAGE.getWidth() - width) / 2, w.y - LOGO_HEIGHT + 10, width, LOGO_HEIGHT);
+            w.y -= LOGO_HEIGHT + 2;
+        } else {
+            w.centered(institution.university().toUpperCase(), 13, true, PRIMARY);
+            w.y -= 17;
+            w.centered(institution.faculty(), 11, false, PRIMARY);
+            w.y -= 10;
+        }
         w.line(MARGIN, PAGE.getWidth() - MARGIN, PRIMARY);
-        w.y -= 40;
+        w.y -= 36;
         w.centered(request.type().label().toUpperCase(), 18, true, Color.BLACK);
         w.y -= 22;
         w.centered("Année universitaire " + request.academicYear(), 10, false, Color.DARK_GRAY);

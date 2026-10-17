@@ -45,12 +45,21 @@ public record EsignProperties(
     public record Issuance(@DefaultValue("true") boolean requireAgent) {
     }
 
+    /**
+     * Identité de l'établissement, reprise sur les documents, la page de vérification et les applications.
+     *
+     * @param shortName sigle (ex. FSBM)
+     * @param logo      logo (PNG, fond transparent de préférence) : ressource « classpath: » ou chemin de fichier ;
+     *                  vide pour un en-tête uniquement textuel
+     */
     public record Institution(
-            @DefaultValue("Université Exemple") String university,
-            @DefaultValue("Faculté des Sciences") String faculty,
-            @DefaultValue("Ville") String city,
+            @DefaultValue("Université Hassan II de Casablanca") String university,
+            @DefaultValue("Faculté des Sciences Ben M'Sick") String faculty,
+            @DefaultValue("FSBM") String shortName,
+            @DefaultValue("Casablanca") String city,
             @DefaultValue("Le Doyen") String signatoryTitle,
-            @DefaultValue("Africa/Casablanca") ZoneId zone) {
+            @DefaultValue("Africa/Casablanca") ZoneId zone,
+            @DefaultValue("classpath:static/branding/logo.png") String logo) {
     }
 
     public enum TokenType { PKCS12, PKCS11 }

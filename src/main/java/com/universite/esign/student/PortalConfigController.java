@@ -21,7 +21,10 @@ class PortalConfigController {
                 "issuer", issuer,
                 "clientId", properties.student().portalClientId(),
                 "university", properties.institution().university(),
-                "faculty", properties.institution().faculty());
+                "faculty", properties.institution().faculty(),
+                "shortName", properties.institution().shortName(),
+                "city", properties.institution().city(),
+                "logoUrl", "/branding/logo.png");
     }
 
     @GetMapping("/etudiant/config.json")
