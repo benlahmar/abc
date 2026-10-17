@@ -322,6 +322,43 @@ Côté Keycloak, pour chaque application : un client OIDC, le rôle `ETUDIANT` p
 *mapper* qui place l'attribut `cne` du compte dans le jeton (voir `docker/keycloak/init-realm.sh`).
 Compte de démonstration : `etudiant` / `etudiant123` (CNE `R130456789`).
 
+## Back-office de la scolarité (`frontend/`)
+
+Application web des agents de scolarité (Vite + React + TypeScript), servie sur
+**http://localhost:8081** par `docker compose up --build` (service `backoffice`).
+Connexion : `agent.apogee` / `agent123` (ou `admin.esign` / `admin123`).
+
+- **Demandes étudiantes** : file des demandes en attente (compteur dans la navigation), onglets
+  Traitées / Refusées / En échec ; pour chaque demande :
+  - **Établir depuis Apogée** (`A`, si la vue Oracle est activée) ;
+  - **Saisir les données** (`S`) : formulaire prérempli, notes collables depuis Excel
+    (code, module, note, crédits, résultat) dans un champ « Code », moyenne pondérée en direct ;
+  - **Refuser** (`R`) avec des motifs prédéfinis ;
+  - sélection multiple pour établir ou refuser en lot ; la demande suivante est sélectionnée automatiquement.
+- **Documents** : recherche (nom, CNE, référence), filtres type / état / année, fiche, téléchargement (`T`),
+  lien de vérification, aperçu, **historique d'audit**, révocation avec motif obligatoire,
+  **Nouveau document** (`N`) hors demande.
+
+Les erreurs de validation de l'API sont affichées sous les champs concernés.
+
+### Développement
+
+```bash
+cd frontend
+npm install
+npm run dev            # http://localhost:5173 (API sur 8080, Keycloak sur 8180)
+npm test               # tests unitaires (vitest)
+npm run typecheck
+npm run api:generate   # régénère les types depuis /v3/api-docs (API démarrée)
+```
+
+Organisation : `packages/api` (client typé), `packages/auth` (OIDC + PKCE, sans dépendance),
+`packages/ui` (charte FSBM et composants), `apps/backoffice`. Les adresses de l'API et de Keycloak
+sont lues dans `config.json` au démarrage ; dans l'image Docker, ce fichier est écrit à partir de
+`ESIGN_API_URL`, `ESIGN_OIDC_ISSUER` et `ESIGN_OIDC_CLIENT_ID` (une même image pour tous les
+environnements). L'origine du back-office doit figurer dans `ESIGN_CORS_ALLOWED_ORIGINS` de l'API,
+et le client Keycloak public `esign-backoffice` doit autoriser son adresse de redirection.
+
 ## Identité de l'établissement
 
 Le nom, la ville et le logo figurent sur les PDF, la page de vérification, les applications étudiant et la
@@ -377,6 +414,8 @@ ESIGN_LOGO=file:/config/logo.png      # PNG, fond transparent de préférence ; 
 - [ ] Webhooks `document.signed` vers les applications, notification de l'étudiant par e-mail
 - [ ] Stockage objet S3/MinIO, conversion PDF/A-3
 - [ ] Connecteur vers le système de scolarité (Apogée…), modèles personnalisables
+- [x] Back-office scolarité : demandes étudiantes, documents (recherche, révocation, historique)
+- [ ] Back-office : imports Apogée, approbations, paramétrage, audit
 - [ ] SDK clients (générés depuis l'OpenAPI)
 
 ## Licences tierces

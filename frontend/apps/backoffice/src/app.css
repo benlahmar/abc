@@ -1,0 +1,140 @@
+/* Back-office : rail de navigation | tableau | panneau de détail. Conçu pour un usage quotidien sur
+   ordinateur ; en dessous de 1100 px le panneau passe sous le tableau. */
+
+.ecran-centre { display: grid; place-content: center; justify-items: center; gap: 1rem; min-height: 100%; color: var(--encre-douce); }
+.panne { padding: 2rem; }
+.lien { background: none; border: 0; padding: 0; color: var(--encre); text-decoration: underline; text-underline-offset: .2em; cursor: pointer; }
+
+.accueil { max-width: 36rem; padding: clamp(2rem, 10vh, 6rem) 1.5rem; margin: 0 auto; }
+.accueil-logo { height: 5.5rem; width: auto; display: block; margin-bottom: 2rem; }
+.accueil h1 { font-size: var(--t2); margin: 0 0 .75rem; }
+.accueil p { color: var(--encre-douce); margin: 0 0 1.5rem; max-width: 60ch; }
+
+/* ------------------------------------------------------------------ atelier */
+.atelier { display: grid; grid-template-columns: 15.5rem 1fr; height: 100%; }
+
+.rail { background: var(--surface); border-right: 1px solid var(--filet); display: flex; flex-direction: column; padding: 1.25rem 0 1rem; min-height: 0; }
+.rail-logo { height: 3.6rem; width: auto; align-self: flex-start; margin: 0 1.25rem .5rem; }
+@media (prefers-color-scheme: dark) { .rail-logo { background: #fbfbf8; padding: .25rem .4rem; border-radius: var(--rayon); } }
+.rail-titre { margin: 0 1.25rem 1.5rem; font-weight: 700; color: var(--encre-douce); font-size: var(--t-1); }
+.rail-liens { display: grid; }
+.rail-liens a { display: flex; justify-content: space-between; align-items: center; gap: .5rem; padding: .6rem 1.25rem;
+  color: var(--encre); text-decoration: none; border-left: 4px solid transparent; font-weight: 700; }
+.rail-liens a:hover { background: var(--papier); }
+.rail-liens a[aria-current="page"] { border-left-color: var(--fsbm); background: var(--fsbm-clair); color: var(--fsbm); }
+.rail-compte { min-width: 1.6rem; padding: 0 .4rem; border-radius: 999px; background: var(--attente); color: #fff; text-align: center; font-size: var(--t-1); }
+@media (prefers-color-scheme: dark) { .rail-compte { color: #10141c; } }
+.rail-pied { margin-top: auto; padding: 1rem 1.25rem 0; border-top: 1px solid var(--filet); display: grid; gap: .5rem; }
+.rail-user { display: grid; }
+.rail-user span { color: var(--encre-douce); font-size: var(--t-1); }
+
+.plan { min-width: 0; min-height: 0; display: flex; }
+.section { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; }
+.section-tete { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; padding: 1rem 1.5rem .75rem; border-bottom: 1px solid var(--filet); }
+.section-tete h1 { font-size: var(--t2); margin: 0; letter-spacing: -.01em; }
+.section-tete > .btn { margin-left: auto; }
+
+.onglets { display: flex; gap: 1.25rem; }
+.onglets button { background: none; border: 0; padding: .35rem 0; cursor: pointer; color: var(--encre-douce); font-weight: 700; border-bottom: 3px solid transparent; }
+.onglets button[aria-selected="true"] { color: var(--encre); border-bottom-color: var(--fsbm); }
+
+.outils { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; padding: .75rem 1.5rem; border-bottom: 1px solid var(--filet); }
+.outils select, .recherche input { min-height: 2.25rem; padding: .35rem .55rem; border: 1.5px solid var(--filet); border-radius: var(--rayon); background: var(--feuille); }
+.recherche { flex: 1 1 18rem; }
+.recherche input { width: 100%; }
+.recherche input:focus, .outils select:focus { outline: none; border-color: var(--fsbm); box-shadow: 0 0 0 3px var(--fsbm-clair); }
+.resultats { color: var(--encre-douce); font-size: var(--t-1); margin-left: auto; }
+
+.lot { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; padding: .6rem 1.5rem; background: var(--fsbm-clair); border-bottom: 1px solid var(--filet); }
+.refus-groupe { display: inline-flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.refus-groupe select { max-width: 22rem; min-height: 2.25rem; border: 1.5px solid var(--filet); border-radius: var(--rayon); background: var(--feuille); }
+
+.espace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(22rem, 30rem); flex: 1; min-height: 0; }
+/* Pendant une saisie, le panneau s'élargit : le formulaire passe avant la liste */
+.espace.espace-large { grid-template-columns: minmax(18rem, 1fr) minmax(30rem, 46rem); }
+.tableau-zone { overflow: auto; min-width: 0; }
+
+/* ------------------------------------------------------------------ tableau */
+.tableau { width: 100%; border-collapse: collapse; }
+.tableau th { position: sticky; top: 0; z-index: 1; background: var(--papier); text-align: left; font-size: var(--t-1); color: var(--encre-douce);
+  padding: .55rem .75rem; border-bottom: 1.5px solid var(--filet-fort); }
+.tableau td { padding: .55rem .75rem; border-bottom: 1px solid var(--filet); vertical-align: top; }
+.tableau tbody tr { cursor: pointer; }
+.tableau tbody tr:hover { background: var(--surface); }
+.tableau tbody tr[aria-selected="true"] { background: var(--fsbm-clair); box-shadow: inset 4px 0 0 var(--fsbm); }
+.tableau th:first-child, .tableau td:first-child { padding-left: 1.5rem; }
+.col-case { width: 2.5rem; }
+.col-case input { width: 1.05rem; height: 1.05rem; accent-color: var(--fsbm); }
+.sous { display: block; color: var(--encre-douce); font-size: var(--t-1); }
+.quand { white-space: nowrap; color: var(--encre-douce); }
+
+.pagination { display: flex; gap: 1rem; align-items: center; justify-content: center; padding: 1rem; }
+.squelettes { display: grid; gap: 1rem; padding: 1.25rem 1.5rem; }
+.squelettes .squelette { height: 2.2rem; }
+.vide { padding: 3rem 1.5rem; max-width: 34rem; }
+.vide h2 { font-size: var(--t1); margin: 0 0 .5rem; }
+.vide p { color: var(--encre-douce); margin: 0 0 1rem; }
+.erreur-chargement { margin: 1rem 1.5rem; padding: .75rem 1rem; border-left: 4px solid var(--annule); background: var(--annule-clair); display: flex; gap: 1rem; align-items: center; }
+
+/* ------------------------------------------------------------------ panneau */
+.panneau { border-left: 1px solid var(--filet); background: var(--surface); overflow: auto; padding: 1.25rem 1.5rem 2rem; display: flex; flex-direction: column; gap: .9rem; align-items: flex-start; }
+.panneau > * { max-width: 100%; }
+.panneau h2 { font-size: var(--t1); margin: 0; }
+.panneau h3 { font-size: var(--t0); margin: .75rem 0 0; }
+.panneau-vide { color: var(--encre-douce); }
+.fiche { display: grid; grid-template-columns: auto 1fr; gap: .35rem 1rem; margin: 0; width: 100%; }
+.fiche dt { color: var(--encre-douce); font-size: var(--t-1); padding-top: .1rem; }
+.fiche dd { margin: 0; }
+.ref { letter-spacing: .04em; }
+.encart { margin: 0; padding: .6rem .8rem; border-left: 4px solid var(--fsbm); background: var(--feuille); width: 100%; }
+.encart-ko { border-left-color: var(--annule); }
+.actions { display: grid; gap: .5rem; width: 100%; }
+.actions .btn { justify-content: space-between; }
+.actions-ligne, .formulaire-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.apercu { width: 100%; aspect-ratio: 1 / 1.3; border: 1px solid var(--filet); background: #fff; }
+
+.historique { list-style: none; padding: 0; margin: 0; width: 100%; }
+.historique li { display: grid; grid-template-columns: 1fr auto; gap: 0 1rem; padding: .45rem 0; border-bottom: 1px solid var(--filet); }
+.historique li > span:last-child { grid-column: 1 / -1; color: var(--encre-douce); font-size: var(--t-1); }
+.historique li > span.num { color: var(--encre-douce); font-size: var(--t-1); }
+
+/* ------------------------------------------------------------------ refus */
+.refus, .refus fieldset { display: grid; gap: .6rem; width: 100%; border: 0; margin: 0; padding: 0; }
+.refus legend { font-weight: 700; margin-bottom: .4rem; }
+.motifs { display: grid; gap: .35rem; }
+.motif { text-align: left; background: var(--feuille); border: 1.5px solid var(--filet); border-radius: var(--rayon); padding: .4rem .6rem; cursor: pointer; font-size: var(--t-1); }
+.motif:hover { border-color: var(--encre); }
+
+/* ------------------------------------------------------------------ formulaire */
+.formulaire { display: grid; gap: 1.1rem; width: 100%; }
+.formulaire fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: .6rem; min-width: 0; }
+.formulaire legend { font-weight: 700; padding: 0; margin-bottom: .5rem; }
+.choix { display: flex !important; gap: 1rem; flex-wrap: wrap; }
+.choix label { display: inline-flex; gap: .4rem; align-items: center; }
+.choix input { accent-color: var(--fsbm); }
+.grille-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.grille-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; }
+.notes { width: 100%; border-collapse: collapse; }
+.notes th { text-align: left; font-size: var(--t-1); color: var(--encre-douce); padding: 0 .25rem .25rem; }
+.notes td { padding: .15rem .2rem; }
+.notes input { width: 100%; min-height: 2rem; padding: .25rem .4rem; border: 1.5px solid var(--filet); border-radius: var(--rayon); background: var(--feuille); }
+.notes input[aria-invalid="true"] { border-color: var(--annule); }
+.notes td:nth-child(1) { width: 4.5rem; } .notes td:nth-child(3) { width: 4.5rem; } .notes td:nth-child(4) { width: 3.75rem; } .notes td:nth-child(5) { width: 4rem; }
+.notes .btn { min-height: 2rem; padding: .2rem .4rem; font-size: var(--t-1); }
+.notes-pied { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.formulaire-message { margin: 0; font-weight: 700; color: var(--valide); }
+.formulaire-message.erreur { color: var(--annule); }
+
+@media (max-width: 1100px) {
+  .espace { grid-template-columns: 1fr; grid-template-rows: minmax(16rem, 1fr) auto; }
+  .panneau { border-left: 0; border-top: 1px solid var(--filet); }
+}
+@media (max-width: 760px) {
+  .atelier { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .rail { flex-direction: row; flex-wrap: wrap; align-items: center; padding: .5rem; gap: .5rem; border-right: 0; border-bottom: 1px solid var(--filet); }
+  .rail-logo { height: 2.5rem; margin: 0; }
+  .rail-titre, .rail-user span { display: none; }
+  .rail-liens { display: flex; }
+  .rail-pied { margin: 0 0 0 auto; border: 0; padding: 0; }
+  .grille-2, .grille-3 { grid-template-columns: 1fr; }
+}

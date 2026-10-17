@@ -141,4 +141,18 @@ $KC update "clients/$cid" -r $REALM -s "redirectUris=$SWAGGER_REDIRECTS" -s "web
 cne_mapper "$cid"
 echo "Client esign-swagger configuré"
 
+# Client public du back-office (agents, validateurs, administrateurs) : application frontend séparée
+BO_URLS='["http://localhost:8081/*","http://localhost:5173/*"]'
+BO_ORIGINS='["http://localhost:8081","http://localhost:5173"]'
+cid=$($KC get clients -r $REALM -q clientId=esign-backoffice --fields id --format csv --noquotes)
+if [[ -z "$cid" ]]; then
+  $KC create clients -r $REALM -s clientId=esign-backoffice -s enabled=true -s publicClient=true \
+    -s standardFlowEnabled=true -s directAccessGrantsEnabled=false -s serviceAccountsEnabled=false
+  cid=$($KC get clients -r $REALM -q clientId=esign-backoffice --fields id --format csv --noquotes)
+fi
+$KC update "clients/$cid" -r $REALM -s "redirectUris=$BO_URLS" -s "webOrigins=$BO_ORIGINS" \
+  -s 'attributes."pkce.code.challenge.method"=S256' \
+  -s 'attributes."post.logout.redirect.uris"=http://localhost:8081/*##http://localhost:5173/*'
+echo "Client esign-backoffice configuré"
+
 echo "Realm $REALM configuré"

@@ -1,0 +1,110 @@
+/* Charte FSBM pour les applications internes.
+   Papier d'archive et encre comme base ; bleu FSBM pour la navigation et la sélection ;
+   violet du cachet réservé aux actions qui signent un document au nom de la faculté. */
+@import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap");
+
+:root {
+  --papier: #e9ece4;
+  --surface: #f6f7f2;
+  --feuille: #fbfbf8;
+  --encre: #1f2b45;
+  --encre-douce: #55607a;
+  --filet: #cdd2c5;
+  --filet-fort: #aab1a2;
+  --fsbm: #255492;
+  --fsbm-clair: #e4ebf5;
+  --tampon: #5b3e8f;
+  --tampon-fonce: #4a3276;
+  --valide: #2d6a4f;
+  --attente: #9a5b0b;
+  --annule: #9b2c2c;
+  --annule-clair: #f7e4e4;
+  --focus: #255492;
+
+  --ui: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --t-1: .8125rem; --t0: .9375rem; --t1: 1.125rem; --t2: 1.35rem;
+  --rayon: 3px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --papier: #161b25; --surface: #1c2230; --feuille: #222a3a; --encre: #e4e7ee; --encre-douce: #a3abbd;
+    --filet: #2e3646; --filet-fort: #465063; --fsbm: #8fb2e6; --fsbm-clair: #23314a; --tampon: #a990d6;
+    --tampon-fonce: #bba6e0; --valide: #74c69d; --attente: #e0a84f; --annule: #ef8f8f; --annule-clair: #3a2124;
+    --focus: #8fb2e6;
+    color-scheme: dark;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body, #root { height: 100%; }
+body { margin: 0; background: var(--papier); color: var(--encre); font: var(--t0)/1.45 var(--ui); -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------------------ boutons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 2.25rem;
+  padding: .35rem .85rem; border: 1.5px solid var(--filet-fort); background: var(--feuille); color: var(--encre);
+  border-radius: var(--rayon); font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.btn:hover { border-color: var(--encre); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn[aria-busy="true"] { cursor: progress; }
+.btn-primary { background: var(--fsbm); border-color: var(--fsbm); color: #fff; }
+.btn-primary:hover { border-color: var(--fsbm); filter: brightness(1.08); }
+/* Action qui signe un document au nom de la faculté */
+.btn-sign { background: var(--tampon); border-color: var(--tampon); color: #fff; }
+.btn-sign:hover { background: var(--tampon-fonce); border-color: var(--tampon-fonce); }
+.btn-danger { color: var(--annule); border-color: var(--annule); background: transparent; }
+.btn-danger.plein { background: var(--annule); color: #fff; }
+.btn-quiet { border-color: transparent; background: transparent; }
+.btn-quiet:hover { border-color: var(--filet-fort); }
+@media (prefers-color-scheme: dark) {
+  .btn-primary, .btn-sign, .btn-danger.plein { color: #10141c; }
+}
+kbd { font: 700 .72rem/1 var(--ui); padding: .15rem .35rem; border: 1px solid var(--filet-fort); border-bottom-width: 2px;
+      border-radius: 3px; color: var(--encre-douce); }
+.btn kbd { border-color: currentColor; color: inherit; opacity: .75; }
+
+/* ------------------------------------------------------------------ statuts */
+.statut { display: inline-flex; align-items: center; gap: .4em; font-weight: 700; font-size: var(--t-1); white-space: nowrap; }
+.statut::before { content: ""; width: .55em; height: .55em; border-radius: 50%; background: currentColor; }
+.statut-ok { color: var(--valide); } .statut-attente { color: var(--attente); } .statut-ko { color: var(--annule); }
+
+/* ------------------------------------------------------------------ champs */
+.champ { display: grid; gap: .3rem; min-width: 0; }
+.champ > span { font-size: var(--t-1); font-weight: 700; color: var(--encre-douce); }
+.champ input, .champ select, .champ textarea {
+  width: 100%; min-height: 2.25rem; padding: .4rem .55rem; border: 1.5px solid var(--filet); border-radius: var(--rayon);
+  background: var(--feuille);
+}
+.champ textarea { min-height: 5rem; resize: vertical; }
+.champ input:focus, .champ select:focus, .champ textarea:focus { outline: none; border-color: var(--fsbm); box-shadow: 0 0 0 3px var(--fsbm-clair); }
+.champ input[readonly] { background: transparent; border-style: dashed; }
+.champ [aria-invalid="true"] { border-color: var(--annule); }
+.champ-erreur { color: var(--annule); font-size: var(--t-1); font-weight: 700; }
+.champ-aide { color: var(--encre-douce); font-size: var(--t-1); }
+
+/* ------------------------------------------------------------------ notifications */
+.toasts { position: fixed; right: 1rem; bottom: 1rem; display: grid; gap: .5rem; z-index: 50; width: min(26rem, calc(100vw - 2rem)); }
+.toast { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: .7rem .9rem;
+         background: #1f2b45; color: #f4f4ef; border-radius: var(--rayon); box-shadow: 0 10px 24px -12px rgba(0, 0, 0, .5); }
+.toast-erreur { background: #9b2c2c; }
+.toast button { background: none; border: 0; color: inherit; text-decoration: underline; cursor: pointer; font-weight: 700; padding: 0; }
+
+/* ------------------------------------------------------------------ dialogue */
+.dialogue { border: 1.5px solid var(--encre); border-radius: var(--rayon); padding: 1.25rem; background: var(--surface); color: var(--encre);
+            width: min(30rem, calc(100vw - 2rem)); }
+.dialogue::backdrop { background: rgba(31, 43, 69, .45); }
+.dialogue h2 { margin: 0 0 .5rem; font-size: var(--t1); }
+.dialogue p { margin: 0 0 1rem; color: var(--encre-douce); }
+.dialogue-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
+
+.squelette { display: block; height: 1rem; border-radius: 2px; background: var(--filet); animation: respire 1.4s ease-in-out infinite; }
+@keyframes respire { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
