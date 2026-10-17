@@ -7,10 +7,12 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -102,5 +105,46 @@ class BackOfficeApiIntegrationTest {
         mvc.perform(get("/api/v1/apogee/status").with(AGENT))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.viewEnabled").value(true));
+    }
+
+    @Test
+    void agentsPreviewImportsAndSeeAllBatches() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "export.csv", "text/csv", """
+                CNE;Nom;Prénom;Filière;Niveau;Année;Semestre;Code module;Module;Note;Crédits
+                BOB1;Alaoui;Sara;SMI;Licence 3;2025;S5;M51;Réseaux;14,5;6
+                BOB1;Alaoui;Sara;SMI;Licence 3;2025;S5;M52;Bases de données;12;6
+                BOB2;Tazi;Anas;SMI;Licence 3;2025;S5;M51;Réseaux;ABI;6
+                """.getBytes(StandardCharsets.UTF_8));
+
+        // Vérification : aperçu des documents valides et erreurs ligne par ligne
+        mvc.perform(multipart("/api/v1/batches/import").file(file).param("type", "RELEVE_NOTES")
+                        .param("dryRun", "true").with(AGENT))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.valid").value(1))
+                .andExpect(jsonPath("$.invalid").value(1))
+                .andExpect(jsonPath("$.preview[0].student").value("Sara Alaoui"))
+                .andExpect(jsonPath("$.preview[0].modules").value(2))
+                .andExpect(jsonPath("$.preview[0].semester").value("S5"));
+
+        // Un traitement lancé par une application est visible par l'agent, du plus récent au plus ancien
+        String body = mvc.perform(multipart("/api/v1/batches/import").file(file).param("type", "RELEVE_NOTES")
+                        .param("issuedById", "agent.apogee").with(APOGEE))
+                .andExpect(status().isAccepted()).andReturn().getResponse().getContentAsString();
+        String id = json.readTree(body).get("id").asString();
+
+        mvc.perform(get("/api/v1/batches").with(AGENT))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(id))
+                .andExpect(jsonPath("$.items[0].total").value(2));
+        mvc.perform(get("/api/v1/batches/{id}", id).with(AGENT)).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/batches/{id}/items", id).param("status", "FAILED").with(AGENT))
+                .andExpect(jsonPath("$[0].cne").value("BOB2"));
+
+        // Une autre application ne voit pas ce traitement
+        JwtRequestPostProcessor other = client("autre-app", "documents:write documents:read");
+        mvc.perform(get("/api/v1/batches").with(other))
+                .andExpect(jsonPath("$.items[*].id").value(not(hasItem(id))));
+        mvc.perform(get("/api/v1/batches/{id}", id).with(other)).andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/batches").param("size", "500").with(AGENT)).andExpect(status().isBadRequest());
     }
 }

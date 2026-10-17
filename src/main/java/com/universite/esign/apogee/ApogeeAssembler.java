@@ -192,8 +192,15 @@ public class ApogeeAssembler {
                 : String.join(",", lines.stream().map(String::valueOf).toList());
     }
 
+    /** Noms de colonnes tels que l'agent les connaît, pour les messages d'erreur. */
+    private static final Map<String, String> LABELS = Map.of(
+            "cne", "CNE", "nom", "nom", "prenom", "prénom", "dateNaissance", "date de naissance",
+            "lieuNaissance", "lieu de naissance", "filiere", "filière", "niveau", "niveau",
+            "academicYear", "année universitaire", "semester", "semestre");
+
     private static String label(String path) {
-        return path.replace("student.", "").replaceAll("grades\\[(\\d+)]\\.", "module $1 : ");
+        String field = path.replace("student.", "");
+        return LABELS.getOrDefault(field, field.replaceAll("grades\\[(\\d+)]\\.", "module $1 : "));
     }
 
     private static String nullToEmpty(String s) {

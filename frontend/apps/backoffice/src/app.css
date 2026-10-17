@@ -138,3 +138,55 @@
   .rail-pied { margin: 0 0 0 auto; border: 0; padding: 0; }
   .grille-2, .grille-3 { grid-template-columns: 1fr; }
 }
+
+/* ------------------------------------------------------------------ imports Apogée */
+.section-aide { margin: 0; color: var(--encre-douce); font-size: var(--t-1); max-width: 46ch; }
+.col-avancement { width: 30%; min-width: 12rem; }
+.sous-ligne { color: var(--encre-douce); font-size: var(--t-1); font-weight: 400; }
+
+.avancement { display: grid; gap: .35rem; width: 100%; }
+.avancement-barre { display: flex; height: .55rem; background: var(--feuille); border: 1px solid var(--filet); border-radius: 999px; overflow: hidden; }
+.avancement.compact .avancement-barre { height: .4rem; }
+.avancement-barre .ok { background: var(--valide); transition: width .4s ease; }
+.avancement-barre .ko { background: var(--annule); transition: width .4s ease; }
+.avancement-texte { display: flex; justify-content: space-between; gap: .75rem; align-items: baseline; font-size: var(--t-1); color: var(--encre-douce); }
+@media (prefers-reduced-motion: reduce) { .avancement-barre span { transition: none; } }
+
+/* Étapes : numérotées comme les rubriques d'un registre */
+.etapes { display: flex; gap: 1.25rem; list-style: none; margin: 0; padding: 0; counter-reset: etape; font-size: var(--t-1); color: var(--encre-douce); }
+.etapes li { counter-increment: etape; display: flex; align-items: center; gap: .4rem; font-weight: 700; }
+.etapes li::before { content: counter(etape); display: inline-grid; place-items: center; width: 1.35rem; height: 1.35rem; border: 1.5px solid currentColor; border-radius: 50%; font-size: .72rem; }
+.etapes li[aria-current="step"] { color: var(--fsbm); }
+.etapes li[aria-current="step"]::before { background: var(--fsbm); border-color: var(--fsbm); color: #fff; }
+
+.depot { display: grid; justify-items: start; gap: .35rem; padding: 1.1rem 1.2rem; border: 2px dashed var(--filet-fort); border-radius: var(--rayon); background: var(--feuille); }
+.depot.survol { border-color: var(--fsbm); background: var(--fsbm-clair); }
+.depot.rempli { border-style: solid; border-color: var(--fsbm); }
+.depot-nom { word-break: break-all; }
+.depot .btn { margin-top: .25rem; }
+
+.rapport { display: grid; gap: .75rem; width: 100%; }
+.rapport h3 { margin: .5rem 0 0; }
+.compteurs { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; border: 1px solid var(--filet); background: var(--feuille); }
+.compteurs > div { padding: .6rem .75rem; border-right: 1px solid var(--filet); }
+.compteurs > div:last-child { border-right: 0; }
+.compteurs dt { font-size: var(--t-1); color: var(--encre-douce); }
+.compteurs dd { margin: 0; font-size: var(--t2); font-weight: 700; }
+.compteurs .ok dd { color: var(--valide); }
+.compteurs .ko dd { color: var(--annule); }
+
+.problemes, .elements { list-style: none; margin: 0; padding: 0; width: 100%; }
+.problemes > li { padding: .5rem .75rem; border-left: 4px solid var(--annule); background: var(--feuille); margin-bottom: .4rem; }
+.problemes ul { margin: .25rem 0 0; padding-left: 1.1rem; color: var(--annule); font-size: var(--t-1); }
+.apercu-lot { max-height: 22rem; overflow: auto; border: 1px solid var(--filet); width: 100%; background: var(--feuille); }
+.apercu-lot .tableau tbody tr { cursor: default; }
+
+.elements > li { padding: .5rem 0; border-bottom: 1px solid var(--filet); display: grid; gap: .2rem; }
+.elements-tete { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; }
+.elements-erreur { margin: 0; color: var(--annule); font-size: var(--t-1); }
+.panneau .onglets { flex-wrap: wrap; gap: .25rem 1rem; }
+.panneau .onglets button { font-size: var(--t-1); }
+@media (max-width: 760px) { .compteurs { grid-template-columns: repeat(2, 1fr); } }
+a.btn { text-decoration: none; }
+.avancement-texte .num { white-space: nowrap; }
+.avancement.compact .avancement-texte { flex-direction: column; gap: 0; }

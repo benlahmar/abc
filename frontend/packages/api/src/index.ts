@@ -15,6 +15,22 @@ export type GradeLine = Schemas['GradeLine'];
 export type StudentRequest = Schemas['RequestView'];
 export type StudentRequestStatus = NonNullable<StudentRequest['status']>;
 export type AuditEvent = Schemas['AuditEvent'];
+export type Batch = Schemas['BatchResponse'];
+export type BatchStatus = NonNullable<Batch['status']>;
+export type BatchPage = Schemas['PageResponseBatchResponse'];
+export type BatchItem = Schemas['BatchItemView'];
+export type BatchItemStatus = NonNullable<BatchItem['status']>;
+export type DryRunReport = Schemas['DryRunReport'];
+export type ApogeeExtraction = Schemas['ApogeeExtraction'];
+
+export interface ImportOptions {
+  type: DocumentType;
+  purpose?: string;
+}
+
+const formWith = (file: File) => { const f = new FormData(); f.append('file', file); return f; };
+const importPath = ({ type, purpose }: ImportOptions, dryRun: boolean) =>
+  `/api/v1/batches/import?${new URLSearchParams({ type, dryRun: String(dryRun), ...(purpose ? { purpose } : {}) })}`;
 
 /** Erreur renvoyée par l'API (format RFC 9457), avec le détail par champ quand il existe. */
 export class ApiError extends Error {
@@ -68,7 +84,8 @@ export function createApi({ baseUrl, getToken, onUnauthorized }: ApiOptions) {
     const token = await getToken();
     const response = await fetch(baseUrl + path, {
       ...init,
-      headers: { ...(init.body ? { 'Content-Type': 'application/json' } : {}), ...init.headers, Authorization: `Bearer ${token}` },
+      // Corps JSON sous forme de texte ; un FormData garde le Content-Type multipart choisi par le navigateur
+      headers: { ...(typeof init.body === 'string' ? { 'Content-Type': 'application/json' } : {}), ...init.headers, Authorization: `Bearer ${token}` },
     });
     if (response.status === 401) onUnauthorized?.();
     if (!response.ok) throw await toApiError(response);
@@ -101,6 +118,22 @@ export function createApi({ baseUrl, getToken, onUnauthorized }: ApiOptions) {
 
     // ------------------------------------------------------------ Apogée
     apogeeStatus: () => json<{ viewEnabled: boolean }>('/api/v1/apogee/status'),
+
+    // ------------------------------------------------------------ traitements en masse
+    batches: (page = 0, size = 20) => json<BatchPage>(`/api/v1/batches?page=${page}&size=${size}`),
+    batch: (id: string) => json<Batch>(`/api/v1/batches/${id}`),
+    batchItems: (id: string, status?: BatchItemStatus) =>
+      json<BatchItem[]>(`/api/v1/batches/${id}/items${status ? `?status=${status}` : ''}`),
+    /** Vérifie un export Apogée (CSV ou Excel) sans rien signer. */
+    checkFile: (file: File, options: ImportOptions) => json<DryRunReport>(importPath(options, true), { method: 'POST', body: formWith(file) }),
+    /** Lance la production des documents d'un export Apogée (traitement en arrière-plan). */
+    importFile: (file: File, options: ImportOptions) => json<Batch>(importPath(options, false), { method: 'POST', body: formWith(file) }),
+    checkApogee: (extraction: Omit<ApogeeExtraction, 'dryRun'>) =>
+      post<DryRunReport>('/api/v1/batches/apogee', { ...extraction, dryRun: true }),
+    extractApogee: (extraction: Omit<ApogeeExtraction, 'dryRun'>) =>
+      post<Batch>('/api/v1/batches/apogee', { ...extraction, dryRun: false }),
+    downloadBatchFile: async (id: string, file: 'report.csv' | 'archive.zip') =>
+      (await request(`/api/v1/batches/${id}/${file}`)).blob(),
   };
 }
 

@@ -5,6 +5,7 @@ import { useApi } from './api';
 import { useRoute } from './lib/route';
 import { DemandesSection } from './sections/Demandes';
 import { DocumentsSection } from './sections/Documents';
+import { ImportsSection } from './sections/Imports';
 
 /** Rôles autorisés à utiliser le back-office dans cette version. */
 const STAFF_ROLES = ['AGENT_SCOLARITE', 'ESIGN_ADMIN'];
@@ -49,7 +50,7 @@ function Workspace() {
   const { user, logout } = useAuth();
   const api = useApi();
   const { path, params, navigate } = useRoute();
-  const section = path.startsWith('/documents') ? 'documents' : 'demandes';
+  const section = path.startsWith('/documents') ? 'documents' : path.startsWith('/imports') ? 'imports' : 'demandes';
 
   // Compteur affiché dans la navigation, partagé avec la section (même clé de cache)
   const pending = useQuery({ queryKey: ['requests', 'PENDING'], queryFn: () => api.studentRequests('PENDING'), refetchInterval: 60_000 });
@@ -70,6 +71,7 @@ function Workspace() {
         <div className="rail-liens">
           {lien('/demandes', 'Demandes étudiantes', section === 'demandes', pending.data?.length)}
           {lien('/documents', 'Documents', section === 'documents')}
+          {lien('/imports', 'Imports Apogée', section === 'imports')}
         </div>
         <div className="rail-pied">
           <div className="rail-user">
@@ -80,9 +82,10 @@ function Workspace() {
         </div>
       </nav>
       <main className="plan">
-        {section === 'demandes'
-          ? <DemandesSection openDocument={(id) => navigate(`/documents?id=${id}`)} />
-          : <DocumentsSection selectedId={params.get('id')} onSelect={(id) => navigate(id ? `/documents?id=${id}` : '/documents', true)} />}
+        {section === 'demandes' && <DemandesSection openDocument={(id) => navigate(`/documents?id=${id}`)} />}
+        {section === 'documents' && <DocumentsSection selectedId={params.get('id')} onSelect={(id) => navigate(id ? `/documents?id=${id}` : '/documents', true)} />}
+        {section === 'imports' && <ImportsSection selectedId={params.get('id')} openDocument={(id) => navigate(`/documents?id=${id}`)}
+          onSelect={(id) => navigate(id ? `/imports?id=${id}` : '/imports', true)} />}
       </main>
     </div>
   );

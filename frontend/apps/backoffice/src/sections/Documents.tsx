@@ -4,6 +4,7 @@ import { DOCUMENT_LABELS, type AuditEvent, type DocumentQuery, type DocumentResp
 import { Button, Dialog, Field, Status, formatDate, formatDateTime, useToast, type Tone } from '@esign/ui';
 import { useApi } from '../api';
 import { useHotkeys } from '../lib/keys';
+import { saveBlob } from '../lib/download';
 import { DocumentForm, USAGES, currentAcademicYear, emptyValues } from '../components/DocumentForm';
 
 export const STATUTS: Record<DocumentStatus, [string, Tone]> = {
@@ -157,10 +158,7 @@ function Detail({ id }: { id: string }) {
     mutationFn: () => api.downloadDocument(id),
     onSuccess: (blob) => {
       const d = doc.data!;
-      const url = URL.createObjectURL(blob);
-      const a = Object.assign(document.createElement('a'), { href: url, download: `${d.studentCne}-${d.type!.toLowerCase()}${d.semester ? '-' + d.semester : ''}.pdf` });
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      saveBlob(blob, `${d.studentCne}-${d.type!.toLowerCase()}${d.semester ? '-' + d.semester : ''}.pdf`);
     },
     onError: (e) => toast({ message: (e as Error).message, error: true }),
   });

@@ -141,7 +141,7 @@ curl -s -F file=@releve.pdf http://localhost:8080/api/v1/verify
 | `POST` | `/api/v1/documents/{id}/revoke` | `documents:revoke` |
 | `GET` | `/api/v1/templates` | authentifié |
 | `POST` | `/api/v1/batches/import`, `/api/v1/batches/apogee` | `documents:write` ou rôle `AGENT_SCOLARITE` |
-| `GET` | `/api/v1/batches/{id}`, `/items`, `/report.csv`, `/archive.zip` | idem |
+| `GET` | `/api/v1/batches` (liste), `/api/v1/batches/{id}`, `/items`, `/report.csv`, `/archive.zip` | idem |
 | `POST` | `/api/v1/apogee/documents` | idem |
 | `GET`, `POST` | `/api/v1/me/**` | rôle `ETUDIANT` (+ claim `cne`) |
 | `GET`, `POST` | `/api/v1/student-requests/**` | `documents:write` ou rôle `AGENT_SCOLARITE` |
@@ -338,6 +338,11 @@ Connexion : `agent.apogee` / `agent123` (ou `admin.esign` / `admin123`).
 - **Documents** : recherche (nom, CNE, référence), filtres type / état / année, fiche, téléchargement (`T`),
   lien de vérification, aperçu, **historique d'audit**, révocation avec motif obligatoire,
   **Nouveau document** (`N`) hors demande.
+- **Imports Apogée** : dépôt d'un export CSV/Excel (ou critères de la vue Oracle si elle est activée),
+  **vérification sans signature** (lignes lues, documents prêts, erreurs ligne par ligne, aperçu des
+  documents filtrable), confirmation, puis suivi en direct de la signature ; à la fin, PDF signés en ZIP
+  (`T`), rapport CSV pour Excel, détail par document (erreurs, lien vers chaque document signé).
+  Modèle de fichier téléchargeable depuis l'écran.
 
 Les erreurs de validation de l'API sont affichées sous les champs concernés.
 
@@ -415,7 +420,8 @@ ESIGN_LOGO=file:/config/logo.png      # PNG, fond transparent de préférence ; 
 - [ ] Stockage objet S3/MinIO, conversion PDF/A-3
 - [ ] Connecteur vers le système de scolarité (Apogée…), modèles personnalisables
 - [x] Back-office scolarité : demandes étudiantes, documents (recherche, révocation, historique)
-- [ ] Back-office : imports Apogée, approbations, paramétrage, audit
+- [x] Back-office : imports Apogée (vérification, signature en masse, suivi, ZIP et rapport)
+- [ ] Back-office : approbations, paramétrage, audit
 - [ ] SDK clients (générés depuis l'OpenAPI)
 
 ## Licences tierces

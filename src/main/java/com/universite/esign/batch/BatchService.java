@@ -10,6 +10,8 @@ import com.universite.esign.common.BadRequestException;
 import com.universite.esign.common.NotFoundException;
 import com.universite.esign.document.DocumentType;
 import com.universite.esign.identity.Agent;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,6 +74,15 @@ public class BatchService {
     @Transactional(readOnly = true)
     public BatchJob get(UUID id) {
         return jobs.findById(id).orElseThrow(() -> new NotFoundException("Traitement introuvable : " + id));
+    }
+
+    /** Traitements du plus récent au plus ancien ; clientId null : tous. */
+    @Transactional(readOnly = true)
+    public Page<BatchJob> list(String clientId, int page, int size) {
+        PageRequest request = PageRequest.of(page, size);
+        return clientId == null
+                ? jobs.findAllByOrderByCreatedAtDesc(request)
+                : jobs.findByClientIdOrderByCreatedAtDesc(clientId, request);
     }
 
     @Transactional(readOnly = true)

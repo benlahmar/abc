@@ -20,6 +20,7 @@ import com.universite.esign.apogee.ApogeeViewClient;
 import com.universite.esign.common.BadRequestException;
 import com.universite.esign.common.FeatureDisabledException;
 import com.universite.esign.common.NotFoundException;
+import com.universite.esign.common.PageResponse;
 import com.universite.esign.config.CallerContext;
 import com.universite.esign.document.Document;
 import com.universite.esign.document.DocumentService;
@@ -29,8 +30,13 @@ import com.universite.esign.identity.Agent;
 import com.universite.esign.identity.AgentResolver;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -52,10 +58,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @RestController
+@Validated
 @RequestMapping("/api/v1/batches")
 @Tag(name = "Traitements en masse", description = "Relevés ou attestations d'une promotion, depuis un export "
         + "Apogée (CSV/Excel) ou la vue Oracle")
@@ -97,6 +105,10 @@ class BatchController {
             description = "Une ligne par étudiant et par module (relevés) ou par étudiant (attestations). "
                     + "Avec dryRun=true, rien n'est signé : la réponse liste les erreurs ligne par ligne. "
                     + "Sinon le traitement démarre en arrière-plan (202) ; suivre son avancement avec GET /{id}.")
+    @ApiResponse(responseCode = "200", description = "Vérification (dryRun)",
+            content = @Content(schema = @Schema(implementation = DryRunReport.class)))
+    @ApiResponse(responseCode = "202", description = "Traitement lancé",
+            content = @Content(schema = @Schema(implementation = BatchResponse.class)))
     ResponseEntity<?> importFile(
             @RequestPart("file") MultipartFile file,
             @RequestParam DocumentType type,
@@ -128,6 +140,10 @@ class BatchController {
     @Operation(summary = "Produire les documents d'une promotion depuis la vue Oracle d'Apogée",
             description = "Critères : année, semestre (relevés), filière (optionnelle). dryRun=true pour vérifier "
                     + "sans signer. Nécessite esign.apogee.view.enabled=true.")
+    @ApiResponse(responseCode = "200", description = "Vérification (dryRun)",
+            content = @Content(schema = @Schema(implementation = DryRunReport.class)))
+    @ApiResponse(responseCode = "202", description = "Traitement lancé",
+            content = @Content(schema = @Schema(implementation = BatchResponse.class)))
     ResponseEntity<?> fromApogee(@Valid @RequestBody ApogeeExtraction request, @AuthenticationPrincipal Jwt jwt) {
         ApogeeViewClient client = view.getIfAvailable();
         if (client == null) {
@@ -152,6 +168,17 @@ class BatchController {
         BatchJob job = batches.submit(request.type(), BatchJob.Source.APOGEE_VIEW, description, assembled,
                 CallerContext.clientId(jwt), issuer, request.purpose());
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(BatchResponse.of(job));
+    }
+
+    @GetMapping
+    @Operation(summary = "Traitements récents",
+            description = "Du plus récent au plus ancien. Le service de scolarité voit tous les traitements, "
+                    + "une application cliente seulement les siens.")
+    PageResponse<BatchResponse> list(@RequestParam(defaultValue = "0") @Min(0) int page,
+                                     @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+                                     Authentication auth, @AuthenticationPrincipal Jwt jwt) {
+        String clientId = CallerContext.seesAllDocuments(auth) ? null : CallerContext.clientId(jwt);
+        return PageResponse.of(batches.list(clientId, page, size), BatchResponse::of);
     }
 
     @GetMapping("/{id}")
@@ -254,7 +281,7 @@ class BatchController {
 
     private BatchJob owned(UUID id, Authentication auth, Jwt jwt) {
         BatchJob job = batches.get(id);
-        if (!CallerContext.isAdmin(auth) && !job.getClientId().equals(CallerContext.clientId(jwt))) {
+        if (!CallerContext.seesAllDocuments(auth) && !job.getClientId().equals(CallerContext.clientId(jwt))) {
             throw new NotFoundException("Traitement introuvable : " + id);
         }
         return job;

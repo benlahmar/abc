@@ -445,6 +445,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Traitements récents
+         * @description Du plus récent au plus ancien. Le service de scolarité voit tous les traitements, une application cliente seulement les siens.
+         */
+        get: operations["list_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/batches/{id}": {
         parameters: {
             query?: never;
@@ -844,6 +864,64 @@ export interface components {
             reason: string;
             by?: components["schemas"]["IssuedBy"];
         };
+        DryRunReport: {
+            /** Format: int32 */
+            rows?: number;
+            /** Format: int32 */
+            documents?: number;
+            /** Format: int32 */
+            valid?: number;
+            /** Format: int32 */
+            invalid?: number;
+            problems?: components["schemas"]["Problem"][];
+            preview?: components["schemas"]["Preview"][];
+        };
+        Preview: {
+            key?: string;
+            cne?: string;
+            student?: string;
+            filiere?: string;
+            niveau?: string;
+            semester?: string;
+            /** Format: int32 */
+            modules?: number;
+            lines?: string;
+        };
+        Problem: {
+            key?: string;
+            lines?: string;
+            errors?: string[];
+        };
+        BatchResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            type?: "ATTESTATION_SCOLARITE" | "RELEVE_NOTES";
+            /** @enum {string} */
+            source?: "FILE" | "APOGEE_VIEW";
+            description?: string;
+            /** @enum {string} */
+            status?: "QUEUED" | "RUNNING" | "COMPLETED" | "COMPLETED_WITH_ERRORS";
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            succeeded?: number;
+            /** Format: int32 */
+            failed?: number;
+            /** Format: int32 */
+            remaining?: number;
+            purpose?: string;
+            issuedBy?: components["schemas"]["Agent"];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            startedAt?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            itemsUrl?: string;
+            reportUrl?: string;
+            archiveUrl?: string;
+        };
         ApogeeExtraction: {
             /** @enum {string} */
             type: "ATTESTATION_SCOLARITE" | "RELEVE_NOTES";
@@ -944,35 +1022,16 @@ export interface components {
             /** Format: int32 */
             totalPages?: number;
         };
-        BatchResponse: {
-            /** Format: uuid */
-            id?: string;
-            /** @enum {string} */
-            type?: "ATTESTATION_SCOLARITE" | "RELEVE_NOTES";
-            /** @enum {string} */
-            source?: "FILE" | "APOGEE_VIEW";
-            description?: string;
-            /** @enum {string} */
-            status?: "QUEUED" | "RUNNING" | "COMPLETED" | "COMPLETED_WITH_ERRORS";
-            /** Format: int32 */
+        PageResponseBatchResponse: {
+            items?: components["schemas"]["BatchResponse"][];
+            /** Format: int64 */
             total?: number;
             /** Format: int32 */
-            succeeded?: number;
+            page?: number;
             /** Format: int32 */
-            failed?: number;
+            size?: number;
             /** Format: int32 */
-            remaining?: number;
-            purpose?: string;
-            issuedBy?: components["schemas"]["Agent"];
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            startedAt?: string;
-            /** Format: date-time */
-            finishedAt?: string;
-            itemsUrl?: string;
-            reportUrl?: string;
-            archiveUrl?: string;
+            totalPages?: number;
         };
         StreamingResponseBody: unknown;
         BatchItemView: {
@@ -1400,13 +1459,22 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description Vérification (dryRun) */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["DryRunReport"];
+                };
+            };
+            /** @description Traitement lancé */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BatchResponse"];
                 };
             };
         };
@@ -1424,13 +1492,22 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description Vérification (dryRun) */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["DryRunReport"];
+                };
+            };
+            /** @description Traitement lancé */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BatchResponse"];
                 };
             };
         };
@@ -1701,6 +1778,29 @@ export interface operations {
                 };
                 content: {
                     "application/pdf": string;
+                };
+            };
+        };
+    };
+    list_1: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PageResponseBatchResponse"];
                 };
             };
         };

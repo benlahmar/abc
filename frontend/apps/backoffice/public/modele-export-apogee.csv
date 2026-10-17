@@ -1,0 +1,5 @@
+CNE;NOM;PRENOM;DATE_NAISSANCE;LIEU_NAISSANCE;FILIERE;NIVEAU;ANNEE;SEMESTRE;CODE_MODULE;MODULE;NOTE;CREDITS;RESULTAT
+R130456789;El Amrani;Yasmine;14/05/2003;Fès;Sciences Mathématiques et Informatique;Licence 3;2025;S5;M51;Réseaux informatiques;14,5;6;V
+R130456789;El Amrani;Yasmine;14/05/2003;Fès;Sciences Mathématiques et Informatique;Licence 3;2025;S5;M52;Bases de données avancées;9,25;6;NV
+R140112233;Benali;Omar;02/11/2002;Rabat;Sciences Mathématiques et Informatique;Licence 3;2025;S5;M51;Réseaux informatiques;12;6;V
+R140112233;Benali;Omar;02/11/2002;Rabat;Sciences Mathématiques et Informatique;Licence 3;2025;S5;M52;Bases de données avancées;15,75;6;V
