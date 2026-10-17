@@ -12,5 +12,8 @@ class PortalWebConfig implements WebMvcConfigurer {
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addRedirectViewController("/etudiant", "/etudiant/");
         registry.addViewController("/etudiant/").setViewName("forward:/etudiant/index.html");
+        // Application « Mes documents officiels » (demandes d'attestations)
+        registry.addRedirectViewController("/demandes", "/demandes/");
+        registry.addViewController("/demandes/").setViewName("forward:/demandes/index.html");
     }
 }

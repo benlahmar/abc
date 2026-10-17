@@ -297,6 +297,25 @@ suivent le circuit d'approbation éventuellement paramétré.
    Le fichier [`src/main/resources/static/etudiant/portail.js`](src/main/resources/static/etudiant/portail.js)
    sert d'exemple complet (connexion PKCE, liste, téléchargement, demande).
 
+### Application « Mes documents officiels » (`/demandes`)
+
+Application complète de demande d'attestations pour les étudiants : http://localhost:8080/demandes/?sso=1
+
+- **Registre** de tous ses documents, regroupés par année universitaire, avec recherche (type, année,
+  semestre, référence) et filtres « Prêts / En cours / Refusés ou annulés » ;
+- **Aperçu du document** à côté du registre, avec son cachet : signé (violet), en attente (pointillés)
+  ou annulé ; le PDF signé reste la seule version qui fait foi ;
+- **Nouvelle demande** avec aperçu en direct, demandes restantes du jour, indication du délai
+  (immédiat ou traité par la scolarité), détection d'un document identique déjà signé ou d'une
+  demande identique en cours, et **5 secondes pour annuler l'envoi** ;
+- **Suivi** de chaque demande étape par étape, motif de refus ou d'annulation, « Corriger et redemander » ;
+- **Téléchargement**, copie du lien de vérification à transmettre à l'organisme destinataire ;
+- Raccourcis clavier (`N` nouvelle demande, `/` recherche, `↑ ↓` parcourir, `T` télécharger, `?` aide),
+  responsive (mobile : actions avant l'aperçu), mode sombre, mouvements réduits respectés.
+
+**Mode démonstration**, sans serveur ni compte : http://localhost:8080/demandes/?demo, ou ouvrir
+directement `src/main/resources/static/demandes/index.html` dans un navigateur.
+
 Côté Keycloak, pour chaque application : un client OIDC, le rôle `ETUDIANT` pour les étudiants, et un
 *mapper* qui place l'attribut `cne` du compte dans le jeton (voir `docker/keycloak/init-realm.sh`).
 Compte de démonstration : `etudiant` / `etudiant123` (CNE `R130456789`).

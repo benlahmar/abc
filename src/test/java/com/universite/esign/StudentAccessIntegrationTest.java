@@ -257,5 +257,9 @@ class StudentAccessIntegrationTest {
                 .andExpect(jsonPath("$.clientId").value("esign-etudiant"))
                 .andExpect(jsonPath("$.issuer").value("http://localhost:0/realms/test"));
         mvc.perform(get("/etudiant/portail.js")).andExpect(status().isOk());
+        // Application « Mes documents officiels »
+        mvc.perform(get("/demandes/")).andExpect(forwardedUrl("/demandes/index.html"));
+        mvc.perform(get("/demandes/demandes.js")).andExpect(status().isOk());
+        mvc.perform(get("/demandes/demandes.css")).andExpect(status().isOk());
     }
 }

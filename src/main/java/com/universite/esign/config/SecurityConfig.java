@@ -43,7 +43,7 @@ class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
                         // Portail étudiant (pages statiques ; l'authentification se fait auprès du SSO)
-                        .requestMatchers("/etudiant", "/etudiant/**").permitAll()
+                        .requestMatchers("/etudiant", "/etudiant/**", "/demandes", "/demandes/**").permitAll()
                         // Espace étudiant : uniquement ses propres documents (CNE du jeton)
                         .requestMatchers("/api/v1/me", "/api/v1/me/**").hasAuthority(student)
                         // File des demandes étudiantes, traitée par le service de scolarité
