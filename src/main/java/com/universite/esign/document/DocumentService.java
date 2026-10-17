@@ -128,6 +128,12 @@ public class DocumentService {
         return documents.findById(id).orElseThrow(() -> new NotFoundException("Document introuvable : " + id));
     }
 
+    /** Documents d'un étudiant, du plus récent au plus ancien. */
+    @Transactional(readOnly = true)
+    public List<Document> forStudent(String cne) {
+        return documents.findByStudentCneOrderByCreatedAtDesc(cne);
+    }
+
     public byte[] content(Document document) {
         if (document.getStorageKey() == null) {
             throw new ConflictException("Le document n'est pas signé (statut " + document.getStatus() + ")");

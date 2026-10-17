@@ -74,7 +74,7 @@ class BatchIntegrationTest {
 
     /** Simule la vue Oracle d'Apogée (H2 en mode Oracle, année au format COD_ANU). */
     @BeforeAll
-    static void createApogeeView() throws Exception {
+    public static void createApogeeView() throws Exception {
         try (Connection c = DriverManager.getConnection("jdbc:h2:mem:apogee;MODE=Oracle;DB_CLOSE_DELAY=-1", "sa", "");
              Statement s = c.createStatement()) {
             s.execute("drop table if exists V_ESIGN_NOTES");

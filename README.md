@@ -135,6 +135,9 @@ curl -s -F file=@releve.pdf http://localhost:8080/api/v1/verify
 | `POST` | `/api/v1/batches/import`, `/api/v1/batches/apogee` | `documents:write` ou rôle `AGENT_SCOLARITE` |
 | `GET` | `/api/v1/batches/{id}`, `/items`, `/report.csv`, `/archive.zip` | idem |
 | `POST` | `/api/v1/apogee/documents` | idem |
+| `GET`, `POST` | `/api/v1/me/**` | rôle `ETUDIANT` (+ claim `cne`) |
+| `GET`, `POST` | `/api/v1/student-requests/**` | `documents:write` ou rôle `AGENT_SCOLARITE` |
+| `GET`, `PUT` | `/api/v1/admin/student-access[/{type}]` | rôle `ESIGN_ADMIN` |
 | `GET` | `/api/v1/audit/verify`, `/api/v1/audit/documents/{id}` | `audit:read` |
 | `GET`, `PUT` | `/api/v1/admin/workflows[/{type}]` | `workflow:admin` ou rôle `ESIGN_ADMIN` |
 | `GET` | `/api/v1/approvals`, `/api/v1/approvals/{id}/preview` | personne connectée (rôle de l'étape) |
@@ -198,6 +201,7 @@ demandes. Les personnes ne sont jamais écrites dans le circuit, seulement des *
 | `vice.doyen` | `vicedoyen123` | `VICE_DOYEN_PEDAGOGIE` |
 | `doyen` | `doyen123` | `DOYEN` |
 | `admin.esign` | `admin123` | `ESIGN_ADMIN` |
+| `etudiant` | `etudiant123` | `ETUDIANT` (CNE `R130456789`) |
 
 Dans Swagger UI, **Authorize** → bloc `personne` (client `esign-swagger`, sans secret) → page de
 connexion Keycloak. Le scénario complet est dans [`requests.http`](requests.http) (étapes 12 à 20).
@@ -252,6 +256,45 @@ Une ligne en erreur ne bloque pas les autres. Après un arrêt de l'application 
 **reprend automatiquement** au redémarrage, sans créer de doublon. Chaque document garde l'agent qui l'a
 établi, et le circuit d'approbation paramétré s'applique aussi aux documents produits en masse.
 
+## Accès étudiant (ENT, appli mobile, autres applications de la fac)
+
+L'étudiant se connecte avec **son compte de l'université** (SSO Keycloak / CAS / LDAP). Son **CNE est lu
+dans son jeton** (claim `cne`, attribut de l'annuaire) : il ne voit et ne demande que ses propres documents,
+quelle que soit l'application utilisée.
+
+| Méthode | Chemin | Rôle |
+|---|---|---|
+| `GET` | `/api/v1/me` | profil + documents demandables en ligne |
+| `GET` | `/api/v1/me/documents`, `/api/v1/me/documents/{id}/download` | ses documents (signés, révoqués, en validation) |
+| `POST`, `GET` | `/api/v1/me/requests` | demander un document, suivre ses demandes |
+
+**Demande en ligne, paramétrable par type de document** (`PUT /api/v1/admin/student-access/{type}`) :
+
+| Mode | Effet |
+|---|---|
+| `AGENT` (par défaut) | la demande arrive dans la file du service (`GET /api/v1/student-requests`) ; l'agent l'établit **depuis Apogée** en un clic (`/fulfill-from-apogee`) ou à partir des données saisies (`/fulfill`), ou la refuse avec un motif visible par l'étudiant (`/reject`) |
+| `AUTO` | le document est produit **immédiatement** depuis la vue Apogée ; si les données manquent, la demande est « non aboutie » avec le motif |
+| `DISABLED` | pas de demande en ligne (l'étudiant voit quand même ses documents) |
+
+Une limite de demandes par jour et par type (`dailyLimit`) évite les abus. Les documents demandés en ligne
+suivent le circuit d'approbation éventuellement paramétré.
+
+### Intégrer dans l'ENT ou une autre application
+
+1. **Le plus simple — lien vers le portail intégré** : `https://esign.universite.ma/etudiant/?sso=1`.
+   L'étudiant déjà connecté à l'ENT (même SSO) arrive directement sur ses documents, sans ressaisir son
+   mot de passe. Le portail fonctionne sur mobile et peut être ouvert dans un onglet ou une WebView.
+2. **Intégration native** : l'application connecte l'étudiant via le SSO (OIDC), puis appelle
+   `/api/v1/me/...` avec **le jeton de l'étudiant** (`Authorization: Bearer …`). Pour une application web
+   appelant l'API depuis le navigateur, déclarer son origine :
+   `ESIGN_CORS_ALLOWED_ORIGINS=https://ent.universite.ma,https://mobile.universite.ma`.
+   Le fichier [`src/main/resources/static/etudiant/portail.js`](src/main/resources/static/etudiant/portail.js)
+   sert d'exemple complet (connexion PKCE, liste, téléchargement, demande).
+
+Côté Keycloak, pour chaque application : un client OIDC, le rôle `ETUDIANT` pour les étudiants, et un
+*mapper* qui place l'attribut `cne` du compte dans le jeton (voir `docker/keycloak/init-realm.sh`).
+Compte de démonstration : `etudiant` / `etudiant123` (CNE `R130456789`).
+
 ## Passage en production
 
 1. **Certificat** : obtenir un certificat de **cachet électronique** de l'établissement auprès d'un
@@ -289,7 +332,8 @@ Une ligne en erreur ne bloque pas les autres. Après un arrêt de l'application 
 - [ ] Notifications aux validateurs (e-mail) et webhooks vers les applications
 - [x] Import des exports Apogée (CSV/Excel) et lecture de la vue Oracle
 - [x] Traitements en masse en arrière-plan, rapport, archive ZIP, reprise après arrêt
-- [ ] Webhooks `document.signed` vers les applications
+- [x] Accès étudiant : ses documents, demandes en ligne (AGENT/AUTO), portail intégrable dans l'ENT
+- [ ] Webhooks `document.signed` vers les applications, notification de l'étudiant par e-mail
 - [ ] Stockage objet S3/MinIO, conversion PDF/A-3
 - [ ] Connecteur vers le système de scolarité (Apogée…), modèles personnalisables
 - [ ] SDK clients (générés depuis l'OpenAPI)

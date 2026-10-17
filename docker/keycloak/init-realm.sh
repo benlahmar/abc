@@ -61,7 +61,7 @@ client audit-app audit-secret-dev audit:read documents:admin
 # ---------------------------------------------------------------- personnes (démonstration)
 
 # Rôles métier du realm : ils figurent dans le jeton (realm_access.roles) et sont utilisés par l'API
-for role in AGENT_SCOLARITE VICE_DOYEN_PEDAGOGIE DOYEN ESIGN_ADMIN; do
+for role in AGENT_SCOLARITE VICE_DOYEN_PEDAGOGIE DOYEN ESIGN_ADMIN ETUDIANT; do
   if ! $KC get "roles/$role" -r $REALM >/dev/null 2>&1; then
     $KC create roles -r $REALM -s name=$role
   fi
@@ -84,10 +84,41 @@ user() {
   echo "Utilisateur $login configuré"
 }
 
+# Attributs libres (ex. cne) autorisés sur les comptes : en production, le CNE vient de l'annuaire (LDAP)
+$KC update users/profile -r $REALM -s unmanagedAttributePolicy=ENABLED
+
 user agent.apogee agent123 Karim Bennani AGENT_SCOLARITE
 user vice.doyen vicedoyen123 Samira Alaoui VICE_DOYEN_PEDAGOGIE
 user doyen doyen123 Ahmed Tazi DOYEN
 user admin.esign admin123 Admin Esign ESIGN_ADMIN
+
+# Étudiant de démonstration ; son CNE est un attribut du compte, transmis dans le jeton (claim « cne »)
+user etudiant etudiant123 Yasmine "El Amrani" ETUDIANT
+uid=$($KC get users -r $REALM -q username=etudiant -q exact=true --fields id --format csv --noquotes)
+$KC update "users/$uid" -r $REALM -s 'attributes.cne=["R130456789"]'
+
+# cne_mapper <id du client> : ajoute la claim « cne » (attribut du compte) aux jetons du client
+cne_mapper() {
+  if ! $KC get "clients/$1/protocol-mappers/models" -r $REALM --fields name --format csv --noquotes | grep -qx cne; then
+    $KC create "clients/$1/protocol-mappers/models" -r $REALM -s name=cne -s protocol=openid-connect \
+      -s protocolMapper=oidc-usermodel-attribute-mapper -s 'config."user.attribute"=cne' \
+      -s 'config."claim.name"=cne' -s 'config."jsonType.label"=String' -s 'config."access.token.claim"=true' \
+      -s 'config."id.token.claim"=true' -s 'config."userinfo.token.claim"=true'
+  fi
+}
+
+# Client public du portail étudiant (/etudiant) ; l'ENT ou une autre appli de la fac aura le sien
+PORTAL_REDIRECTS='["http://localhost:8080/etudiant/*","http://127.0.0.1:8080/etudiant/*"]'
+cid=$($KC get clients -r $REALM -q clientId=esign-etudiant --fields id --format csv --noquotes)
+if [[ -z "$cid" ]]; then
+  $KC create clients -r $REALM -s clientId=esign-etudiant -s enabled=true -s publicClient=true \
+    -s standardFlowEnabled=true -s directAccessGrantsEnabled=true -s serviceAccountsEnabled=false
+  cid=$($KC get clients -r $REALM -q clientId=esign-etudiant --fields id --format csv --noquotes)
+fi
+$KC update "clients/$cid" -r $REALM -s "redirectUris=$PORTAL_REDIRECTS" -s "webOrigins=$WEB_ORIGINS" \
+  -s 'attributes."pkce.code.challenge.method"=S256' -s 'attributes."post.logout.redirect.uris"=http://localhost:8080/etudiant/*##http://127.0.0.1:8080/etudiant/*'
+cne_mapper "$cid"
+echo "Client esign-etudiant configuré"
 
 # Client public pour la connexion des personnes depuis Swagger UI (authorization code + PKCE)
 SWAGGER_REDIRECTS='["http://localhost:8080/swagger-ui/oauth2-redirect.html","http://127.0.0.1:8080/swagger-ui/oauth2-redirect.html"]'
@@ -99,6 +130,7 @@ if [[ -z "$cid" ]]; then
 fi
 $KC update "clients/$cid" -r $REALM -s "redirectUris=$SWAGGER_REDIRECTS" -s "webOrigins=$WEB_ORIGINS" \
   -s 'attributes."pkce.code.challenge.method"=S256'
+cne_mapper "$cid"
 echo "Client esign-swagger configuré"
 
 echo "Realm $REALM configuré"

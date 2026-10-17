@@ -1,5 +1,7 @@
 package com.universite.esign.config;
 
+import java.util.List;
+
 import com.universite.esign.identity.EsignAuthoritiesConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,6 +10,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
  * Deux types d'appelants, authentifiés par le fournisseur d'identité de l'université (Keycloak…) :
@@ -23,18 +28,27 @@ class SecurityConfig {
     static final String ESIGN_ADMIN = "ROLE_ESIGN_ADMIN";
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, EsignProperties properties) throws Exception {
+        String student = "ROLE_" + properties.student().role();
         JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
         jwtConverter.setJwtGrantedAuthoritiesConverter(new EsignAuthoritiesConverter());
 
         http
                 .csrf(csrf -> csrf.disable()) // API sans session ni cookie : jetons Bearer uniquement
+                .cors(cors -> cors.configurationSource(corsConfiguration(properties.cors().allowedOrigins())))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Vérification publique (employeurs, ambassades… qui scannent le QR code)
                         .requestMatchers("/verify/**", "/api/v1/verify/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
+                        // Portail étudiant (pages statiques ; l'authentification se fait auprès du SSO)
+                        .requestMatchers("/etudiant", "/etudiant/**").permitAll()
+                        // Espace étudiant : uniquement ses propres documents (CNE du jeton)
+                        .requestMatchers("/api/v1/me", "/api/v1/me/**").hasAuthority(student)
+                        // File des demandes étudiantes, traitée par le service de scolarité
+                        .requestMatchers("/api/v1/student-requests/**")
+                        .hasAnyAuthority("SCOPE_documents:write", AGENT, CallerContext.ADMIN_AUTHORITY)
                         .requestMatchers(HttpMethod.POST, "/api/v1/documents/*/revoke")
                         .hasAnyAuthority("SCOPE_documents:revoke", AGENT, CallerContext.ADMIN_AUTHORITY)
                         .requestMatchers(HttpMethod.POST, "/api/v1/documents")
@@ -52,5 +66,20 @@ class SecurityConfig {
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)));
         return http.build();
+    }
+
+    /** Applications web de la fac (ENT…) autorisées à appeler l'API depuis le navigateur. */
+    private static CorsConfigurationSource corsConfiguration(List<String> allowedOrigins) {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        if (!allowedOrigins.isEmpty()) {
+            CorsConfiguration cors = new CorsConfiguration();
+            cors.setAllowedOrigins(allowedOrigins);
+            cors.setAllowedMethods(List.of("GET", "POST", "PUT"));
+            cors.setAllowedHeaders(List.of("Authorization", "Content-Type", "Idempotency-Key"));
+            cors.setExposedHeaders(List.of("Location", "Content-Disposition"));
+            cors.setMaxAge(3600L);
+            source.registerCorsConfiguration("/api/**", cors);
+        }
+        return source;
     }
 }

@@ -56,6 +56,15 @@ esign:
     online: ${ESIGN_VALIDATION_ONLINE:false}
   storage:
     base-dir: ${ESIGN_STORAGE_DIR:./data/storage}
+  student:
+    # Claim du jeton contenant le CNE de l'étudiant (attribut de l'annuaire / Keycloak)
+    cne-claim: ${ESIGN_STUDENT_CNE_CLAIM:cne}
+    role: ${ESIGN_STUDENT_ROLE:ETUDIANT}
+    portal-client-id: ${ESIGN_STUDENT_PORTAL_CLIENT_ID:esign-etudiant}
+  cors:
+    # Applications web de la fac autorisées à appeler l'API depuis le navigateur, séparées par des virgules
+    # ex. ESIGN_CORS_ALLOWED_ORIGINS=https://ent.universite.ma,https://mobile.universite.ma
+    allowed-origins: ${ESIGN_CORS_ALLOWED_ORIGINS:}
   apogee:
     # Correspondance donnée -> nom de colonne dans les exports CSV/Excel et dans la vue Oracle.
     # Adapter aux noms réels de vos exports (ex. cne: COD_NNE_IND, nom: LIB_NOM_PAT_IND, annee: COD_ANU).

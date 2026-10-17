@@ -13,11 +13,18 @@ public record Agent(String id, String name, Source source) {
         /** Identité prouvée par le jeton de la personne elle-même (connexion Keycloak). */
         AUTHENTICATED,
         /** Identité déclarée par une application cliente de confiance (ex. Apogée) qui agit pour l'agent. */
-        DECLARED
+        DECLARED,
+        /** Établi automatiquement par la plateforme (ex. demande en libre-service d'un étudiant authentifié). */
+        SYSTEM
     }
 
     /** Libellé pour le journal d'audit, ex. « agent.apogee (via scolarite-app) ». */
     public String auditLabel(String clientId) {
-        return id + " (" + (source == Source.AUTHENTICATED ? "authentifié" : "déclaré") + " via " + clientId + ")";
+        String how = switch (source) {
+            case AUTHENTICATED -> "authentifié";
+            case DECLARED -> "déclaré";
+            case SYSTEM -> "automatique";
+        };
+        return id + " (" + how + " via " + clientId + ")";
     }
 }

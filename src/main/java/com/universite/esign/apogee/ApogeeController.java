@@ -1,11 +1,5 @@
 package com.universite.esign.apogee;
 
-import java.util.List;
-
-import com.universite.esign.apogee.ApogeeAssembler.Assembled;
-import com.universite.esign.common.BadRequestException;
-import com.universite.esign.common.FeatureDisabledException;
-import com.universite.esign.common.NotFoundException;
 import com.universite.esign.config.CallerContext;
 import com.universite.esign.document.Document;
 import com.universite.esign.document.DocumentService;
@@ -22,7 +16,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -48,16 +41,14 @@ class ApogeeController {
             @Valid IssuedBy issuedBy) {
     }
 
-    private final ObjectProvider<ApogeeViewClient> view;
-    private final ApogeeAssembler assembler;
+    private final ApogeeDocumentService apogee;
     private final DocumentService documents;
     private final WorkflowService workflow;
     private final AgentResolver agents;
 
-    ApogeeController(ObjectProvider<ApogeeViewClient> view, ApogeeAssembler assembler, DocumentService documents,
-                     WorkflowService workflow, AgentResolver agents) {
-        this.view = view;
-        this.assembler = assembler;
+    ApogeeController(ApogeeDocumentService apogee, DocumentService documents, WorkflowService workflow,
+                     AgentResolver agents) {
+        this.apogee = apogee;
         this.documents = documents;
         this.workflow = workflow;
         this.agents = agents;
@@ -71,30 +62,9 @@ class ApogeeController {
             @Valid @RequestBody FromApogeeRequest request,
             @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey,
             @AuthenticationPrincipal Jwt jwt) {
-        ApogeeViewClient client = view.getIfAvailable();
-        if (client == null) {
-            throw new FeatureDisabledException("La vue Oracle Apogée n'est pas activée (esign.apogee.view.enabled)");
-        }
-        boolean transcript = request.type() == DocumentType.RELEVE_NOTES;
-        if (transcript && (request.semester() == null || request.semester().isBlank())) {
-            throw new BadRequestException("Le semestre est obligatoire pour un relevé de notes");
-        }
         Agent issuer = agents.issuer(jwt, request.issuedBy());
-        List<ApogeeRow> rows = client.find(request.academicYear(), transcript ? request.semester() : null, null,
-                request.cne());
-        if (rows.isEmpty()) {
-            throw new NotFoundException("Aucune donnée Apogée pour " + request.cne() + " / " + request.academicYear()
-                    + (transcript ? " / " + request.semester() : ""));
-        }
-        List<Assembled> assembled = assembler.assemble(request.type(), rows, request.purpose(),
-                new IssuedBy(issuer.id(), issuer.name()));
-        // Pour une attestation, plusieurs lignes (modules) concernent le même étudiant : un seul document
-        Assembled doc = assembled.getFirst();
-        if (!doc.valid()) {
-            throw new BadRequestException("Données Apogée incomplètes : " + String.join(" ; ", doc.errors()));
-        }
-        DocumentService.CreationResult result =
-                documents.create(doc.request(), issuer, CallerContext.clientId(jwt), idempotencyKey);
+        DocumentService.CreationResult result = apogee.create(request.type(), request.cne(), request.academicYear(),
+                request.semester(), request.purpose(), issuer, CallerContext.clientId(jwt), idempotencyKey);
         Document d = result.document();
         DocumentResponse body = DocumentResponse.of(d, workflow.approvals(d.getId()),
                 documents.verificationUrl(d.getVerificationCode()));

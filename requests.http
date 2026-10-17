@@ -231,3 +231,60 @@ Content-Type: application/json
 
 { "type": "RELEVE_NOTES", "academicYear": "2025-2026", "semester": "S5", "filiere": "SMI",
   "issuedBy": { "id": "agent.apogee", "name": "Karim Bennani" }, "dryRun": true }
+
+### ===================================================================
+### Accès étudiant (portail : http://localhost:8080/etudiant/?sso=1)
+### ===================================================================
+
+### 28. Connexion de l'étudiante (démonstration ; l'ENT utilise la connexion SSO)
+# @name etuToken
+POST {{keycloak}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=esign-etudiant&username=etudiant&password=etudiant123&scope=openid
+
+### 29. Mon profil et ce que je peux demander
+GET {{api}}/api/v1/me
+Authorization: Bearer {{etuToken.response.body.access_token}}
+
+### 30. Mes documents
+GET {{api}}/api/v1/me/documents
+Authorization: Bearer {{etuToken.response.body.access_token}}
+
+### 31. Demander un relevé de notes
+POST {{api}}/api/v1/me/requests
+Authorization: Bearer {{etuToken.response.body.access_token}}
+Content-Type: application/json
+
+{ "type": "RELEVE_NOTES", "academicYear": "2025-2026", "semester": "S5", "purpose": "ETRANGER" }
+
+### 32. Côté agent : demandes en attente
+# @name agentToken
+POST {{keycloak}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=esign-swagger&username=agent.apogee&password=agent123&scope=openid
+
+###
+# @name demandes
+GET {{api}}/api/v1/student-requests
+Authorization: Bearer {{agentToken.response.body.access_token}}
+
+### 33. L'agent établit le relevé demandé (ou /fulfill-from-apogee si la vue Oracle est activée)
+POST {{api}}/api/v1/student-requests/{{demandes.response.body.$[0].id}}/fulfill
+Authorization: Bearer {{agentToken.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "type": "RELEVE_NOTES",
+  "student": { "cne": "R130456789", "nom": "El Amrani", "prenom": "Yasmine",
+               "filiere": "SMI", "niveau": "Licence 3" },
+  "academicYear": "2025-2026",
+  "semester": "S5",
+  "grades": [ { "code": "M51", "intitule": "Réseaux informatiques", "note": 14.5, "credits": 6 } ],
+  "purpose": "ETRANGER"
+}
+
+### 34. Mes demandes (statut FULFILLED) et mes documents (le relevé est téléchargeable)
+GET {{api}}/api/v1/me/requests
+Authorization: Bearer {{etuToken.response.body.access_token}}

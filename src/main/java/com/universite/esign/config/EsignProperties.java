@@ -18,7 +18,25 @@ public record EsignProperties(
         Signing signing,
         Validation validation,
         Storage storage,
-        @DefaultValue Issuance issuance) {
+        @DefaultValue Issuance issuance,
+        @DefaultValue Student student,
+        @DefaultValue Cors cors) {
+
+    /**
+     * Accès étudiant.
+     *
+     * @param cneClaim       claim du jeton qui contient le CNE de l'étudiant (attribut de l'annuaire)
+     * @param role           rôle Keycloak des étudiants
+     * @param portalClientId client OIDC public du portail étudiant intégré (/etudiant)
+     */
+    public record Student(@DefaultValue("cne") String cneClaim,
+                          @DefaultValue("ETUDIANT") String role,
+                          @DefaultValue("esign-etudiant") String portalClientId) {
+    }
+
+    /** Origines web (ENT, appli de la fac…) autorisées à appeler l'API depuis le navigateur. */
+    public record Cors(@DefaultValue List<String> allowedOrigins) {
+    }
 
     /**
      * @param requireAgent une application qui appelle l'API avec son propre jeton (ex. Apogée) doit

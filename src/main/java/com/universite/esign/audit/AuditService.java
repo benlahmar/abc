@@ -37,6 +37,12 @@ public class AuditService {
         chainHead.setLastHash(hash);
     }
 
+    /** Pour les opérations sans transaction englobante (ex. demandes étudiantes). */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void recordInNewTransaction(String eventType, UUID documentId, String actor, String details) {
+        record(eventType, documentId, actor, details);
+    }
+
     @Transactional(readOnly = true)
     public List<AuditEvent> forDocument(UUID documentId) {
         return events.findByDocumentIdOrderByIdAsc(documentId);

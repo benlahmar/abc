@@ -4,6 +4,7 @@ import com.universite.esign.common.BadRequestException;
 import com.universite.esign.common.ConflictException;
 import com.universite.esign.common.FeatureDisabledException;
 import com.universite.esign.common.NotFoundException;
+import com.universite.esign.common.TooManyRequestsException;
 import com.universite.esign.signature.PadesValidationService.UnsupportedDocumentException;
 import java.util.List;
 import java.util.Map;
@@ -88,6 +89,11 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     ProblemDetail forbidden(AccessDeniedException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    ProblemDetail tooMany(TooManyRequestsException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, e.getMessage());
     }
 
     @ExceptionHandler(FeatureDisabledException.class)
