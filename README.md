@@ -148,7 +148,8 @@ curl -s -F file=@releve.pdf http://localhost:8080/api/v1/verify
 | `GET`, `POST` | `/api/v1/me/**` | rôle `ETUDIANT` (+ claim `cne`) |
 | `GET`, `POST` | `/api/v1/student-requests/**` | `documents:write` ou rôle `AGENT_SCOLARITE` |
 | `GET`, `PUT` | `/api/v1/admin/student-access[/{type}]` | rôle `ESIGN_ADMIN` |
-| `GET` | `/api/v1/audit/verify`, `/api/v1/audit/events?type=`, `/api/v1/audit/documents/{id}` | `audit:read` ou rôle `ESIGN_ADMIN` |
+| `GET` | `/api/v1/audit/verify`, `/api/v1/audit/events` (type, actor, q, documentId, from, to), `/api/v1/audit/events.csv`, `/api/v1/audit/types` | `audit:read` ou rôle `ESIGN_ADMIN` |
+| `GET` | `/api/v1/audit/documents/{id}` | `audit:read`, rôles `ESIGN_ADMIN` ou `AGENT_SCOLARITE` |
 | `GET`, `PUT` | `/api/v1/admin/workflows[/{type}]` | `workflow:admin` ou rôle `ESIGN_ADMIN` |
 | `GET` | `/api/v1/approvals`, `/api/v1/approvals/{id}/preview` | personne connectée (rôle de l'étape) |
 | `POST` | `/api/v1/approvals/{id}/approve`, `/reject` | personne connectée (rôle de l'étape) |
@@ -362,6 +363,13 @@ Connexion : `agent.apogee` / `agent123` pour les agents, `admin.esign` / `admin1
     dans la liste de l'année demandée ; sinon la demande va au service avec une note « à vérifier »
     (absent du registre, bloqué) visible des seuls agents. Nombre de demandes par jour ;
   - **Historique** des modifications (qui, quand, quoi), lu dans le journal d'audit.
+- **Journal d'audit** (rôle `ESIGN_ADMIN`) : tous les événements (documents, circuit, demandes, traitements
+  en masse, registre, paramétrage) avec leur auteur, filtrables par texte (CNE, nom ou référence de
+  l'étudiant, motif…), rubrique, acteur et période ; détail et empreintes de chaque événement, tous les
+  événements d'un document ; **export CSV** pour Excel (10 000 événements au plus) ; **vérification de
+  l'intégrité** de toute la chaîne. La vérification donne l'**empreinte de tête**, à noter hors de la
+  plateforme (registre papier, courriel au doyen) : elle prouvera plus tard que le journal n'a pas été
+  réécrit depuis.
 
 - **Approbations** (validateurs : `vice.doyen` / `vicedoyen123`, `doyen` / `doyen123`) : documents
   en attente de leur décision selon le circuit, avec l'aperçu du PDF non signé, le déroulement du
@@ -371,7 +379,8 @@ Connexion : `agent.apogee` / `agent123` pour les agents, `admin.esign` / `admin1
   **Mes décisions**. L'agent qui a établi un document ne peut pas l'approuver.
 
 Les sections affichées dépendent des rôles du compte : agent de scolarité (demandes, documents,
-imports), validateur (approbations), administrateur (paramétrage), ou plusieurs à la fois.
+imports, registre), validateur (approbations), administrateur (registre en lecture, paramétrage,
+journal d'audit), ou plusieurs à la fois.
 
 Les erreurs de validation de l'API sont affichées sous les champs concernés.
 
@@ -453,7 +462,7 @@ ESIGN_LOGO=file:/config/logo.png      # PNG, fond transparent de préférence ; 
 - [x] Back-office : paramétrage (circuit, demandes en ligne, historique)
 - [x] Back-office : approbations (aperçu, décision, lot, historique des décisions)
 - [x] Registre des inscrits : attestations immédiates sans la vue Oracle, avec comparaison, blocage et purge
-- [ ] Back-office : audit
+- [x] Back-office : journal d'audit (recherche, export, vérification d'intégrité)
 - [ ] SDK clients (générés depuis l'OpenAPI)
 
 ## Licences tierces

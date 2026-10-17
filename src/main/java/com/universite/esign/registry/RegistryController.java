@@ -8,6 +8,7 @@ import java.util.Map;
 
 import com.universite.esign.common.BadRequestException;
 import com.universite.esign.common.PageResponse;
+import com.universite.esign.config.CallerContext;
 import com.universite.esign.identity.AgentResolver;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -87,7 +88,8 @@ class RegistryController {
         }
         return dryRun
                 ? registry.check(academicYear, file.getOriginalFilename(), file.getBytes())
-                : registry.apply(academicYear, file.getOriginalFilename(), file.getBytes(), agents.issuer(jwt, null));
+                : registry.apply(academicYear, file.getOriginalFilename(), file.getBytes(), agents.issuer(jwt, null),
+                        CallerContext.clientId(jwt));
     }
 
     @GetMapping("/students")
@@ -113,13 +115,14 @@ class RegistryController {
     @Operation(summary = "Bloquer un étudiant", description = "Ses demandes en ligne iront au service de scolarité, "
             + "même s'il figure dans la liste ; le blocage survit aux imports suivants.")
     RegistryStudentView block(@PathVariable long id, @Valid @RequestBody BlockRequest request, @AuthenticationPrincipal Jwt jwt) {
-        return RegistryStudentView.of(registry.block(id, request.reason().strip(), agents.issuer(jwt, null)));
+        return RegistryStudentView.of(registry.block(id, request.reason().strip(), agents.issuer(jwt, null),
+                CallerContext.clientId(jwt)));
     }
 
     @PostMapping("/students/{id}/unblock")
     @Operation(summary = "Débloquer un étudiant")
     RegistryStudentView unblock(@PathVariable long id, @AuthenticationPrincipal Jwt jwt) {
-        return RegistryStudentView.of(registry.unblock(id, agents.issuer(jwt, null)));
+        return RegistryStudentView.of(registry.unblock(id, agents.issuer(jwt, null), CallerContext.clientId(jwt)));
     }
 
     @DeleteMapping("/{academicYear}")

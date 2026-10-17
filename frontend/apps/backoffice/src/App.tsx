@@ -10,6 +10,7 @@ import { ImportsSection } from './sections/Imports';
 import { RegistreSection } from './sections/Registre';
 import { ApprobationsSection } from './sections/Approbations';
 import { ParametrageSection } from './sections/Parametrage';
+import { AuditSection } from './sections/Audit';
 
 /** Rôles des validateurs du circuit (voir Paramétrage). */
 const VALIDATOR_ROLES = ['VICE_DOYEN_PEDAGOGIE', 'DOYEN'];
@@ -60,9 +61,9 @@ function Workspace() {
   const validateur = hasRole(...VALIDATOR_ROLES);
   const api = useApi();
   const { path, params, navigate } = useRoute();
-  const demandee = (['documents', 'imports', 'registre', 'approbations', 'parametrage', 'demandes'] as const).find((s) => path.startsWith(`/${s}`));
+  const demandee = (['documents', 'imports', 'registre', 'approbations', 'parametrage', 'audit', 'demandes'] as const).find((s) => path.startsWith(`/${s}`));
   const section = demandee ?? (agent ? 'demandes' : validateur ? 'approbations' : 'parametrage');
-  const autorisee = section === 'parametrage' ? admin : section === 'approbations' ? validateur
+  const autorisee = section === 'parametrage' || section === 'audit' ? admin : section === 'approbations' ? validateur
     : section === 'registre' ? agent || admin : agent;
 
   // Compteur affiché dans la navigation, partagé avec la section (même clé de cache)
@@ -89,6 +90,7 @@ function Workspace() {
           {(agent || admin) && lien('/registre', 'Registre des inscrits', section === 'registre')}
           {validateur && lien('/approbations', 'Approbations', section === 'approbations', aDecider.data?.length)}
           {admin && lien('/parametrage', 'Paramétrage', section === 'parametrage')}
+          {admin && lien('/audit', 'Journal d\'audit', section === 'audit')}
         </div>
         <div className="rail-pied">
           <div className="rail-user">
@@ -102,7 +104,7 @@ function Workspace() {
       <main className="plan">
         {!autorisee && (
           <div className="vide"><h2>Section non disponible</h2>
-            <p>{section === 'parametrage' ? 'Le paramétrage est réservé aux comptes ayant le rôle ESIGN_ADMIN.'
+            <p>{section === 'parametrage' || section === 'audit' ? 'Cette section est réservée aux comptes ayant le rôle ESIGN_ADMIN.'
               : section === 'approbations' ? 'Les approbations sont réservées aux validateurs du circuit (vice-doyen, doyen).'
               : 'Cette section est réservée aux agents de scolarité (rôle AGENT_SCOLARITE).'}</p></div>
         )}
@@ -113,6 +115,7 @@ function Workspace() {
         {autorisee && section === 'registre' && <RegistreSection />}
         {autorisee && section === 'approbations' && <ApprobationsSection />}
         {autorisee && section === 'parametrage' && <ParametrageSection />}
+        {autorisee && section === 'audit' && <AuditSection />}
       </main>
     </div>
   );

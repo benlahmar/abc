@@ -658,6 +658,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/audit/types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Nombre d'événements par type */
+        get: operations["types"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/audit/events": {
         parameters: {
             query?: never;
@@ -667,9 +684,29 @@ export interface paths {
         };
         /**
          * Journal d'audit, du plus récent au plus ancien
-         * @description type (répétable) : limiter à certains événements, ex. WORKFLOW_UPDATED, STUDENT_ACCESS_UPDATED pour l'historique du paramétrage.
+         * @description type (répétable) : limiter à certains événements, ex. WORKFLOW_UPDATED, STUDENT_ACCESS_UPDATED pour l'historique du paramétrage. actor, q (texte du détail : CNE, référence, motif…), documentId, from et to (dates, incluses) affinent la recherche.
          */
         get: operations["events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audit/events.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exporter le journal (CSV pour Excel), mêmes critères
+         * @description Les 10 000 événements les plus récents correspondant aux critères, avec leurs empreintes.
+         */
+        get: operations["export"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1333,6 +1370,14 @@ export interface components {
             events?: number;
             /** Format: int64 */
             firstInvalidEventId?: number;
+            headHash?: string;
+            /** Format: date-time */
+            checkedAt?: string;
+        };
+        TypeCount: {
+            type?: string;
+            /** Format: int64 */
+            count?: number;
         };
         AuditEvent: {
             /** Format: int64 */
@@ -2383,10 +2428,35 @@ export interface operations {
             };
         };
     };
+    types: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TypeCount"][];
+                };
+            };
+        };
+    };
     events: {
         parameters: {
             query?: {
                 type?: string[];
+                actor?: string;
+                q?: string;
+                documentId?: string;
+                from?: string;
+                to?: string;
                 page?: number;
                 size?: number;
             };
@@ -2403,6 +2473,33 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PageResponseAuditEvent"];
+                };
+            };
+        };
+    };
+    export: {
+        parameters: {
+            query?: {
+                type?: string[];
+                actor?: string;
+                q?: string;
+                documentId?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": components["schemas"]["StreamingResponseBody"];
                 };
             };
         };

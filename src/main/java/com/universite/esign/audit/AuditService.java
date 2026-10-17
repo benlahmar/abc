@@ -2,13 +2,13 @@ package com.universite.esign.audit;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 import com.universite.esign.common.Hashes;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,13 +46,20 @@ public class AuditService {
         record(eventType, documentId, actor, details);
     }
 
-    /** Événements du plus récent au plus ancien, éventuellement limités à certains types. */
+    /** Recherche dans le journal, du plus récent au plus ancien. */
     @Transactional(readOnly = true)
-    public Page<AuditEvent> recent(Collection<String> types, int page, int size) {
-        PageRequest request = PageRequest.of(page, size);
-        return types == null || types.isEmpty()
-                ? events.findAllByOrderByIdDesc(request)
-                : events.findByEventTypeInOrderByIdDesc(types, request);
+    public Page<AuditEvent> search(AuditSearch criteria, int page, int size) {
+        return events.findAll(criteria.toSpecification(),
+                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id")));
+    }
+
+    public record TypeCount(String type, long count) {
+    }
+
+    @Transactional(readOnly = true)
+    public List<TypeCount> countByType() {
+        return events.countByEventType().stream()
+                .map(r -> new TypeCount((String) r[0], ((Number) r[1]).longValue())).toList();
     }
 
     @Transactional(readOnly = true)
@@ -69,16 +76,21 @@ public class AuditService {
             String expected = hash(previous, e.getEventType(), e.getDocumentId(), e.getActor(), e.getDetails(),
                     e.getCreatedAt());
             if (!e.getPreviousHash().equals(previous) || !e.getHash().equals(expected)) {
-                return new ChainVerification(false, all.size(), e.getId());
+                return new ChainVerification(false, all.size(), e.getId(), null, Instant.now());
             }
             previous = e.getHash();
         }
         String recordedHead = head.findById(AuditChainHead.ID).map(AuditChainHead::getLastHash).orElse(GENESIS);
         boolean headMatches = recordedHead.equals(previous);
-        return new ChainVerification(headMatches, all.size(), null);
+        return new ChainVerification(headMatches, all.size(), null, previous, Instant.now());
     }
 
-    public record ChainVerification(boolean valid, int events, Long firstInvalidEventId) {
+    /**
+     * @param headHash empreinte du dernier événement : notée hors de la plateforme (registre papier, courriel
+     *                 au doyen…), elle permet de prouver plus tard que le journal n'a pas été réécrit depuis
+     */
+    public record ChainVerification(boolean valid, int events, Long firstInvalidEventId, String headHash,
+                                    Instant checkedAt) {
     }
 
     private static String hash(String previous, String type, UUID documentId, String actor, String details,

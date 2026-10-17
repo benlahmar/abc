@@ -5,17 +5,13 @@ import { Button, Dialog, Field, Status, formatDate, formatDateTime, useToast, ty
 import { useApi } from '../api';
 import { useHotkeys } from '../lib/keys';
 import { saveBlob } from '../lib/download';
+import { libelle } from '../lib/audit';
 import { DocumentForm, USAGES, currentAcademicYear, emptyValues } from '../components/DocumentForm';
 
 export const STATUTS: Record<DocumentStatus, [string, Tone]> = {
   SIGNED: ['Signé', 'ok'], PENDING_APPROVAL: ['En validation', 'attente'], REJECTED: ['Refusé', 'ko'], REVOKED: ['Révoqué', 'ko'],
 };
 
-const EVENEMENTS: Record<string, string> = {
-  DOCUMENT_ISSUED: 'Établi', DOCUMENT_SIGNED: 'Signé (cachet électronique)', DOCUMENT_REVOKED: 'Révoqué',
-  STEP_APPROVED: 'Étape approuvée', STEP_REJECTED: 'Étape refusée', STUDENT_REQUEST: 'Demandé par l\'étudiant',
-  STUDENT_REQUEST_FULFILLED: 'Demande traitée', STUDENT_REQUEST_REJECTED: 'Demande refusée',
-};
 
 const annees = () => { const a = Number(currentAcademicYear().slice(0, 4)); return Array.from({ length: 6 }, (_, i) => `${a - i}-${a - i + 1}`); };
 
@@ -229,7 +225,7 @@ function Historique({ events }: { events: AuditEvent[] }) {
     <ol className="historique">
       {events.map((e) => (
         <li key={e.id}>
-          <strong>{EVENEMENTS[e.eventType!] ?? e.eventType}</strong>
+          <strong>{libelle(e.eventType)}</strong>
           <span className="num">{formatDateTime(e.createdAt)}</span>
           <span>{e.actor}</span>
         </li>

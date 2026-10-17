@@ -28,6 +28,27 @@ export type WorkflowCondition = WorkflowStep['condition'];
 export type StudentAccessSetting = Schemas['Setting'];
 export type StudentAccessMode = Schemas['Update']['mode'];
 export type AuditPage = Schemas['PageResponseAuditEvent'];
+export type AuditTypeCount = Schemas['TypeCount'];
+export type AuditVerification = Schemas['ChainVerification'];
+
+/** Critères du journal d'audit ; dates au format AAAA-MM-JJ, « to » incluse. */
+export interface AuditQuery {
+  types?: string[];
+  actor?: string;
+  q?: string;
+  documentId?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  size?: number;
+}
+
+function auditParams({ types = [], ...rest }: AuditQuery) {
+  const params = new URLSearchParams();
+  types.forEach((t) => params.append('type', t));
+  Object.entries(rest).forEach(([k, v]) => v !== undefined && v !== '' && params.set(k, String(v)));
+  return params;
+}
 export type ApprovalTask = Schemas['Task'];
 export type RegistryOverview = Schemas['RegistryOverview'];
 export type RegistryFiliere = Schemas['RegistryFiliere'];
@@ -181,11 +202,11 @@ export function createApi({ baseUrl, getToken, onUnauthorized }: ApiOptions) {
     studentAccess: () => json<StudentAccessSetting[]>('/api/v1/admin/student-access'),
     saveStudentAccess: (type: DocumentType, mode: StudentAccessMode, dailyLimit: number) =>
       json<StudentAccessSetting>(`/api/v1/admin/student-access/${type}`, { method: 'PUT', body: JSON.stringify({ mode, dailyLimit }) }),
-    auditEvents: (types: string[] = [], page = 0, size = 50) => {
-      const params = new URLSearchParams({ page: String(page), size: String(size) });
-      types.forEach((t) => params.append('type', t));
-      return json<AuditPage>(`/api/v1/audit/events?${params}`);
-    },
+    auditEvents: (types: string[] = [], page = 0, size = 50) => json<AuditPage>(`/api/v1/audit/events?${auditParams({ types, page, size })}`),
+    auditSearch: (query: AuditQuery) => json<AuditPage>(`/api/v1/audit/events?${auditParams(query)}`),
+    auditExport: async (query: AuditQuery) => (await request(`/api/v1/audit/events.csv?${auditParams({ ...query, page: undefined, size: undefined })}`)).blob(),
+    auditTypes: () => json<AuditTypeCount[]>('/api/v1/audit/types'),
+    verifyAudit: () => json<AuditVerification>('/api/v1/audit/verify'),
 
     downloadBatchFile: async (id: string, file: 'report.csv' | 'archive.zip') =>
       (await request(`/api/v1/batches/${id}/${file}`)).blob(),

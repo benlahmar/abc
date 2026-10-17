@@ -88,7 +88,8 @@ public class RegistryService {
 
     /** Remplace la liste de chaque filière présente dans le fichier. Refusé si une ligne est en erreur. */
     @Transactional
-    public RegistryReport apply(String academicYear, String fileName, byte[] content, Agent agent) {
+    public RegistryReport apply(String academicYear, String fileName, byte[] content, Agent agent,
+                                String clientId) {
         Parsed parsed = parse(academicYear, fileName, content);
         if (!parsed.problems.isEmpty()) {
             throw new BadRequestException(parsed.problems.size() + " ligne(s) en erreur : corrigez le fichier avant "
@@ -115,7 +116,7 @@ public class RegistryService {
             existing.values().stream()
                     .filter(s -> s.getFiliere().equals(diff.filiere()) && !inFile.contains(s.getCne()))
                     .forEach(students::delete);
-            audit.record("REGISTRY_IMPORTED", null, agent.auditLabel("back-office"),
+            audit.record("REGISTRY_IMPORTED", null, agent.auditLabel(clientId),
                     academicYear + " " + diff.filiere() + " : " + diff.after() + " inscrit(s), +" + diff.addedCount()
                             + " -" + diff.removedCount() + " ~" + diff.changedCount() + " (" + fileName + ")");
         }
@@ -274,19 +275,19 @@ public class RegistryService {
     // ---------------------------------------------------------------- blocage, purge
 
     @Transactional
-    public RegistryStudent block(long id, String reason, Agent agent) {
+    public RegistryStudent block(long id, String reason, Agent agent, String clientId) {
         RegistryStudent s = get(id);
         s.block(reason, agent.name());
-        audit.record("REGISTRY_BLOCKED", null, agent.auditLabel("back-office"),
+        audit.record("REGISTRY_BLOCKED", null, agent.auditLabel(clientId),
                 s.getAcademicYear() + " CNE " + s.getCne() + " : " + reason);
         return s;
     }
 
     @Transactional
-    public RegistryStudent unblock(long id, Agent agent) {
+    public RegistryStudent unblock(long id, Agent agent, String clientId) {
         RegistryStudent s = get(id);
         s.unblock();
-        audit.record("REGISTRY_UNBLOCKED", null, agent.auditLabel("back-office"),
+        audit.record("REGISTRY_UNBLOCKED", null, agent.auditLabel(clientId),
                 s.getAcademicYear() + " CNE " + s.getCne());
         return s;
     }
