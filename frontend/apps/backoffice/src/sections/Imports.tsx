@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiError, DOCUMENT_LABELS, type Batch, type BatchItemStatus, type DocumentType, type DryRunReport } from '@esign/api';
+import { ApiError, DOCUMENT_LABELS, DOCUMENT_PLURALS, type Batch, type BatchItemStatus, type DocumentType, type DryRunReport } from '@esign/api';
 import { Button, Dialog, Field, Status, formatDateTime, relativeTime, useToast } from '@esign/ui';
 import { useApi } from '../api';
 import { useHotkeys } from '../lib/keys';
@@ -8,7 +8,6 @@ import { saveBlob } from '../lib/download';
 import { ACCEPTED_EXTENSIONS, ELEMENT_STATUTS, LOT_STATUTS, checkImportFile, duration, enCours, formatLines, pluriel, progress, withoutLinePrefix } from '../lib/imports';
 import { USAGES, currentAcademicYear } from '../components/DocumentForm';
 
-const PLURIELS: Record<DocumentType, string> = { ATTESTATION_SCOLARITE: 'Attestations de scolarité', RELEVE_NOTES: 'Relevés de notes' };
 const SEMESTRES = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10'];
 
 interface Props {
@@ -196,7 +195,7 @@ function NouvelImport({ viewEnabled, onCancel, onLaunched }: { viewEnabled: bool
         <fieldset className="choix">
           <legend>Documents à produire</legend>
           {(Object.keys(DOCUMENT_LABELS) as DocumentType[]).map((t) => (
-            <label key={t}><input type="radio" name="type" checked={type === t} onChange={() => { setType(t); reset(); }} />{PLURIELS[t]}</label>
+            <label key={t}><input type="radio" name="type" checked={type === t} onChange={() => { setType(t); reset(); }} />{DOCUMENT_PLURALS[t]}</label>
           ))}
         </fieldset>
 

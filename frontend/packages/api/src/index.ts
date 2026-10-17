@@ -22,6 +22,12 @@ export type BatchItem = Schemas['BatchItemView'];
 export type BatchItemStatus = NonNullable<BatchItem['status']>;
 export type DryRunReport = Schemas['DryRunReport'];
 export type ApogeeExtraction = Schemas['ApogeeExtraction'];
+export type Workflow = Schemas['WorkflowDefinition'];
+export type WorkflowStep = Schemas['WorkflowStepDto'];
+export type WorkflowCondition = WorkflowStep['condition'];
+export type StudentAccessSetting = Schemas['Setting'];
+export type StudentAccessMode = Schemas['Update']['mode'];
+export type AuditPage = Schemas['PageResponseAuditEvent'];
 
 export interface ImportOptions {
   type: DocumentType;
@@ -132,6 +138,19 @@ export function createApi({ baseUrl, getToken, onUnauthorized }: ApiOptions) {
       post<DryRunReport>('/api/v1/batches/apogee', { ...extraction, dryRun: true }),
     extractApogee: (extraction: Omit<ApogeeExtraction, 'dryRun'>) =>
       post<Batch>('/api/v1/batches/apogee', { ...extraction, dryRun: false }),
+    // ------------------------------------------------------------ paramétrage (administrateur)
+    workflows: () => json<Workflow[]>('/api/v1/admin/workflows'),
+    saveWorkflow: (type: DocumentType, steps: WorkflowStep[]) =>
+      json<Workflow>(`/api/v1/admin/workflows/${type}`, { method: 'PUT', body: JSON.stringify({ steps }) }),
+    studentAccess: () => json<StudentAccessSetting[]>('/api/v1/admin/student-access'),
+    saveStudentAccess: (type: DocumentType, mode: StudentAccessMode, dailyLimit: number) =>
+      json<StudentAccessSetting>(`/api/v1/admin/student-access/${type}`, { method: 'PUT', body: JSON.stringify({ mode, dailyLimit }) }),
+    auditEvents: (types: string[] = [], page = 0, size = 50) => {
+      const params = new URLSearchParams({ page: String(page), size: String(size) });
+      types.forEach((t) => params.append('type', t));
+      return json<AuditPage>(`/api/v1/audit/events?${params}`);
+    },
+
     downloadBatchFile: async (id: string, file: 'report.csv' | 'archive.zip') =>
       (await request(`/api/v1/batches/${id}/${file}`)).blob(),
   };
@@ -142,4 +161,9 @@ export type Api = ReturnType<typeof createApi>;
 export const DOCUMENT_LABELS: Record<DocumentType, string> = {
   ATTESTATION_SCOLARITE: 'Attestation de scolarité',
   RELEVE_NOTES: 'Relevé de notes',
+};
+
+export const DOCUMENT_PLURALS: Record<DocumentType, string> = {
+  ATTESTATION_SCOLARITE: 'Attestations de scolarité',
+  RELEVE_NOTES: 'Relevés de notes',
 };

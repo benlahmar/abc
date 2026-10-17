@@ -550,6 +550,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/audit/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Journal d'audit, du plus récent au plus ancien
+         * @description type (répétable) : limiter à certains événements, ex. WORKFLOW_UPDATED, STUDENT_ACCESS_UPDATED pour l'historique du paramétrage.
+         */
+        get: operations["events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/audit/documents/{id}": {
         parameters: {
             query?: never;
@@ -1063,6 +1083,17 @@ export interface components {
             createdAt?: string;
             previousHash?: string;
             hash?: string;
+        };
+        PageResponseAuditEvent: {
+            items?: components["schemas"]["AuditEvent"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int32 */
+            totalPages?: number;
         };
         Task: {
             /** Format: uuid */
@@ -1911,6 +1942,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ChainVerification"];
+                };
+            };
+        };
+    };
+    events: {
+        parameters: {
+            query?: {
+                type?: string[];
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PageResponseAuditEvent"];
                 };
             };
         };

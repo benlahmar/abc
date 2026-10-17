@@ -6,6 +6,7 @@ import { useRoute } from './lib/route';
 import { DemandesSection } from './sections/Demandes';
 import { DocumentsSection } from './sections/Documents';
 import { ImportsSection } from './sections/Imports';
+import { ParametrageSection } from './sections/Parametrage';
 
 /** Rôles autorisés à utiliser le back-office dans cette version. */
 const STAFF_ROLES = ['AGENT_SCOLARITE', 'ESIGN_ADMIN'];
@@ -47,13 +48,18 @@ export function App() {
 }
 
 function Workspace() {
-  const { user, logout } = useAuth();
+  const { user, logout, hasRole } = useAuth();
+  // Sections selon les rôles : un compte peut cumuler agent et administrateur
+  const agent = hasRole('AGENT_SCOLARITE');
+  const admin = hasRole('ESIGN_ADMIN');
   const api = useApi();
   const { path, params, navigate } = useRoute();
-  const section = path.startsWith('/documents') ? 'documents' : path.startsWith('/imports') ? 'imports' : 'demandes';
+  const demandee = (['documents', 'imports', 'parametrage', 'demandes'] as const).find((s) => path.startsWith(`/${s}`));
+  const section = demandee ?? (agent ? 'demandes' : 'parametrage');
+  const autorisee = section === 'parametrage' ? admin : agent;
 
   // Compteur affiché dans la navigation, partagé avec la section (même clé de cache)
-  const pending = useQuery({ queryKey: ['requests', 'PENDING'], queryFn: () => api.studentRequests('PENDING'), refetchInterval: 60_000 });
+  const pending = useQuery({ queryKey: ['requests', 'PENDING'], queryFn: () => api.studentRequests('PENDING'), refetchInterval: 60_000, enabled: agent });
 
   const lien = (to: string, label: string, active: boolean, count?: number) => (
     <a href={to} aria-current={active ? 'page' : undefined}
@@ -69,23 +75,30 @@ function Workspace() {
         <img src="/logo.png" alt="FSBM" className="rail-logo" />
         <div className="rail-titre">Documents officiels</div>
         <div className="rail-liens">
-          {lien('/demandes', 'Demandes étudiantes', section === 'demandes', pending.data?.length)}
-          {lien('/documents', 'Documents', section === 'documents')}
-          {lien('/imports', 'Imports Apogée', section === 'imports')}
+          {agent && lien('/demandes', 'Demandes étudiantes', section === 'demandes', pending.data?.length)}
+          {agent && lien('/documents', 'Documents', section === 'documents')}
+          {agent && lien('/imports', 'Imports Apogée', section === 'imports')}
+          {admin && lien('/parametrage', 'Paramétrage', section === 'parametrage')}
         </div>
         <div className="rail-pied">
           <div className="rail-user">
             <strong>{user?.name}</strong>
-            <span>{user?.roles.includes('ESIGN_ADMIN') ? 'Administrateur' : 'Agent de scolarité'}</span>
+            <span>{[agent && 'Agent de scolarité', admin && 'Administrateur'].filter(Boolean).join(', ')}</span>
           </div>
           <button type="button" className="lien" onClick={logout}>Se déconnecter</button>
         </div>
       </nav>
       <main className="plan">
-        {section === 'demandes' && <DemandesSection openDocument={(id) => navigate(`/documents?id=${id}`)} />}
-        {section === 'documents' && <DocumentsSection selectedId={params.get('id')} onSelect={(id) => navigate(id ? `/documents?id=${id}` : '/documents', true)} />}
-        {section === 'imports' && <ImportsSection selectedId={params.get('id')} openDocument={(id) => navigate(`/documents?id=${id}`)}
+        {!autorisee && (
+          <div className="vide"><h2>Section non disponible</h2>
+            <p>{section === 'parametrage' ? 'Le paramétrage est réservé aux comptes ayant le rôle ESIGN_ADMIN.'
+              : 'Cette section est réservée aux agents de scolarité (rôle AGENT_SCOLARITE).'}</p></div>
+        )}
+        {autorisee && section === 'demandes' && <DemandesSection openDocument={(id) => navigate(`/documents?id=${id}`)} />}
+        {autorisee && section === 'documents' && <DocumentsSection selectedId={params.get('id')} onSelect={(id) => navigate(id ? `/documents?id=${id}` : '/documents', true)} />}
+        {autorisee && section === 'imports' && <ImportsSection selectedId={params.get('id')} openDocument={(id) => navigate(`/documents?id=${id}`)}
           onSelect={(id) => navigate(id ? `/imports?id=${id}` : '/imports', true)} />}
+        {autorisee && section === 'parametrage' && <ParametrageSection />}
       </main>
     </div>
   );

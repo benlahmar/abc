@@ -157,6 +157,17 @@ class WorkflowIntegrationTest {
                 .andExpect(jsonPath("$[?(@.type == 'RELEVE_NOTES')].steps[1].condition").value("IF_ESCALATED"));
         mvc.perform(get("/api/v1/audit/verify").with(ADMIN))
                 .andExpect(jsonPath("$.valid").value(true));
+
+        // Historique du paramétrage : la dernière modification en premier, avec son auteur
+        mvc.perform(get("/api/v1/audit/events").param("type", "WORKFLOW_UPDATED", "STUDENT_ACCESS_UPDATED")
+                        .param("size", "5").with(ADMIN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].eventType").value("WORKFLOW_UPDATED"))
+                .andExpect(jsonPath("$.items[0].actor").value("admin.esign"))
+                .andExpect(jsonPath("$.items[0].details").value(org.hamcrest.Matchers.containsString("VICE_DOYEN_PEDAGOGIE")));
+        mvc.perform(get("/api/v1/audit/events").with(VICE_DOYEN)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/apogee/status").with(ADMIN)).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/batches").with(ADMIN)).andExpect(status().isForbidden());
     }
 
     // ------------------------------------------------------------ déroulement du circuit

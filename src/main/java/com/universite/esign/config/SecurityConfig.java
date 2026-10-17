@@ -54,6 +54,9 @@ class SecurityConfig {
                         .hasAnyAuthority("SCOPE_documents:revoke", AGENT, CallerContext.ADMIN_AUTHORITY)
                         .requestMatchers(HttpMethod.POST, "/api/v1/documents")
                         .hasAnyAuthority("SCOPE_documents:write", AGENT, CallerContext.ADMIN_AUTHORITY)
+                        // État de la vue Apogée : aussi utile à l'administrateur (mode AUTO des demandes)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/apogee/status")
+                        .hasAnyAuthority("SCOPE_documents:write", AGENT, CallerContext.ADMIN_AUTHORITY, ESIGN_ADMIN)
                         // Établissement depuis Apogée (fichier, vue Oracle) et traitements en masse
                         .requestMatchers("/api/v1/batches/**", "/api/v1/apogee/**")
                         .hasAnyAuthority("SCOPE_documents:write", AGENT, CallerContext.ADMIN_AUTHORITY)

@@ -146,7 +146,7 @@ curl -s -F file=@releve.pdf http://localhost:8080/api/v1/verify
 | `GET`, `POST` | `/api/v1/me/**` | rôle `ETUDIANT` (+ claim `cne`) |
 | `GET`, `POST` | `/api/v1/student-requests/**` | `documents:write` ou rôle `AGENT_SCOLARITE` |
 | `GET`, `PUT` | `/api/v1/admin/student-access[/{type}]` | rôle `ESIGN_ADMIN` |
-| `GET` | `/api/v1/audit/verify`, `/api/v1/audit/documents/{id}` | `audit:read` |
+| `GET` | `/api/v1/audit/verify`, `/api/v1/audit/events?type=`, `/api/v1/audit/documents/{id}` | `audit:read` ou rôle `ESIGN_ADMIN` |
 | `GET`, `PUT` | `/api/v1/admin/workflows[/{type}]` | `workflow:admin` ou rôle `ESIGN_ADMIN` |
 | `GET` | `/api/v1/approvals`, `/api/v1/approvals/{id}/preview` | personne connectée (rôle de l'étape) |
 | `POST` | `/api/v1/approvals/{id}/approve`, `/reject` | personne connectée (rôle de l'étape) |
@@ -326,7 +326,7 @@ Compte de démonstration : `etudiant` / `etudiant123` (CNE `R130456789`).
 
 Application web des agents de scolarité (Vite + React + TypeScript), servie sur
 **http://localhost:8081** par `docker compose up --build` (service `backoffice`).
-Connexion : `agent.apogee` / `agent123` (ou `admin.esign` / `admin123`).
+Connexion : `agent.apogee` / `agent123` pour les agents, `admin.esign` / `admin123` pour le paramétrage.
 
 - **Demandes étudiantes** : file des demandes en attente (compteur dans la navigation), onglets
   Traitées / Refusées / En échec ; pour chaque demande :
@@ -343,6 +343,16 @@ Connexion : `agent.apogee` / `agent123` (ou `admin.esign` / `admin123`).
   documents filtrable), confirmation, puis suivi en direct de la signature ; à la fin, PDF signés en ZIP
   (`T`), rapport CSV pour Excel, détail par document (erreurs, lien vers chaque document signé).
   Modèle de fichier téléchargeable depuis l'écran.
+- **Paramétrage** (rôle `ESIGN_ADMIN`, compte `admin.esign` / `admin123`) :
+  - **Circuit de validation** par type de document : étapes ordonnées (rôle qui décide, condition
+    *toujours* / *selon l'usage* / *sur demande*), simulation du parcours d'un document avant
+    d'enregistrer, confirmation rédigée en clair ;
+  - **Demandes en ligne** des étudiants : fermée, traitée par le service ou immédiate depuis Apogée
+    (proposée seulement si la vue Oracle est activée), nombre de demandes par jour ;
+  - **Historique** des modifications (qui, quand, quoi), lu dans le journal d'audit.
+
+Les sections affichées dépendent des rôles du compte : agent de scolarité (demandes, documents,
+imports), administrateur (paramétrage), ou les deux.
 
 Les erreurs de validation de l'API sont affichées sous les champs concernés.
 
@@ -421,7 +431,8 @@ ESIGN_LOGO=file:/config/logo.png      # PNG, fond transparent de préférence ; 
 - [ ] Connecteur vers le système de scolarité (Apogée…), modèles personnalisables
 - [x] Back-office scolarité : demandes étudiantes, documents (recherche, révocation, historique)
 - [x] Back-office : imports Apogée (vérification, signature en masse, suivi, ZIP et rapport)
-- [ ] Back-office : approbations, paramétrage, audit
+- [x] Back-office : paramétrage (circuit, demandes en ligne, historique)
+- [ ] Back-office : approbations, audit
 - [ ] SDK clients (générés depuis l'OpenAPI)
 
 ## Licences tierces

@@ -2,10 +2,13 @@ package com.universite.esign.audit;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 import com.universite.esign.common.Hashes;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +44,15 @@ public class AuditService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void recordInNewTransaction(String eventType, UUID documentId, String actor, String details) {
         record(eventType, documentId, actor, details);
+    }
+
+    /** Événements du plus récent au plus ancien, éventuellement limités à certains types. */
+    @Transactional(readOnly = true)
+    public Page<AuditEvent> recent(Collection<String> types, int page, int size) {
+        PageRequest request = PageRequest.of(page, size);
+        return types == null || types.isEmpty()
+                ? events.findAllByOrderByIdDesc(request)
+                : events.findByEventTypeInOrderByIdDesc(types, request);
     }
 
     @Transactional(readOnly = true)
