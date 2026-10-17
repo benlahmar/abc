@@ -28,6 +28,10 @@ export type WorkflowCondition = WorkflowStep['condition'];
 export type StudentAccessSetting = Schemas['Setting'];
 export type StudentAccessMode = Schemas['Update']['mode'];
 export type AuditPage = Schemas['PageResponseAuditEvent'];
+export type ApprovalTask = Schemas['Task'];
+export type ApprovalDecision = Schemas['Decision'];
+export type ApprovalStep = Schemas['Approval'];
+export type ApprovalStatus = NonNullable<ApprovalStep['status']>;
 
 export interface ImportOptions {
   type: DocumentType;
@@ -138,6 +142,15 @@ export function createApi({ baseUrl, getToken, onUnauthorized }: ApiOptions) {
       post<DryRunReport>('/api/v1/batches/apogee', { ...extraction, dryRun: true }),
     extractApogee: (extraction: Omit<ApogeeExtraction, 'dryRun'>) =>
       post<Batch>('/api/v1/batches/apogee', { ...extraction, dryRun: false }),
+    // ------------------------------------------------------------ approbations (validateurs)
+    approvals: () => json<ApprovalTask[]>('/api/v1/approvals'),
+    approvalDecisions: () => json<ApprovalDecision[]>('/api/v1/approvals/decided'),
+    approvalDocument: (id: string) => json<DocumentResponse>(`/api/v1/approvals/${id}`),
+    approvalPreview: async (id: string) => (await request(`/api/v1/approvals/${id}/preview`)).blob(),
+    approve: (id: string, decision: { comment?: string; escalate?: boolean } = {}) =>
+      post<DocumentResponse>(`/api/v1/approvals/${id}/approve`, decision),
+    rejectApproval: (id: string, reason: string) => post<DocumentResponse>(`/api/v1/approvals/${id}/reject`, { reason }),
+
     // ------------------------------------------------------------ paramétrage (administrateur)
     workflows: () => json<Workflow[]>('/api/v1/admin/workflows'),
     saveWorkflow: (type: DocumentType, steps: WorkflowStep[]) =>

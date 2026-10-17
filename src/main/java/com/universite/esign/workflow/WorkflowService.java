@@ -109,6 +109,12 @@ public class WorkflowService {
         return approvals.findByDocumentIdOrderByStepOrder(documentId);
     }
 
+    /** Dernières décisions d'une personne, de la plus récente à la plus ancienne. */
+    @Transactional(readOnly = true)
+    public List<DocumentApproval> decidedBy(String approverId) {
+        return approvals.findTop100ByDecidedByIdIgnoreCaseOrderByDecidedAtDesc(approverId);
+    }
+
     @Transactional(readOnly = true)
     public List<DocumentApproval> pendingFor(Collection<String> roles) {
         if (roles.isEmpty()) {

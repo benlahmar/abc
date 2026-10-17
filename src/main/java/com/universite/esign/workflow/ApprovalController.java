@@ -57,6 +57,18 @@ class ApprovalController {
         return approvals.pending(AgentResolver.roles(auth));
     }
 
+    @GetMapping("/decided")
+    @Operation(summary = "Mes décisions récentes (100 dernières)")
+    List<ApprovalService.Decision> decided(@AuthenticationPrincipal Jwt jwt) {
+        return approvals.decidedBy(agents.approver(jwt).id());
+    }
+
+    @GetMapping("/{documentId}")
+    @Operation(summary = "Document soumis à ma décision (ou déjà décidé par moi), avec le déroulement du circuit")
+    DocumentResponse get(@PathVariable UUID documentId, Authentication auth, @AuthenticationPrincipal Jwt jwt) {
+        return response(approvals.forApprover(documentId, AgentResolver.roles(auth), agents.approver(jwt).id()));
+    }
+
     @GetMapping(value = "/{documentId}/preview", produces = MediaType.APPLICATION_PDF_VALUE)
     @Operation(summary = "Prévisualiser le document (non signé) avant décision")
     ResponseEntity<byte[]> preview(@PathVariable UUID documentId, Authentication auth) {

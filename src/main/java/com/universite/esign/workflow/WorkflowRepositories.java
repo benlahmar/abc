@@ -23,4 +23,6 @@ interface DocumentApprovalRepository extends JpaRepository<DocumentApproval, Lon
     List<DocumentApproval> findByDocumentIdOrderByStepOrder(UUID documentId);
 
     List<DocumentApproval> findByStatusAndRoleInOrderByIdAsc(ApprovalStatus status, Collection<String> roles);
+
+    List<DocumentApproval> findTop100ByDecidedByIdIgnoreCaseOrderByDecidedAtDesc(String decidedById);
 }

@@ -262,3 +262,21 @@ a.btn { text-decoration: none; }
   .barre-enregistrer { left: 1rem; right: 1rem; }
   .journal li { grid-template-columns: 1fr; }
 }
+
+/* ------------------------------------------------------------------ approbations */
+.deroule { list-style: none; margin: 0; padding: 0 0 0 1rem; width: 100%; border-left: 2px solid var(--filet-fort); display: grid; gap: .6rem; }
+.deroule li { position: relative; display: grid; grid-template-columns: 1fr auto; gap: .1rem 1rem; align-items: baseline; }
+.deroule li::before { content: ""; position: absolute; left: calc(-1rem - 6px); top: .45rem; width: .6rem; height: .6rem; border-radius: 50%; background: var(--papier); border: 2px solid var(--filet-fort); }
+.deroule .deroule-pending::before { background: var(--attente); border-color: var(--attente); }
+.deroule .deroule-approved::before { background: var(--valide); border-color: var(--valide); }
+.deroule .deroule-rejected::before { background: var(--annule); border-color: var(--annule); }
+.deroule .deroule-skipped { opacity: .6; }
+.deroule-nom { display: grid; font-weight: 700; }
+.deroule-detail { grid-column: 1 / -1; color: var(--encre-douce); font-size: var(--t-1); }
+.decision { display: grid; gap: .6rem; width: 100%; padding: .9rem 1rem; background: var(--feuille); border: 1.5px solid var(--filet); border-left: 4px solid var(--fsbm); }
+.decision textarea { min-height: 3.5rem; }
+.apercu-cadre { margin: 0; width: 100%; display: grid; gap: .3rem; }
+.apercu-cadre figcaption { font-size: var(--t-1); color: var(--encre-douce); font-weight: 700; }
+.apercu-cadre .apercu { min-height: 34rem; }
+.espace.espace-approbations { grid-template-columns: minmax(30rem, 1fr) minmax(28rem, 40rem); }
+.etiquette { display: inline-block; margin-top: .2rem; padding: 0 .4rem; border: 1px solid var(--filet-fort); border-radius: var(--rayon); font-size: .75rem; color: var(--encre-douce); }

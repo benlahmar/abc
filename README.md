@@ -351,8 +351,15 @@ Connexion : `agent.apogee` / `agent123` pour les agents, `admin.esign` / `admin1
     (proposée seulement si la vue Oracle est activée), nombre de demandes par jour ;
   - **Historique** des modifications (qui, quand, quoi), lu dans le journal d'audit.
 
+- **Approbations** (validateurs : `vice.doyen` / `vicedoyen123`, `doyen` / `doyen123`) : documents
+  en attente de leur décision selon le circuit, avec l'aperçu du PDF non signé, le déroulement du
+  circuit (qui a approuvé, quand, avec quel commentaire) et ce que déclenche l'approbation (signature
+  immédiate ou étape suivante) ; **Approuver** (`A`, commentaire facultatif, validation
+  supplémentaire possible), **Refuser** (`R`, motif obligatoire), approbation **en lot** ; onglet
+  **Mes décisions**. L'agent qui a établi un document ne peut pas l'approuver.
+
 Les sections affichées dépendent des rôles du compte : agent de scolarité (demandes, documents,
-imports), administrateur (paramétrage), ou les deux.
+imports), validateur (approbations), administrateur (paramétrage), ou plusieurs à la fois.
 
 Les erreurs de validation de l'API sont affichées sous les champs concernés.
 
@@ -432,7 +439,8 @@ ESIGN_LOGO=file:/config/logo.png      # PNG, fond transparent de préférence ; 
 - [x] Back-office scolarité : demandes étudiantes, documents (recherche, révocation, historique)
 - [x] Back-office : imports Apogée (vérification, signature en masse, suivi, ZIP et rapport)
 - [x] Back-office : paramétrage (circuit, demandes en ligne, historique)
-- [ ] Back-office : approbations, audit
+- [x] Back-office : approbations (aperçu, décision, lot, historique des décisions)
+- [ ] Back-office : audit
 - [ ] SDK clients (générés depuis l'OpenAPI)
 
 ## Licences tierces

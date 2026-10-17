@@ -199,7 +199,14 @@ class WorkflowIntegrationTest {
 
         // Le vice-doyen voit la demande et peut prévisualiser le PDF non signé
         mvc.perform(get("/api/v1/approvals").with(VICE_DOYEN))
-                .andExpect(jsonPath("$[*].documentId").value(hasItem(id)));
+                .andExpect(jsonPath("$[*].documentId").value(hasItem(id)))
+                .andExpect(jsonPath("$[?(@.documentId == '%s')].type".formatted(id)).value(hasItem("RELEVE_NOTES")))
+                .andExpect(jsonPath("$[?(@.documentId == '%s')].stepNumber".formatted(id)).value(hasItem(1)))
+                .andExpect(jsonPath("$[?(@.documentId == '%s')].stepCount".formatted(id)).value(hasItem(1)));
+        mvc.perform(get("/api/v1/approvals/{id}", id).with(VICE_DOYEN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.approvals[0].status").value("PENDING"));
+        mvc.perform(get("/api/v1/approvals/{id}", id).with(DOYEN)).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/approvals/{id}/preview", id).with(VICE_DOYEN))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF));
@@ -219,6 +226,13 @@ class WorkflowIntegrationTest {
                 .andExpect(jsonPath("$.approvals[0].decidedById").value("vice.doyen"))
                 .andExpect(jsonPath("$.approvals[0].comment").value("Notes conformes"))
                 .andExpect(jsonPath("$.approvals[1].status").value("SKIPPED"));
+
+        // Après décision : le vice-doyen retrouve le document dans ses décisions et peut encore le consulter
+        mvc.perform(get("/api/v1/approvals/decided").with(VICE_DOYEN))
+                .andExpect(jsonPath("$[0].documentId").value(id))
+                .andExpect(jsonPath("$[0].decision").value("APPROVED"))
+                .andExpect(jsonPath("$[0].documentStatus").value("SIGNED"));
+        mvc.perform(get("/api/v1/approvals/{id}", id).with(VICE_DOYEN)).andExpect(status().isOk());
 
         byte[] pdf = mvc.perform(get("/api/v1/documents/{id}/download", id).with(APOGEE))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();

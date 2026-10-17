@@ -607,6 +607,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/approvals/{documentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Document soumis à ma décision (ou déjà décidé par moi), avec le déroulement du circuit */
+        get: operations["get_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/approvals/{documentId}/preview": {
         parameters: {
             query?: never;
@@ -616,6 +633,23 @@ export interface paths {
         };
         /** Prévisualiser le document (non signé) avant décision */
         get: operations["preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approvals/decided": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mes décisions récentes (100 dernières) */
+        get: operations["decided"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1099,6 +1133,8 @@ export interface components {
             /** Format: uuid */
             documentId?: string;
             documentType?: string;
+            /** @enum {string} */
+            type?: "ATTESTATION_SCOLARITE" | "RELEVE_NOTES";
             studentName?: string;
             studentCne?: string;
             academicYear?: string;
@@ -1106,9 +1142,32 @@ export interface components {
             purpose?: string;
             step?: string;
             role?: string;
+            /** Format: int32 */
+            stepNumber?: number;
+            /** Format: int32 */
+            stepCount?: number;
+            escalated?: boolean;
             issuedBy?: components["schemas"]["Agent"];
             /** Format: date-time */
             requestedAt?: string;
+        };
+        Decision: {
+            /** Format: uuid */
+            documentId?: string;
+            /** @enum {string} */
+            type?: "ATTESTATION_SCOLARITE" | "RELEVE_NOTES";
+            studentName?: string;
+            studentCne?: string;
+            academicYear?: string;
+            semester?: string;
+            step?: string;
+            /** @enum {string} */
+            decision?: "WAITING" | "CONDITIONAL" | "PENDING" | "APPROVED" | "REJECTED" | "SKIPPED";
+            comment?: string;
+            /** Format: date-time */
+            decidedAt?: string;
+            /** @enum {string} */
+            documentStatus?: "PENDING_APPROVAL" | "REJECTED" | "SIGNED" | "REVOKED";
         };
         Status: {
             viewEnabled?: boolean;
@@ -2012,6 +2071,28 @@ export interface operations {
             };
         };
     };
+    get_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentResponse"];
+                };
+            };
+        };
+    };
     preview: {
         parameters: {
             query?: never;
@@ -2030,6 +2111,26 @@ export interface operations {
                 };
                 content: {
                     "application/pdf": string;
+                };
+            };
+        };
+    };
+    decided: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Decision"][];
                 };
             };
         };
