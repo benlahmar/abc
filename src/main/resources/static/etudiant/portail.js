@@ -150,8 +150,10 @@
     const sync = () => {
       const offer = profile.documentTypes.find((o) => o.type === type.value);
       $('semester-field').hidden = type.value !== 'RELEVE_NOTES';
-      $('mode-hint').textContent = offer.mode === 'AUTO'
-        ? 'Le document est produit immédiatement à partir des données d\'Apogée.'
+      // immediate : calculé par l'API (vue Apogée, ou inscription dans le registre de l'année)
+      $('mode-hint').textContent = (offer.immediate ?? offer.mode === 'AUTO')
+        ? (offer.mode === 'REGISTRY' ? 'Le document est produit immédiatement à partir de votre inscription.'
+          : 'Le document est produit immédiatement à partir des données d\'Apogée.')
         : 'La demande est transmise au service de scolarité ; le document apparaîtra ici une fois établi.';
     };
     type.addEventListener('change', sync); sync();

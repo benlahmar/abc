@@ -4,7 +4,7 @@ import { ApiError, DOCUMENT_LABELS, DOCUMENT_PLURALS, type DocumentType, type St
 import { Button, Dialog, Field, formatDateTime, useToast } from '@esign/ui';
 import { useApi } from '../api';
 import { USAGES } from '../components/DocumentForm';
-import { CONDITIONS, MODES, ROLES, checkSteps, describeChange, emptyStep, nameForRole, normalize, roleLabel, sameSteps, simulate } from '../lib/parametrage';
+import { CONDITIONS, MODES, modesFor, ROLES, checkSteps, describeChange, emptyStep, nameForRole, normalize, roleLabel, sameSteps, simulate } from '../lib/parametrage';
 
 type Onglet = 'circuit' | 'demandes' | 'historique';
 const TYPES = Object.keys(DOCUMENT_LABELS) as DocumentType[];
@@ -300,9 +300,9 @@ function AccesEtudiant({ setting, viewEnabled }: { setting: StudentAccessSetting
   return (
     <section className="carte-reglage" aria-labelledby={`${id}-titre`}>
       <h2 id={`${id}-titre`}>{DOCUMENT_LABELS[setting.type!]}</h2>
-      <fieldset className="conditions modes">
+      <fieldset className={`conditions modes modes-${modesFor(setting.type!).length}`}>
         <legend className="sr">Demande en ligne</legend>
-        {(Object.keys(MODES) as StudentAccessMode[]).map((m) => {
+        {modesFor(setting.type!).map((m) => {
           const indisponible = m === 'AUTO' && !viewEnabled;
           return (
             <label key={m} className={`condition${mode === m ? ' choisie' : ''}${indisponible ? ' indisponible' : ''}`}>

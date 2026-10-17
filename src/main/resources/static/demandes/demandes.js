@@ -504,8 +504,11 @@
       envoyer.disabled = !v.type;
       if (!offre) { delai.textContent = 'Toutes vos demandes du jour sont utilisées. Revenez demain.'; return; }
       const reste = offre.dailyLimit - demandesDuJour(v.type);
-      delai.textContent = (offre.mode === 'AUTO'
-        ? 'Le document est produit immédiatement à partir de vos données Apogée.'
+      // immediate : calculé par l'API pour l'année en cours (vue Apogée, ou inscription dans le registre)
+      const immediat = (offre.immediate ?? offre.mode === 'AUTO') && (offre.mode !== 'REGISTRY' || v.annee === anneeCourante());
+      delai.textContent = (immediat
+        ? (offre.mode === 'REGISTRY' ? 'Le document est produit immédiatement à partir de votre inscription.'
+          : 'Le document est produit immédiatement à partir de vos données Apogée.')
         : 'Votre demande est transmise au service de scolarité, qui établit le document.')
         + ` Il vous reste ${reste} demande${reste > 1 ? 's' : ''} aujourd'hui pour ce document.`;
 

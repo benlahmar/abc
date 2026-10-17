@@ -24,7 +24,12 @@ export const MODES: Record<StudentAccessMode, { label: string; aide: string }> =
   DISABLED: { label: 'Fermée', aide: 'Pas de demande en ligne. L\'étudiant voit et télécharge toujours ses documents.' },
   AGENT: { label: 'Traitée par le service', aide: 'La demande arrive dans la file « Demandes étudiantes » ; un agent l\'établit.' },
   AUTO: { label: 'Immédiate depuis Apogée', aide: 'Le document est produit et signé aussitôt à partir de la vue Oracle Apogée.' },
+  REGISTRY: { label: 'Immédiate depuis le registre', aide: 'Signée aussitôt si l\'étudiant figure, non bloqué, dans le registre des inscrits de l\'année ; sinon la demande va au service.' },
 };
+
+/** Modes proposés pour un type de document : le registre ne contient pas de notes. */
+export const modesFor = (type: DocumentType): StudentAccessMode[] =>
+  type === 'ATTESTATION_SCOLARITE' ? ['DISABLED', 'AGENT', 'REGISTRY', 'AUTO'] : ['DISABLED', 'AGENT', 'AUTO'];
 
 export const STEP_ROLE = /^[A-Z][A-Z0-9_]{1,59}$/;
 

@@ -161,7 +161,8 @@ export function DemandesSection({ openDocument }: { openDocument: (id: string) =
                       <input type="checkbox" aria-label={`Sélectionner ${r.studentName}`} checked={checked.has(r.id!)} onChange={() => toggle(r.id!)} /></td>}
                     <td className="num quand" title={formatDateTime(pending ? r.createdAt : r.handledAt)}>{relativeTime(pending ? r.createdAt : r.handledAt)}</td>
                     <td><strong>{r.studentName}</strong><span className="sous num">{r.studentCne}</span></td>
-                    <td>{DOCUMENT_LABELS[r.type!]}<span className="sous">{periode(r)}</span></td>
+                    <td>{DOCUMENT_LABELS[r.type!]}<span className="sous">{periode(r)}</span>
+                      {pending && r.agentNote && <span className="etiquette etiquette-alerte" title={r.agentNote}>À vérifier</span>}</td>
                     <td>{pending ? (USAGES[r.purpose ?? ''] ?? r.purpose) : r.handledByName}</td>
                   </tr>
                 ))}
@@ -240,6 +241,7 @@ function Detail({ r, pending, apogee, busy, refus, onApogee, onSaisie, onRefus, 
         {!pending && <><dt>Traitée</dt><dd>{formatDateTime(r.handledAt)} par {r.handledByName}</dd></>}
       </dl>
       {r.message && <p className={`encart${r.status === 'FULFILLED' ? '' : ' encart-ko'}`}>{r.message}</p>}
+      {pending && r.agentNote && <p className="encart encart-attente"><strong>À vérifier : </strong>{r.agentNote}</p>}
 
       {pending && !refus && (
         <div className="actions">

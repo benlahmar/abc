@@ -7,6 +7,7 @@ import { roleLabel } from './lib/parametrage';
 import { DemandesSection } from './sections/Demandes';
 import { DocumentsSection } from './sections/Documents';
 import { ImportsSection } from './sections/Imports';
+import { RegistreSection } from './sections/Registre';
 import { ApprobationsSection } from './sections/Approbations';
 import { ParametrageSection } from './sections/Parametrage';
 
@@ -59,9 +60,10 @@ function Workspace() {
   const validateur = hasRole(...VALIDATOR_ROLES);
   const api = useApi();
   const { path, params, navigate } = useRoute();
-  const demandee = (['documents', 'imports', 'approbations', 'parametrage', 'demandes'] as const).find((s) => path.startsWith(`/${s}`));
+  const demandee = (['documents', 'imports', 'registre', 'approbations', 'parametrage', 'demandes'] as const).find((s) => path.startsWith(`/${s}`));
   const section = demandee ?? (agent ? 'demandes' : validateur ? 'approbations' : 'parametrage');
-  const autorisee = section === 'parametrage' ? admin : section === 'approbations' ? validateur : agent;
+  const autorisee = section === 'parametrage' ? admin : section === 'approbations' ? validateur
+    : section === 'registre' ? agent || admin : agent;
 
   // Compteur affiché dans la navigation, partagé avec la section (même clé de cache)
   const aDecider = useQuery({ queryKey: ['approvals'], queryFn: api.approvals, refetchInterval: 60_000, enabled: validateur });
@@ -84,6 +86,7 @@ function Workspace() {
           {agent && lien('/demandes', 'Demandes étudiantes', section === 'demandes', pending.data?.length)}
           {agent && lien('/documents', 'Documents', section === 'documents')}
           {agent && lien('/imports', 'Imports Apogée', section === 'imports')}
+          {(agent || admin) && lien('/registre', 'Registre des inscrits', section === 'registre')}
           {validateur && lien('/approbations', 'Approbations', section === 'approbations', aDecider.data?.length)}
           {admin && lien('/parametrage', 'Paramétrage', section === 'parametrage')}
         </div>
@@ -107,6 +110,7 @@ function Workspace() {
         {autorisee && section === 'documents' && <DocumentsSection selectedId={params.get('id')} onSelect={(id) => navigate(id ? `/documents?id=${id}` : '/documents', true)} />}
         {autorisee && section === 'imports' && <ImportsSection selectedId={params.get('id')} openDocument={(id) => navigate(`/documents?id=${id}`)}
           onSelect={(id) => navigate(id ? `/imports?id=${id}` : '/imports', true)} />}
+        {autorisee && section === 'registre' && <RegistreSection />}
         {autorisee && section === 'approbations' && <ApprobationsSection />}
         {autorisee && section === 'parametrage' && <ParametrageSection />}
       </main>

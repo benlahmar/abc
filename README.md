@@ -142,7 +142,9 @@ curl -s -F file=@releve.pdf http://localhost:8080/api/v1/verify
 | `GET` | `/api/v1/templates` | authentifié |
 | `POST` | `/api/v1/batches/import`, `/api/v1/batches/apogee` | `documents:write` ou rôle `AGENT_SCOLARITE` |
 | `GET` | `/api/v1/batches` (liste), `/api/v1/batches/{id}`, `/items`, `/report.csv`, `/archive.zip` | idem |
-| `POST` | `/api/v1/apogee/documents` | idem |
+| `GET`, `POST` | `/api/v1/registry`, `/registry/import`, `/registry/students`, `/registry/students/{id}/block` | rôle `AGENT_SCOLARITE` |
+| `DELETE` | `/api/v1/registry/{année}` (année close) | rôle `ESIGN_ADMIN` |
+| `POST` | `/api/v1/apogee/documents` | `documents:write` ou rôle `AGENT_SCOLARITE` |
 | `GET`, `POST` | `/api/v1/me/**` | rôle `ETUDIANT` (+ claim `cne`) |
 | `GET`, `POST` | `/api/v1/student-requests/**` | `documents:write` ou rôle `AGENT_SCOLARITE` |
 | `GET`, `PUT` | `/api/v1/admin/student-access[/{type}]` | rôle `ESIGN_ADMIN` |
@@ -343,12 +345,22 @@ Connexion : `agent.apogee` / `agent123` pour les agents, `admin.esign` / `admin1
   documents filtrable), confirmation, puis suivi en direct de la signature ; à la fin, PDF signés en ZIP
   (`T`), rapport CSV pour Excel, détail par document (erreurs, lien vers chaque document signé).
   Modèle de fichier téléchargeable depuis l'écran.
+- **Registre des inscrits** : listes des inscrits par filière et par année (CSV ou Excel : CNE, nom,
+  prénom, filière, niveau ; date et lieu de naissance facultatifs ; modèle téléchargeable). Chaque
+  import est d'abord **comparé** à la liste en vigueur (arrivées, départs, changements de niveau ou
+  de filière, lignes en erreur) ; il **remplace** ensuite la liste de chaque filière du fichier et
+  il est refusé tant qu'une ligne est en erreur. Un agent peut **bloquer** un étudiant (transfert,
+  annulation…) : le blocage survit aux imports. L'administrateur supprime les listes d'une année
+  close (données personnelles).
 - **Paramétrage** (rôle `ESIGN_ADMIN`, compte `admin.esign` / `admin123`) :
   - **Circuit de validation** par type de document : étapes ordonnées (rôle qui décide, condition
     *toujours* / *selon l'usage* / *sur demande*), simulation du parcours d'un document avant
     d'enregistrer, confirmation rédigée en clair ;
-  - **Demandes en ligne** des étudiants : fermée, traitée par le service ou immédiate depuis Apogée
-    (proposée seulement si la vue Oracle est activée), nombre de demandes par jour ;
+  - **Demandes en ligne** des étudiants : fermée, traitée par le service, immédiate depuis Apogée
+    (si la vue Oracle est activée) ou, pour les **attestations** seulement, **immédiate depuis le
+    registre des inscrits** : l'attestation est signée aussitôt si l'étudiant figure, non bloqué,
+    dans la liste de l'année demandée ; sinon la demande va au service avec une note « à vérifier »
+    (absent du registre, bloqué) visible des seuls agents. Nombre de demandes par jour ;
   - **Historique** des modifications (qui, quand, quoi), lu dans le journal d'audit.
 
 - **Approbations** (validateurs : `vice.doyen` / `vicedoyen123`, `doyen` / `doyen123`) : documents
@@ -440,6 +452,7 @@ ESIGN_LOGO=file:/config/logo.png      # PNG, fond transparent de préférence ; 
 - [x] Back-office : imports Apogée (vérification, signature en masse, suivi, ZIP et rapport)
 - [x] Back-office : paramétrage (circuit, demandes en ligne, historique)
 - [x] Back-office : approbations (aperçu, décision, lot, historique des décisions)
+- [x] Registre des inscrits : attestations immédiates sans la vue Oracle, avec comparaison, blocage et purge
 - [ ] Back-office : audit
 - [ ] SDK clients (générés depuis l'OpenAPI)
 

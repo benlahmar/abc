@@ -39,6 +39,10 @@ public class StudentAccessService {
         if (mode == StudentAccessMode.AUTO && !apogee.viewEnabled()) {
             throw new BadRequestException("Le mode AUTO nécessite la vue Oracle Apogée (esign.apogee.view.enabled)");
         }
+        if (mode == StudentAccessMode.REGISTRY && type != DocumentType.ATTESTATION_SCOLARITE) {
+            throw new BadRequestException("Le mode REGISTRY (registre des inscrits) est réservé aux attestations de "
+                    + "scolarité : les notes doivent venir d'Apogée");
+        }
         StudentAccessSetting setting = settings.findById(type)
                 .orElseGet(() -> new StudentAccessSetting(type, mode, dailyLimit));
         setting.update(mode, dailyLimit);

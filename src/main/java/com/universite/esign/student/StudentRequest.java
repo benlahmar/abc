@@ -58,6 +58,10 @@ public class StudentRequest {
     @Column(name = "handled_at")
     private Instant handledAt;
 
+    /** Note interne pour les agents (ex. « absent du registre des inscrits »), jamais montrée à l'étudiant. */
+    @Column(name = "agent_note", length = 500)
+    private String agentNote;
+
     @Column(length = 1000)
     private String message;
 
@@ -129,5 +133,10 @@ public class StudentRequest {
     public String getHandledByName() { return handledByName; }
     public Instant getHandledAt() { return handledAt; }
     public String getMessage() { return message; }
+    public String getAgentNote() { return agentNote; }
+
+    void noteForAgents(String note) {
+        this.agentNote = note == null || note.length() <= 500 ? note : note.substring(0, 499) + "…";
+    }
     public Instant getCreatedAt() { return createdAt; }
 }

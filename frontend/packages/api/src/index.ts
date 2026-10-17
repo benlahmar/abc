@@ -29,6 +29,13 @@ export type StudentAccessSetting = Schemas['Setting'];
 export type StudentAccessMode = Schemas['Update']['mode'];
 export type AuditPage = Schemas['PageResponseAuditEvent'];
 export type ApprovalTask = Schemas['Task'];
+export type RegistryOverview = Schemas['RegistryOverview'];
+export type RegistryFiliere = Schemas['RegistryFiliere'];
+export type RegistryReport = Schemas['RegistryReport'];
+export type RegistryFiliereDiff = Schemas['RegistryFiliereDiff'];
+export type RegistryPerson = Schemas['RegistryPerson'];
+export type RegistryStudent = Schemas['RegistryStudentView'];
+export type RegistryStudentPage = Schemas['PageResponseRegistryStudentView'];
 export type ApprovalDecision = Schemas['Decision'];
 export type ApprovalStep = Schemas['Approval'];
 export type ApprovalStatus = NonNullable<ApprovalStep['status']>;
@@ -142,6 +149,22 @@ export function createApi({ baseUrl, getToken, onUnauthorized }: ApiOptions) {
       post<DryRunReport>('/api/v1/batches/apogee', { ...extraction, dryRun: true }),
     extractApogee: (extraction: Omit<ApogeeExtraction, 'dryRun'>) =>
       post<Batch>('/api/v1/batches/apogee', { ...extraction, dryRun: false }),
+    // ------------------------------------------------------------ registre des inscrits
+    registry: (academicYear?: string) =>
+      json<RegistryOverview>(`/api/v1/registry${academicYear ? `?academicYear=${academicYear}` : ''}`),
+    checkRegistry: (file: File, academicYear: string) =>
+      json<RegistryReport>(`/api/v1/registry/import?${new URLSearchParams({ academicYear, dryRun: 'true' })}`, { method: 'POST', body: formWith(file) }),
+    importRegistry: (file: File, academicYear: string) =>
+      json<RegistryReport>(`/api/v1/registry/import?${new URLSearchParams({ academicYear, dryRun: 'false' })}`, { method: 'POST', body: formWith(file) }),
+    registryStudents: (query: { academicYear: string; filiere?: string; q?: string; blocked?: boolean; page?: number; size?: number }) => {
+      const params = new URLSearchParams();
+      Object.entries(query).forEach(([k, v]) => v !== undefined && v !== '' && v !== false && params.set(k, String(v)));
+      return json<RegistryStudentPage>(`/api/v1/registry/students?${params}`);
+    },
+    blockStudent: (id: number, reason: string) => post<RegistryStudent>(`/api/v1/registry/students/${id}/block`, { reason }),
+    unblockStudent: (id: number) => post<RegistryStudent>(`/api/v1/registry/students/${id}/unblock`),
+    purgeRegistry: (academicYear: string) => json<{ removed: number }>(`/api/v1/registry/${academicYear}`, { method: 'DELETE' }),
+
     // ------------------------------------------------------------ approbations (validateurs)
     approvals: () => json<ApprovalTask[]>('/api/v1/approvals'),
     approvalDecisions: () => json<ApprovalDecision[]>('/api/v1/approvals/decided'),

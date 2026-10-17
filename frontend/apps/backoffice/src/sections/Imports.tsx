@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, DOCUMENT_LABELS, DOCUMENT_PLURALS, type Batch, type BatchItemStatus, type DocumentType, type DryRunReport } from '@esign/api';
 import { Button, Dialog, Field, Status, formatDateTime, relativeTime, useToast } from '@esign/ui';
 import { useApi } from '../api';
 import { useHotkeys } from '../lib/keys';
 import { saveBlob } from '../lib/download';
-import { ACCEPTED_EXTENSIONS, ELEMENT_STATUTS, LOT_STATUTS, checkImportFile, duration, enCours, formatLines, pluriel, progress, withoutLinePrefix } from '../lib/imports';
+import { ELEMENT_STATUTS, LOT_STATUTS, duration, enCours, formatLines, pluriel, progress, withoutLinePrefix } from '../lib/imports';
 import { USAGES, currentAcademicYear } from '../components/DocumentForm';
+import { Depot } from '../components/Depot';
 
 const SEMESTRES = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10'];
 
@@ -132,8 +133,6 @@ function NouvelImport({ viewEnabled, onCancel, onLaunched }: { viewEnabled: bool
   const [vue, setVue] = useState({ academicYear: currentAcademicYear(), semester: 'S1', filiere: '' });
   const [report, setReport] = useState<DryRunReport>();
   const [confirmation, setConfirmation] = useState(false);
-  const [survol, setSurvol] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
 
   // Toute modification des critères invalide la vérification précédente
   const reset = () => { setReport(undefined); verification.reset(); };
@@ -156,14 +155,6 @@ function NouvelImport({ viewEnabled, onCancel, onLaunched }: { viewEnabled: bool
     },
   });
 
-  const choisir = (f?: File) => {
-    if (!f) return;
-    reset();
-    const err = checkImportFile(f);
-    setFileError(err);
-    setFile(err ? undefined : f);
-  };
-  const onDrop = (e: DragEvent) => { e.preventDefault(); setSurvol(false); choisir(e.dataTransfer.files[0]); };
 
   const verifier = (e: FormEvent) => {
     e.preventDefault();
@@ -201,24 +192,8 @@ function NouvelImport({ viewEnabled, onCancel, onLaunched }: { viewEnabled: bool
 
         {source === 'fichier' ? (
           <div>
-            <div className={`depot${survol ? ' survol' : ''}${file ? ' rempli' : ''}`}
-              onDragOver={(e) => { e.preventDefault(); setSurvol(true); }} onDragLeave={() => setSurvol(false)} onDrop={onDrop}>
-              {file ? (
-                <>
-                  <strong className="depot-nom">{file.name}</strong>
-                  <span className="sous num">{(file.size / 1024).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ko</span>
-                  <Button variant="quiet" onClick={() => input.current?.click()}>Choisir un autre fichier</Button>
-                </>
-              ) : (
-                <>
-                  <strong>Déposez l'export Apogée ici</strong>
-                  <span className="sous">CSV ou Excel (.xlsx, .xls), 20 Mo au plus</span>
-                  <Button onClick={() => input.current?.click()}>Parcourir…</Button>
-                </>
-              )}
-              <input ref={input} type="file" hidden accept={ACCEPTED_EXTENSIONS.join(',')} onChange={(e) => { choisir(e.target.files?.[0]); e.target.value = ''; }} />
-            </div>
-            {fileError && <p className="champ-erreur" role="alert">{fileError}</p>}
+            <Depot file={file} invitation="Déposez l'export Apogée ici" error={fileError} onError={setFileError}
+              onFile={(f) => { reset(); setFile(f); }} />
             <p className="champ-aide">Une ligne par étudiant et par module ; les noms de colonnes sont reconnus sans tenir compte
               des accents ni de la casse. <a href="/modele-export-apogee.csv" download>Télécharger le modèle</a></p>
           </div>

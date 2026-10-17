@@ -2,6 +2,7 @@ package com.universite.esign.student;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -16,7 +17,10 @@ import com.universite.esign.document.Document;
 import com.universite.esign.document.DocumentService;
 import com.universite.esign.document.DocumentType;
 import com.universite.esign.document.dto.CreateDocumentRequest;
+import com.universite.esign.document.dto.StudentInfo;
 import com.universite.esign.identity.Agent;
+import com.universite.esign.registry.RegistryService;
+import com.universite.esign.registry.RegistryStudent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -35,6 +39,8 @@ public class StudentRequestService {
     private static final Logger log = LoggerFactory.getLogger(StudentRequestService.class);
     static final Agent SELF_SERVICE = new Agent("libre-service", "Libre-service étudiant (données Apogée)",
             Agent.Source.SYSTEM);
+    static final Agent REGISTRY_SERVICE = new Agent("registre-inscrits",
+            "Libre-service étudiant (registre des inscrits)", Agent.Source.SYSTEM);
 
     private final StudentRequestRepository requests;
     private final StudentAccessService access;
@@ -42,9 +48,12 @@ public class StudentRequestService {
     private final DocumentService documents;
     private final AuditService audit;
     private final EsignProperties properties;
+    private final RegistryService registry;
 
     StudentRequestService(StudentRequestRepository requests, StudentAccessService access, ApogeeDocumentService apogee,
-                          DocumentService documents, AuditService audit, EsignProperties properties) {
+                          DocumentService documents, AuditService audit, EsignProperties properties,
+                          RegistryService registry) {
+        this.registry = registry;
         this.requests = requests;
         this.access = access;
         this.apogee = apogee;
@@ -91,7 +100,46 @@ public class StudentRequestService {
                 return complete(request.getId(), r -> r.failed(reason));
             }
         }
+        if (setting.getMode() == StudentAccessMode.REGISTRY) {
+            return fromRegistry(request, student, purpose, clientId);
+        }
         return request;
+    }
+
+    /**
+     * Attestation immédiate si l'étudiant figure, non bloqué, dans le registre de l'année demandée. Sinon la
+     * demande reste dans la file du service, avec une note expliquant pourquoi (jamais refusée d'office).
+     */
+    private StudentRequest fromRegistry(StudentRequest request, Student student, String purpose, String clientId) {
+        Optional<RegistryStudent> found = registry.find(student.cne(), request.getAcademicYear());
+        if (found.isEmpty()) {
+            return complete(request.getId(), r -> r.noteForAgents("Absent du registre des inscrits "
+                    + request.getAcademicYear() + " : vérifier l'inscription avant d'établir l'attestation"));
+        }
+        RegistryStudent s = found.get();
+        if (s.isBlocked()) {
+            return complete(request.getId(), r -> r.noteForAgents("Bloqué dans le registre par " + s.getBlockedBy()
+                    + " : " + s.getBlockedReason()));
+        }
+        CreateDocumentRequest data = new CreateDocumentRequest(DocumentType.ATTESTATION_SCOLARITE,
+                new StudentInfo(s.getCne(), s.getNom(), s.getPrenom(), s.getDateNaissance(), s.getLieuNaissance(),
+                        s.getFiliere(), s.getNiveau()),
+                request.getAcademicYear(), null, null, null, purpose, null);
+        try {
+            DocumentService.CreationResult result = documents.create(data, REGISTRY_SERVICE, clientId,
+                    "etudiant-" + request.getId());
+            StudentRequest saved = complete(request.getId(), r -> r.fulfilled(result.document().getId(),
+                    REGISTRY_SERVICE.id(), REGISTRY_SERVICE.name()));
+            String source = registry.importOf(s).map(i -> "registre " + i.getFiliere() + " importé le "
+                    + i.getImportedAt() + " par " + i.getImportedByName()).orElse("registre");
+            recordAudit("STUDENT_REQUEST_FULFILLED", saved, REGISTRY_SERVICE.auditLabel(clientId),
+                    "document " + result.document().getId() + " depuis le " + source);
+            return saved;
+        } catch (RuntimeException e) {
+            log.info("Demande {} : délivrance depuis le registre impossible : {}", request.getId(), e.getMessage());
+            return complete(request.getId(), r -> r.noteForAgents("Délivrance automatique impossible : "
+                    + e.getMessage()));
+        }
     }
 
     @Transactional(readOnly = true)

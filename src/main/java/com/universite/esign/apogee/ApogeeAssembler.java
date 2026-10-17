@@ -164,7 +164,7 @@ public class ApogeeAssembler {
         }
     }
 
-    static LocalDate parseDate(String raw) {
+    public static LocalDate parseDate(String raw) {
         String value = raw.strip();
         // Les dates Oracle/Excel peuvent arriver avec une heure : « 2003-05-14 00:00:00 »
         if (value.length() > 10 && (value.charAt(10) == ' ' || value.charAt(10) == 'T')) {

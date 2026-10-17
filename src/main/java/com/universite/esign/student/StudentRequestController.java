@@ -33,12 +33,14 @@ class StudentRequestController {
 
     record RequestView(UUID id, String studentCne, String studentName, String studentUsername, DocumentType type,
                        String label, String academicYear, String semester, String purpose, StudentRequestStatus status,
-                       UUID documentId, String handledByName, Instant handledAt, String message, Instant createdAt) {
+                       UUID documentId, String handledByName, Instant handledAt, String message, Instant createdAt,
+                       /** Note interne (ex. pourquoi la demande n'a pas été délivrée immédiatement). */
+                       String agentNote) {
         static RequestView of(StudentRequest r) {
             return new RequestView(r.getId(), r.getStudentCne(), r.getStudentName(), r.getStudentUsername(),
                     r.getDocumentType(), r.getDocumentType().label(), r.getAcademicYear(), r.getSemester(),
                     r.getPurpose(), r.getStatus(), r.getDocumentId(), r.getHandledByName(), r.getHandledAt(),
-                    r.getMessage(), r.getCreatedAt());
+                    r.getMessage(), r.getCreatedAt(), r.getAgentNote());
         }
     }
 

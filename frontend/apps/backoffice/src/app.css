@@ -228,6 +228,7 @@ a.btn { text-decoration: none; }
 .condition.choisie { border-color: var(--fsbm); background: var(--fsbm-clair); }
 .condition.indisponible { opacity: .6; cursor: not-allowed; }
 .modes { grid-template-columns: repeat(3, 1fr); }
+.modes.modes-4 { grid-template-columns: repeat(2, 1fr); }
 .usages { border: 0; margin: 0; padding: .6rem .7rem; display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; background: var(--surface); border-left: 3px solid var(--fsbm); }
 .usages legend { float: left; width: 100%; font-size: var(--t-1); font-weight: 700; color: var(--encre-douce); padding: 0; margin-bottom: .2rem; }
 .usages label, .case { display: inline-flex; gap: .4rem; align-items: center; }
@@ -280,3 +281,25 @@ a.btn { text-decoration: none; }
 .apercu-cadre .apercu { min-height: 34rem; }
 .espace.espace-approbations { grid-template-columns: minmax(30rem, 1fr) minmax(28rem, 40rem); }
 .etiquette { display: inline-block; margin-top: .2rem; padding: 0 .4rem; border: 1px solid var(--filet-fort); border-radius: var(--rayon); font-size: .75rem; color: var(--encre-douce); }
+.etiquette-alerte { border-color: var(--attente); color: var(--attente); font-weight: 700; margin-left: .35rem; }
+.encart-attente { border-left-color: var(--attente); }
+
+/* ------------------------------------------------------------------ registre des inscrits */
+.annee select { min-height: 2.25rem; padding: .3rem .5rem; border: 1.5px solid var(--filet-fort); border-radius: var(--rayon); background: var(--feuille); font-weight: 700; }
+.bandeau-annee { background: var(--surface); }
+.bandeau-annee span { margin-right: auto; }
+.espace.espace-registre { grid-template-columns: minmax(0, 1fr) minmax(24rem, 34rem); }
+.tableau tfoot td { padding: .55rem .75rem; font-weight: 700; border-top: 1.5px solid var(--filet-fort); }
+.tableau tfoot td:first-child { padding-left: 1.5rem; }
+.outils-panneau { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; width: 100%; }
+.outils-panneau .recherche { flex: 1 1 12rem; }
+.inscrits { list-style: none; margin: 0; padding: 0; width: 100%; }
+.inscrits li { display: grid; gap: .1rem; padding: .5rem 0; border-bottom: 1px solid var(--filet); }
+.inscrits li.bloque { border-left: 3px solid var(--annule); padding-left: .6rem; }
+.inscrits-tete { display: flex; justify-content: space-between; gap: .75rem; align-items: center; }
+.inscrits-tete .btn { min-height: 1.9rem; padding: .15rem .5rem; font-size: var(--t-1); }
+.inscrits-blocage { font-size: var(--t-1); }
+.carte-diff { padding: .6rem .8rem; background: var(--feuille); border: 1px solid var(--filet); display: grid; gap: .3rem; }
+.diff summary { cursor: pointer; font-size: var(--t-1); font-weight: 700; }
+.diff ul { margin: .3rem 0 0; padding-left: 1.1rem; font-size: var(--t-1); max-height: 14rem; overflow: auto; }
+.diff-ok summary { color: var(--valide); } .diff-ko summary { color: var(--annule); } .diff-attente summary { color: var(--attente); }

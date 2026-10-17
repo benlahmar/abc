@@ -10,6 +10,7 @@ import com.universite.esign.document.Document;
 import com.universite.esign.document.DocumentService;
 import com.universite.esign.document.DocumentStatus;
 import com.universite.esign.document.DocumentType;
+import com.universite.esign.registry.RegistryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -44,7 +45,9 @@ class MeController {
     }
 
     /** Ce que l'étudiant peut demander en ligne. */
-    record Offer(DocumentType type, String label, StudentAccessMode mode, int dailyLimit) {
+    record Offer(DocumentType type, String label, StudentAccessMode mode, int dailyLimit,
+                 /** Vrai : un document de l'année en cours serait délivré immédiatement à cet étudiant. */
+                 boolean immediate) {
     }
 
     record MyDocument(UUID id, DocumentType type, String label, DocumentStatus status, String academicYear,
@@ -74,9 +77,11 @@ class MeController {
     private final StudentRequestService requests;
     private final StudentAccessService access;
     private final DocumentService documents;
+    private final RegistryService registry;
 
     MeController(StudentResolver students, StudentRequestService requests, StudentAccessService access,
-                 DocumentService documents) {
+                 DocumentService documents, RegistryService registry) {
+        this.registry = registry;
         this.students = students;
         this.requests = requests;
         this.access = access;
@@ -89,7 +94,13 @@ class MeController {
         Student s = students.resolve(jwt);
         List<Offer> offers = access.all().stream()
                 .filter(a -> a.getMode() != StudentAccessMode.DISABLED)
-                .map(a -> new Offer(a.getDocumentType(), a.getDocumentType().label(), a.getMode(), a.getDailyLimit()))
+                .map(a -> new Offer(a.getDocumentType(), a.getDocumentType().label(), a.getMode(), a.getDailyLimit(),
+                        switch (a.getMode()) {
+                            case AUTO -> true;
+                            case REGISTRY -> registry.find(s.cne(), registry.currentAcademicYear())
+                                    .filter(r -> !r.isBlocked()).isPresent();
+                            default -> false;
+                        }))
                 .toList();
         return new Profile(s.cne(), s.username(), s.name(), offers);
     }

@@ -7,5 +7,10 @@ public enum StudentAccessMode {
     /** La demande arrive dans la file du service (Apogée), un agent l'établit. */
     AGENT,
     /** Le document est produit immédiatement à partir de la vue Apogée (nécessite la vue). */
-    AUTO
+    AUTO,
+    /**
+     * Attestations seulement : le document est produit immédiatement si l'étudiant figure (non bloqué) dans le
+     * registre des inscrits de l'année ; sinon la demande va au service, comme en mode AGENT.
+     */
+    REGISTRY
 }

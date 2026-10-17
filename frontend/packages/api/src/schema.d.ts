@@ -121,6 +121,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/registry/students/{id}/unblock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Débloquer un étudiant */
+        post: operations["unblock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/registry/students/{id}/block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bloquer un étudiant
+         * @description Ses demandes en ligne iront au service de scolarité, même s'il figure dans la liste ; le blocage survit aux imports suivants.
+         */
+        post: operations["block"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/registry/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Importer une liste d'inscrits (CSV ou Excel)
+         * @description Une ligne par étudiant : CNE, nom, prénom, filière, niveau (date et lieu de naissance facultatifs). Pour chaque filière du fichier, la liste remplace celle de l'année. Avec dryRun=true, rien n'est modifié : la réponse détaille arrivées, départs et changements.
+         */
+        post: operations["importFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/requests": {
         parameters: {
             query?: never;
@@ -199,7 +256,7 @@ export interface paths {
          * Importer un export Apogée (CSV ou Excel)
          * @description Une ligne par étudiant et par module (relevés) ou par étudiant (attestations). Avec dryRun=true, rien n'est signé : la réponse liste les erreurs ligne par ligne. Sinon le traitement démarre en arrière-plan (202) ; suivre son avancement avec GET /{id}.
          */
-        post: operations["importFile"];
+        post: operations["importFile_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -349,6 +406,57 @@ export interface paths {
         };
         /** Détail d'une demande */
         get: operations["get_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/registry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Filières de l'année : effectifs, étudiants bloqués, dernier import */
+        get: operations["overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/registry/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Étudiants inscrits (recherche par CNE ou nom, filtre par filière ou étudiants bloqués) */
+        get: operations["students"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/registry/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Historique des imports de l'année */
+        get: operations["imports"];
         put?: never;
         post?: never;
         delete?: never;
@@ -712,6 +820,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/registry/{academicYear}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Supprimer les listes d'une année close (administrateur) */
+        delete: operations["purge"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -730,7 +855,7 @@ export interface components {
         };
         Update: {
             /** @enum {string} */
-            mode: "DISABLED" | "AGENT" | "AUTO";
+            mode: "DISABLED" | "AGENT" | "AUTO" | "REGISTRY";
             /** Format: int32 */
             dailyLimit?: number;
         };
@@ -738,7 +863,7 @@ export interface components {
             /** @enum {string} */
             type?: "ATTESTATION_SCOLARITE" | "RELEVE_NOTES";
             /** @enum {string} */
-            mode?: "DISABLED" | "AGENT" | "AUTO";
+            mode?: "DISABLED" | "AGENT" | "AUTO" | "REGISTRY";
             /** Format: int32 */
             dailyLimit?: number;
         };
@@ -809,6 +934,7 @@ export interface components {
             message?: string;
             /** Format: date-time */
             createdAt?: string;
+            agentNote?: string;
         };
         CreateDocumentRequest: {
             /** @enum {string} */
@@ -841,6 +967,65 @@ export interface components {
         };
         AgentOnly: {
             issuedBy?: components["schemas"]["IssuedBy"];
+        };
+        RegistryStudentView: {
+            /** Format: int64 */
+            id?: number;
+            cne?: string;
+            nom?: string;
+            prenom?: string;
+            /** Format: date */
+            dateNaissance?: string;
+            lieuNaissance?: string;
+            filiere?: string;
+            niveau?: string;
+            blocked?: boolean;
+            blockedReason?: string;
+            blockedBy?: string;
+            /** Format: date-time */
+            blockedAt?: string;
+        };
+        BlockRequest: {
+            reason: string;
+        };
+        LineProblem: {
+            /** Format: int32 */
+            line?: number;
+            cne?: string;
+            errors?: string[];
+        };
+        RegistryFiliereDiff: {
+            filiere?: string;
+            /** Format: int32 */
+            before?: number;
+            /** Format: int32 */
+            after?: number;
+            /** Format: int32 */
+            addedCount?: number;
+            /** Format: int32 */
+            removedCount?: number;
+            /** Format: int32 */
+            changedCount?: number;
+            added?: components["schemas"]["RegistryPerson"][];
+            removed?: components["schemas"]["RegistryPerson"][];
+            changed?: components["schemas"]["RegistryPerson"][];
+        };
+        RegistryPerson: {
+            cne?: string;
+            nom?: string;
+            prenom?: string;
+            niveau?: string;
+            detail?: string;
+        };
+        RegistryReport: {
+            academicYear?: string;
+            /** Format: int32 */
+            rows?: number;
+            /** Format: int32 */
+            students?: number;
+            problems?: components["schemas"]["LineProblem"][];
+            filieres?: components["schemas"]["RegistryFiliereDiff"][];
+            applied?: boolean;
         };
         NewRequest: {
             /** @enum {string} */
@@ -1008,14 +1193,58 @@ export interface components {
             label?: string;
             requiredFields?: string[];
         };
+        RegistryFiliere: {
+            filiere?: string;
+            /** Format: int64 */
+            students?: number;
+            /** Format: int64 */
+            blocked?: number;
+            lastImport?: components["schemas"]["RegistryImport"];
+        };
+        RegistryImport: {
+            /** Format: uuid */
+            id?: string;
+            academicYear?: string;
+            filiere?: string;
+            fileName?: string;
+            /** Format: int32 */
+            studentCount?: number;
+            /** Format: int32 */
+            added?: number;
+            /** Format: int32 */
+            removed?: number;
+            /** Format: int32 */
+            changed?: number;
+            importedById?: string;
+            importedByName?: string;
+            /** Format: date-time */
+            importedAt?: string;
+        };
+        RegistryOverview: {
+            academicYear?: string;
+            currentAcademicYear?: string;
+            filieres?: components["schemas"]["RegistryFiliere"][];
+        };
+        PageResponseRegistryStudentView: {
+            items?: components["schemas"]["RegistryStudentView"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
         Offer: {
             /** @enum {string} */
             type?: "ATTESTATION_SCOLARITE" | "RELEVE_NOTES";
             label?: string;
             /** @enum {string} */
-            mode?: "DISABLED" | "AGENT" | "AUTO";
+            mode?: "DISABLED" | "AGENT" | "AUTO" | "REGISTRY";
             /** Format: int32 */
             dailyLimit?: number;
+            immediate?: boolean;
         };
         Profile: {
             cne?: string;
@@ -1360,6 +1589,84 @@ export interface operations {
             };
         };
     };
+    unblock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RegistryStudentView"];
+                };
+            };
+        };
+    };
+    block: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BlockRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RegistryStudentView"];
+                };
+            };
+        };
+    };
+    importFile: {
+        parameters: {
+            query: {
+                academicYear: string;
+                dryRun?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RegistryReport"];
+                };
+            };
+        };
+    };
     myRequests: {
         parameters: {
             query?: never;
@@ -1525,7 +1832,7 @@ export interface operations {
             };
         };
     };
-    importFile: {
+    importFile_1: {
         parameters: {
             query: {
                 type: "ATTESTATION_SCOLARITE" | "RELEVE_NOTES";
@@ -1762,6 +2069,77 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RequestView"];
+                };
+            };
+        };
+    };
+    overview: {
+        parameters: {
+            query?: {
+                academicYear?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RegistryOverview"];
+                };
+            };
+        };
+    };
+    students: {
+        parameters: {
+            query: {
+                academicYear: string;
+                filiere?: string;
+                q?: string;
+                blocked?: boolean;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PageResponseRegistryStudentView"];
+                };
+            };
+        };
+    };
+    imports: {
+        parameters: {
+            query: {
+                academicYear: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RegistryImport"][];
                 };
             };
         };
@@ -2191,6 +2569,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Setting"][];
+                };
+            };
+        };
+    };
+    purge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                academicYear: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: number;
+                    };
                 };
             };
         };

@@ -54,6 +54,11 @@ class SecurityConfig {
                         .hasAnyAuthority("SCOPE_documents:revoke", AGENT, CallerContext.ADMIN_AUTHORITY)
                         .requestMatchers(HttpMethod.POST, "/api/v1/documents")
                         .hasAnyAuthority("SCOPE_documents:write", AGENT, CallerContext.ADMIN_AUTHORITY)
+                        // Registre des inscrits : géré par le service, purge d'une année close par l'administrateur
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/registry/*").hasAnyAuthority(ESIGN_ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/registry", "/api/v1/registry/**")
+                        .hasAnyAuthority(AGENT, ESIGN_ADMIN, CallerContext.ADMIN_AUTHORITY)
+                        .requestMatchers("/api/v1/registry/**").hasAnyAuthority(AGENT, "SCOPE_documents:write")
                         // État de la vue Apogée : aussi utile à l'administrateur (mode AUTO des demandes)
                         .requestMatchers(HttpMethod.GET, "/api/v1/apogee/status")
                         .hasAnyAuthority("SCOPE_documents:write", AGENT, CallerContext.ADMIN_AUTHORITY, ESIGN_ADMIN)
