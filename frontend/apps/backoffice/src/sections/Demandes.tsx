@@ -4,6 +4,7 @@ import { DOCUMENT_LABELS, type StudentRequest, type StudentRequestStatus } from 
 import { Button, Status, formatDateTime, relativeTime, useToast } from '@esign/ui';
 import { useApi } from '../api';
 import { useHotkeys } from '../lib/keys';
+import { decouperNom } from '../lib/noms';
 import { DocumentForm, USAGES, emptyValues } from '../components/DocumentForm';
 
 const ONGLETS: { status: StudentRequestStatus; label: string }[] = [
@@ -33,7 +34,8 @@ export function DemandesSection({ openDocument }: { openDocument: (id: string) =
   const [mode, setMode] = useState<'detail' | 'saisie' | 'refus'>('detail');
 
   const apogee = useQuery({ queryKey: ['apogee-status'], queryFn: api.apogeeStatus, staleTime: 300_000 });
-  const list = useQuery({ queryKey: ['requests', onglet], queryFn: () => api.studentRequests(onglet) });
+  // Relue à chaque ouverture de la section (et toutes les 30 s) : une demande arrivée entre-temps doit apparaître
+  const list = useQuery({ queryKey: ['requests', onglet], queryFn: () => api.studentRequests(onglet), refetchOnMount: 'always', refetchInterval: 30_000 });
   const rows = useMemo(() => list.data ?? [], [list.data]);
   const selected = rows.find((r) => r.id === selectedId) ?? null;
   const pending = onglet === 'PENDING';
@@ -57,12 +59,19 @@ export function DemandesSection({ openDocument }: { openDocument: (id: string) =
     void queryClient.invalidateQueries({ queryKey: ['documents'] });
   };
 
+  /** Le circuit peut retenir le document pour validation : l'annonce dit ce qui s'est réellement passé. */
+  const annoncer = async (r: StudentRequest, documentId?: string) => {
+    const doc = documentId ? await api.document(documentId).catch(() => undefined) : undefined;
+    const etat = doc?.status === 'PENDING_APPROVAL' ? 'établi, en attente de validation' : 'établi et signé';
+    toast({ message: `${DOCUMENT_LABELS[r.type!]} ${etat} pour ${r.studentName}.`,
+      action: documentId ? { label: 'Ouvrir', run: () => openDocument(documentId) } : undefined });
+  };
+
   const fromApogee = useMutation({
     mutationFn: (r: StudentRequest) => api.fulfillFromApogee(r.id!),
     onSuccess: (res, r) => {
       done(r.id!);
-      toast({ message: `${DOCUMENT_LABELS[r.type!]} établi et signé pour ${r.studentName}.`,
-        action: res.documentId ? { label: 'Ouvrir', run: () => openDocument(res.documentId!) } : undefined });
+      void annoncer(r, res.documentId);
     },
     onError: (e) => toast({ message: (e as Error).message, error: true }),
   });
@@ -179,15 +188,14 @@ export function DemandesSection({ openDocument }: { openDocument: (id: string) =
                 key={selected.id}
                 initial={{ ...emptyValues(), type: selected.type!, cne: selected.studentCne!, academicYear: selected.academicYear!,
                   semester: selected.semester ?? 'S1', purpose: selected.purpose ?? '',
-                  ...splitName(selected.studentName) }}
+                  ...decouperNom(selected.studentName) }}
                 locked={['type', 'cne', 'academicYear', 'semester', 'purpose']}
                 submitLabel="Établir et signer"
                 onCancel={() => setMode('detail')}
                 onSubmit={async (data) => {
                   const res = await api.fulfill(selected.id!, data);
                   done(selected.id!);
-                  toast({ message: `${DOCUMENT_LABELS[selected.type!]} établi et signé pour ${selected.studentName}.`,
-                    action: res.documentId ? { label: 'Ouvrir', run: () => openDocument(res.documentId!) } : undefined });
+                  await annoncer(selected, res.documentId);
                 }} />
             </>
           ) : (
@@ -211,13 +219,6 @@ export function DemandesSection({ openDocument }: { openDocument: (id: string) =
 }
 
 /** « EL AMRANI Yasmine » → nom « El Amrani », prénom « Yasmine » (à vérifier par l'agent). */
-function splitName(full?: string) {
-  const parts = (full ?? '').trim().split(/\s+/);
-  const nom = parts.filter((p) => p === p.toUpperCase() && /\p{L}/u.test(p));
-  const prenom = parts.filter((p) => !nom.includes(p));
-  const cap = (s: string) => s.toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (m) => m.toUpperCase());
-  return nom.length && prenom.length ? { nom: cap(nom.join(' ')), prenom: prenom.join(' ') } : { nom: '', prenom: '' };
-}
 
 interface DetailProps {
   r: StudentRequest; pending: boolean; apogee: boolean; busy: boolean; refus: boolean;

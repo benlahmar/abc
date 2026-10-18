@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -247,19 +247,14 @@ class StudentAccessIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
-    // ------------------------------------------------------------ portail intégré
+    // ------------------------------------------------------------ anciennes adresses
 
     @Test
-    void portalIsServedWithItsOidcConfiguration() throws Exception {
-        mvc.perform(get("/etudiant/")).andExpect(forwardedUrl("/etudiant/index.html"));
-        mvc.perform(get("/etudiant/config.json"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.clientId").value("esign-etudiant"))
-                .andExpect(jsonPath("$.issuer").value("http://localhost:0/realms/test"));
-        mvc.perform(get("/etudiant/portail.js")).andExpect(status().isOk());
-        // Application « Mes documents officiels »
-        mvc.perform(get("/demandes/")).andExpect(forwardedUrl("/demandes/index.html"));
-        mvc.perform(get("/demandes/demandes.js")).andExpect(status().isOk());
-        mvc.perform(get("/demandes/demandes.css")).andExpect(status().isOk());
+    void formerStudentAddressesRedirectToTheStudentApp() throws Exception {
+        mvc.perform(get("/demandes/?sso=1"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "http://localhost:8082/?sso=1"));
+        mvc.perform(get("/etudiant")).andExpect(header().string("Location", "http://localhost:8082/"));
+        mvc.perform(get("/demandes/demandes.js")).andExpect(status().isFound());
     }
 }

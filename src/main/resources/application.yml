@@ -63,7 +63,8 @@ esign:
     # Claim du jeton contenant le CNE de l'étudiant (attribut de l'annuaire / Keycloak)
     cne-claim: ${ESIGN_STUDENT_CNE_CLAIM:cne}
     role: ${ESIGN_STUDENT_ROLE:ETUDIANT}
-    portal-client-id: ${ESIGN_STUDENT_PORTAL_CLIENT_ID:esign-etudiant}
+    # Application étudiante « Mes documents officiels » ; /etudiant et /demandes y redirigent
+    app-url: ${ESIGN_STUDENT_APP_URL:http://localhost:8082}
   cors:
     # Applications web de la fac autorisées à appeler l'API depuis le navigateur, séparées par des virgules
     # ex. ESIGN_CORS_ALLOWED_ORIGINS=https://ent.universite.ma,https://mobile.universite.ma

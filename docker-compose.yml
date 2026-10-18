@@ -66,7 +66,9 @@ services:
       ESIGN_STORAGE_DIR: /data/storage
       # Applications web autorisées à appeler l'API depuis le navigateur : back-office (Docker et
       # développement Vite). Ajouter l'ENT ou d'autres applis de la fac si besoin.
-      ESIGN_CORS_ALLOWED_ORIGINS: http://localhost:8081,http://localhost:5173
+      ESIGN_CORS_ALLOWED_ORIGINS: http://localhost:8081,http://localhost:5173,http://localhost:8082,http://localhost:5174
+      # Application étudiante : les anciennes adresses /etudiant et /demandes de l'API y redirigent
+      ESIGN_STUDENT_APP_URL: http://localhost:8082
       # Vue Oracle d'Apogée (désactivée) : voir docs/vue-apogee.sql
       APOGEE_VIEW_ENABLED: "false"
       # APOGEE_VIEW_URL: jdbc:oracle:thin:@//serveur-apogee:1521/APOGEE
@@ -79,17 +81,20 @@ services:
     volumes:
       - esigndata:/data
 
-  backoffice:
+  # Applications web : back-office (8081) et espace étudiant « Mes documents officiels » (8082)
+  frontend:
     build: ./frontend
     depends_on:
       - esign-api
     environment:
-      # Adresses vues par le navigateur de l'agent (pas les noms internes Docker)
+      # Adresses vues par le navigateur (pas les noms internes Docker)
       ESIGN_API_URL: http://localhost:8080
       ESIGN_OIDC_ISSUER: http://localhost:8180/realms/universite
-      ESIGN_OIDC_CLIENT_ID: esign-backoffice
+      ESIGN_BACKOFFICE_CLIENT_ID: esign-backoffice
+      ESIGN_STUDENT_CLIENT_ID: esign-etudiant
     ports:
       - "8081:80"
+      - "8082:8082"
 
 volumes:
   pgdata:

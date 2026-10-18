@@ -292,19 +292,22 @@ suivent le circuit d'approbation éventuellement paramétré.
 
 ### Intégrer dans l'ENT ou une autre application
 
-1. **Le plus simple — lien vers le portail intégré** : `https://esign.universite.ma/etudiant/?sso=1`.
-   L'étudiant déjà connecté à l'ENT (même SSO) arrive directement sur ses documents, sans ressaisir son
-   mot de passe. Le portail fonctionne sur mobile et peut être ouvert dans un onglet ou une WebView.
+1. **Le plus simple — lien vers l'application étudiante** : `https://etudiant.fsbm.ac.ma/?sso=1`
+   (en local : http://localhost:8082/?sso=1). L'étudiant déjà connecté à l'ENT (même SSO) arrive
+   directement sur ses documents, sans ressaisir son mot de passe. L'application fonctionne sur mobile et
+   peut être ouverte dans un onglet ou une WebView. Les anciennes adresses de l'API (`/etudiant`,
+   `/demandes`, avec leurs paramètres) redirigent vers elle (`ESIGN_STUDENT_APP_URL`).
 2. **Intégration native** : l'application connecte l'étudiant via le SSO (OIDC), puis appelle
    `/api/v1/me/...` avec **le jeton de l'étudiant** (`Authorization: Bearer …`). Pour une application web
    appelant l'API depuis le navigateur, déclarer son origine :
    `ESIGN_CORS_ALLOWED_ORIGINS=https://ent.universite.ma,https://mobile.universite.ma`.
-   Le fichier [`src/main/resources/static/etudiant/portail.js`](src/main/resources/static/etudiant/portail.js)
-   sert d'exemple complet (connexion PKCE, liste, téléchargement, demande).
+   L'application étudiante (`frontend/apps/etudiant`, client `@esign/api` typé) sert d'exemple complet.
 
-### Application « Mes documents officiels » (`/demandes`)
+### Application étudiante « Mes documents officiels » (`frontend/apps/etudiant`)
 
-Application complète de demande d'attestations pour les étudiants : http://localhost:8080/demandes/?sso=1
+Application de demande d'attestations et de relevés pour les étudiants (Vite + React + TypeScript, dans le
+même monorepo que le back-office), servie sur **http://localhost:8082** par `docker compose up --build`.
+Connexion directe depuis l'ENT : http://localhost:8082/?sso=1.
 
 - **Registre** de tous ses documents, regroupés par année universitaire, avec recherche (type, année,
   semestre, référence) et filtres « Prêts / En cours / Refusés ou annulés » ;
@@ -318,8 +321,8 @@ Application complète de demande d'attestations pour les étudiants : http://loc
 - Raccourcis clavier (`N` nouvelle demande, `/` recherche, `↑ ↓` parcourir, `T` télécharger, `?` aide),
   responsive (mobile : actions avant l'aperçu), mode sombre, mouvements réduits respectés.
 
-**Mode démonstration**, sans serveur ni compte : http://localhost:8080/demandes/?demo, ou ouvrir
-directement `src/main/resources/static/demandes/index.html` dans un navigateur.
+**Mode démonstration**, sans compte ni API : http://localhost:8082/?demo (ou http://localhost:5174/?demo
+en développement).
 
 Côté Keycloak, pour chaque application : un client OIDC, le rôle `ETUDIANT` pour les étudiants, et un
 *mapper* qui place l'attribut `cne` du compte dans le jeton (voir `docker/keycloak/init-realm.sh`).
@@ -328,7 +331,9 @@ Compte de démonstration : `etudiant` / `etudiant123` (CNE `R130456789`).
 ## Back-office de la scolarité (`frontend/`)
 
 Application web des agents de scolarité (Vite + React + TypeScript), servie sur
-**http://localhost:8081** par `docker compose up --build` (service `backoffice`).
+**http://localhost:8081** par `docker compose up --build` (service `frontend`, qui sert aussi l'application
+étudiante sur 8082). Après une mise à jour depuis une version où le service s'appelait `backoffice` :
+`docker compose up --build --remove-orphans`.
 Connexion : `agent.apogee` / `agent123` pour les agents, `admin.esign` / `admin123` pour le paramétrage.
 
 - **Demandes étudiantes** : file des demandes en attente (compteur dans la navigation), onglets
@@ -389,14 +394,38 @@ Les erreurs de validation de l'API sont affichées sous les champs concernés.
 ```bash
 cd frontend
 npm install
-npm run dev            # http://localhost:5173 (API sur 8080, Keycloak sur 8180)
+npm run dev            # back-office http://localhost:5173, étudiant http://localhost:5174 (API 8080, Keycloak 8180)
 npm test               # tests unitaires (vitest)
 npm run typecheck
 npm run api:generate   # régénère les types depuis /v3/api-docs (API démarrée)
 ```
 
 Organisation : `packages/api` (client typé), `packages/auth` (OIDC + PKCE, sans dépendance),
-`packages/ui` (charte FSBM et composants), `apps/backoffice`. Les adresses de l'API et de Keycloak
+`packages/ui` (charte FSBM et composants du back-office), `apps/backoffice`, `apps/etudiant`, `e2e`.
+
+### Tests de bout en bout (`frontend/e2e`, Playwright)
+
+Ils rejouent les parcours réels, dans un vrai navigateur, contre la plateforme démarrée :
+
+| Scénario | Ce qui est vérifié |
+|---|---|
+| `1-attestation` | l'étudiant arrive par l'ancienne adresse (lien ENT), demande une attestation ; l'agent la saisit et la signe ; l'étudiant télécharge le PDF ; la page de vérification le déclare authentique |
+| `2-circuit` | relevé « pour l'étranger » : l'agent l'établit, il part en validation ; le vice-doyen l'approuve ; il est signé |
+| `3-registre` | l'agent importe une liste ; l'étudiante inscrite obtient son attestation immédiatement ; bloquée, sa demande va au service avec la note « à vérifier » |
+| `4-audit` | intégrité du journal, recherche par CNE, export ; journal et paramétrage interdits aux agents |
+
+```bash
+docker compose up --build        # la plateforme complète (attendre que tout soit démarré)
+cd frontend
+npx playwright install chromium  # une seule fois sur le poste
+npm run e2e                      # environ 40 secondes
+npm run e2e:rapport              # rapport HTML (captures et traces en cas d'échec)
+```
+
+À lancer sur un environnement de **test** : les scénarios modifient le paramétrage (puis rétablissent les
+valeurs par défaut, avec une limite de 50 demandes par jour), créent des documents et inscrivent
+l'étudiante de démonstration dans la filière « Filière des tests automatiques » du registre. Adresses
+modifiables : `E2E_API`, `E2E_BACKOFFICE`, `E2E_ETUDIANT`, `E2E_ISSUER`. Les adresses de l'API et de Keycloak
 sont lues dans `config.json` au démarrage ; dans l'image Docker, ce fichier est écrit à partir de
 `ESIGN_API_URL`, `ESIGN_OIDC_ISSUER` et `ESIGN_OIDC_CLIENT_ID` (une même image pour tous les
 environnements). L'origine du back-office doit figurer dans `ESIGN_CORS_ALLOWED_ORIGINS` de l'API,
@@ -463,6 +492,7 @@ ESIGN_LOGO=file:/config/logo.png      # PNG, fond transparent de préférence ; 
 - [x] Back-office : approbations (aperçu, décision, lot, historique des décisions)
 - [x] Registre des inscrits : attestations immédiates sans la vue Oracle, avec comparaison, blocage et purge
 - [x] Back-office : journal d'audit (recherche, export, vérification d'intégrité)
+- [x] Application étudiante dans le monorepo frontend, tests de bout en bout (Playwright)
 - [ ] SDK clients (générés depuis l'OpenAPI)
 
 ## Licences tierces

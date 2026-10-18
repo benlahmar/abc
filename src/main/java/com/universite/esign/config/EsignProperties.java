@@ -25,13 +25,14 @@ public record EsignProperties(
     /**
      * Accès étudiant.
      *
-     * @param cneClaim       claim du jeton qui contient le CNE de l'étudiant (attribut de l'annuaire)
-     * @param role           rôle Keycloak des étudiants
-     * @param portalClientId client OIDC public du portail étudiant intégré (/etudiant)
+     * @param cneClaim claim du jeton qui contient le CNE de l'étudiant (attribut de l'annuaire)
+     * @param role     rôle Keycloak des étudiants
+     * @param appUrl   adresse de l'application étudiante « Mes documents officiels » (frontend/apps/etudiant) :
+     *                 les anciennes adresses /etudiant et /demandes de l'API y redirigent
      */
     public record Student(@DefaultValue("cne") String cneClaim,
                           @DefaultValue("ETUDIANT") String role,
-                          @DefaultValue("esign-etudiant") String portalClientId) {
+                          @DefaultValue("http://localhost:8082") String appUrl) {
     }
 
     /** Origines web (ENT, appli de la fac…) autorisées à appeler l'API depuis le navigateur. */

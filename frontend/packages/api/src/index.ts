@@ -50,6 +50,11 @@ function auditParams({ types = [], ...rest }: AuditQuery) {
   return params;
 }
 export type ApprovalTask = Schemas['Task'];
+export type StudentProfile = Schemas['Profile'];
+export type StudentOffer = Schemas['Offer'];
+export type MyDocument = Schemas['MyDocument'];
+export type MyRequest = Schemas['MyRequest'];
+export type NewStudentRequest = Schemas['NewRequest'];
 export type RegistryOverview = Schemas['RegistryOverview'];
 export type RegistryFiliere = Schemas['RegistryFiliere'];
 export type RegistryReport = Schemas['RegistryReport'];
@@ -134,6 +139,13 @@ export function createApi({ baseUrl, getToken, onUnauthorized }: ApiOptions) {
     json<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body), headers });
 
   return {
+    // ------------------------------------------------------------ espace étudiant (/api/v1/me)
+    me: () => json<StudentProfile>('/api/v1/me'),
+    myDocuments: () => json<MyDocument[]>('/api/v1/me/documents'),
+    myRequests: () => json<MyRequest[]>('/api/v1/me/requests'),
+    createMyRequest: (data: NewStudentRequest) => post<MyRequest>('/api/v1/me/requests', data),
+    downloadMyDocument: async (id: string) => (await request(`/api/v1/me/documents/${id}/download`)).blob(),
+
     // ------------------------------------------------------------ demandes étudiantes
     studentRequests: (status: StudentRequestStatus = 'PENDING') =>
       json<StudentRequest[]>(`/api/v1/student-requests?status=${status}`),

@@ -115,16 +115,18 @@ cne_mapper() {
   fi
 }
 
-# Client public du portail étudiant (/etudiant) ; l'ENT ou une autre appli de la fac aura le sien
-PORTAL_REDIRECTS='["http://localhost:8080/etudiant/*","http://127.0.0.1:8080/etudiant/*","http://localhost:8080/demandes/*","http://127.0.0.1:8080/demandes/*"]'
+# Client public de l'application étudiante « Mes documents officiels » (frontend/apps/etudiant) :
+# Docker sur 8082, développement Vite sur 5174. L'ENT ou une autre appli de la fac aura le sien.
+PORTAL_REDIRECTS='["http://localhost:8082/*","http://localhost:5174/*"]'
+PORTAL_ORIGINS='["http://localhost:8082","http://localhost:5174"]'
 cid=$($KC get clients -r $REALM -q clientId=esign-etudiant --fields id --format csv --noquotes)
 if [[ -z "$cid" ]]; then
   $KC create clients -r $REALM -s clientId=esign-etudiant -s enabled=true -s publicClient=true \
     -s standardFlowEnabled=true -s directAccessGrantsEnabled=true -s serviceAccountsEnabled=false
   cid=$($KC get clients -r $REALM -q clientId=esign-etudiant --fields id --format csv --noquotes)
 fi
-$KC update "clients/$cid" -r $REALM -s "redirectUris=$PORTAL_REDIRECTS" -s "webOrigins=$WEB_ORIGINS" \
-  -s 'attributes."pkce.code.challenge.method"=S256' -s 'attributes."post.logout.redirect.uris"=http://localhost:8080/etudiant/*##http://127.0.0.1:8080/etudiant/*##http://localhost:8080/demandes/*##http://127.0.0.1:8080/demandes/*'
+$KC update "clients/$cid" -r $REALM -s "redirectUris=$PORTAL_REDIRECTS" -s "webOrigins=$PORTAL_ORIGINS" \
+  -s 'attributes."pkce.code.challenge.method"=S256' -s 'attributes."post.logout.redirect.uris"=http://localhost:8082/*##http://localhost:5174/*'
 cne_mapper "$cid"
 echo "Client esign-etudiant configuré"
 

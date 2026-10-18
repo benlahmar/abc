@@ -1,0 +1,9 @@
+{
+  "apiUrl": "http://localhost:8080",
+  "issuer": "http://localhost:8180/realms/universite",
+  "clientId": "esign-etudiant",
+  "university": "Université Hassan II de Casablanca",
+  "faculty": "Faculté des Sciences Ben M'Sick",
+  "shortName": "FSBM",
+  "city": "Casablanca"
+}

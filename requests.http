@@ -233,7 +233,7 @@ Content-Type: application/json
   "issuedBy": { "id": "agent.apogee", "name": "Karim Bennani" }, "dryRun": true }
 
 ### ===================================================================
-### Accès étudiant (portail : http://localhost:8080/etudiant/?sso=1)
+### Accès étudiant (application : http://localhost:8082/?sso=1)
 ### ===================================================================
 
 ### 28. Connexion de l'étudiante (démonstration ; l'ENT utilise la connexion SSO)

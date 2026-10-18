@@ -92,7 +92,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ------------------------------------------------------------------ atelier : registre | plan */
 
-.atelier { display: grid; grid-template-columns: minmax(20rem, 26rem) 1fr; min-height: calc(100vh - 5rem); }
+.atelier { display: grid; grid-template-columns: minmax(20rem, 26rem) 1fr; min-height: calc(100vh - 5.5rem); }
 
 .registre { border-right: 1px solid var(--filet); display: flex; flex-direction: column; min-width: 0; }
 .registre-tete { display: flex; justify-content: space-between; align-items: center; gap: 1rem;
@@ -133,6 +133,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .ligne[aria-selected="true"] .etat-clos { color: #9b2c2c; }
 
 .vide-liste { padding: 1.5rem clamp(1rem, 2vw, 1.5rem); color: var(--encre-douce); }
+.chargement { padding: 3rem clamp(1rem, 3vw, 2rem); color: var(--encre-douce); }
 
 .squelette { padding: 1rem clamp(1rem, 2vw, 1.5rem); display: grid; gap: 1rem; }
 .squelette i { display: block; height: 2.6rem; background: var(--bureau); border-radius: 2px;
@@ -246,7 +247,7 @@ legend, .champ > span { font-weight: 700; margin-bottom: .45rem; display: block;
           z-index: 20; width: min(34rem, calc(100vw - 2rem)); }
 .toast { display: flex; gap: 1rem; align-items: center; justify-content: space-between; padding: .8rem 1rem;
          background: #1f2b45; color: #f4f4ef; border-radius: 3px; box-shadow: 0 10px 24px -12px rgba(0, 0, 0, .5); }
-.toast .lien { color: #f4f4ef; font-weight: 700; }
+.toast .lien { color: #f4f4ef; font-weight: 700; white-space: nowrap; }
 .toast-erreur { background: #9b2c2c; }
 .toast-compte { font-variant-numeric: tabular-nums; }
 
