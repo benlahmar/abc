@@ -1,11 +1,18 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0}[hidden]{display:none!important}</style></head><body><title>Courbe à la voix</title>
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Courbe à la voix</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
 <style>
-/* Mise en page : une carte de dictée et une feuille à carreaux pour la courbe, empilées sur téléphone, côte à côte sur grand écran. Encre bleue sur papier quadrillé, stylo rouge pour l'écoute. */
+/* Mise en page pensée pour la projection en salle ou en amphi :
+   sur grand écran, tout tient dans la fenêtre sans défilement. Barre de commande en haut,
+   graphique au centre, descente de gradient et fiches à droite, à portée de souris.
+   Sur téléphone, les zones s'empilent. Encre bleue sur papier quadrillé, stylo rouge pour la descente. */
 :root {
+  color-scheme: light;
+  --zoom: 1;
+  --side: clamp(21rem, 27vw, 30rem);
   --paper: #f3f5fc;
   --card: #fbfcff;
   --grid-minor: #dfe4f6;
@@ -64,211 +71,325 @@
   color-scheme: dark;
 }
 
+/* La taille de base suit la largeur de l'écran ; A− / A+ la multiplient (lisibilité depuis le fond de la salle). */
+html { font-size: calc(var(--zoom) * clamp(15px, 0.5vw + 8.5px, 19px)); }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
+  margin: 0;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 15px;
-  line-height: 1.5;
-  padding-block: 20px 40px;
+  font-size: 1rem;
+  line-height: 1.45;
+  padding-block: 0.75rem 1.5rem;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
-.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 18px; }
-h1 {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 600;
-  font-size: clamp(1.9rem, 5vw, 2.7rem);
-  line-height: 1.1;
-  margin: 0;
-  text-wrap: balance;
-}
-.lede { margin: 6px 0 0; color: var(--ink-soft); max-width: 60ch; }
-h2, h3 { margin: 0; font-weight: 600; }
-h3 { font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-soft); }
+.shell { max-width: 1100px; margin: 0 auto; display: grid; gap: 0.75rem; grid-template-columns: minmax(0, 1fr); }
+h1, h2, h3 { margin: 0; font-weight: 600; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 0.85rem; min-width: 0; }
 
-.app { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 900px) {
-  .app { grid-template-columns: 350px minmax(0, 1fr); align-items: start; }
-}
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
-.dictate { display: grid; gap: 16px; }
-
-.speak { display: flex; gap: 14px; align-items: center; }
+/* ----- barre de commande ----- */
+.cmd { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem 1rem; padding: 0.6rem 0.9rem; }
+.brand h1 { font-family: var(--font-display); font-style: italic; font-size: 1.5rem; line-height: 1.1; white-space: nowrap; }
+.brand p { margin: 0; font-size: 0.8rem; color: var(--ink-soft); white-space: nowrap; }
 .mic {
-  flex: none; width: 76px; height: 76px; border-radius: 50%;
+  flex: none; width: 3.6rem; height: 3.6rem; border-radius: 50%;
   border: 0; background: var(--ink); color: var(--paper);
   display: grid; place-items: center; cursor: pointer;
 }
+.mic svg { width: 1.6rem; height: 1.6rem; }
 .mic.on { background: var(--pen); color: #fff; animation: ring 1.4s ease-out infinite; }
 @keyframes ring {
   0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--pen) 55%, transparent); }
-  100% { box-shadow: 0 0 0 20px color-mix(in srgb, var(--pen) 0%, transparent); }
+  100% { box-shadow: 0 0 0 1.2rem color-mix(in srgb, var(--pen) 0%, transparent); }
 }
 @media (prefers-reduced-motion: reduce) { .mic.on { animation: none; } }
-.speak-text { min-width: 0; display: grid; gap: 4px; }
+.cmd-main { flex: 1 1 26rem; min-width: 0; display: grid; gap: 0.3rem; }
+.cmd-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.1rem 0.9rem; min-height: 1.45em; }
 .status { margin: 0; font-weight: 500; }
 .status.ok { color: var(--ok); }
 .status.warn, .status.error { color: var(--pen); }
-.heard { margin: 0; font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-soft); overflow-wrap: anywhere; min-height: 1.4em; }
+.heard { margin: 0; font-family: var(--font-mono); font-size: 0.85rem; color: var(--ink-soft); overflow-wrap: anywhere; }
+.cmd-tools { display: flex; gap: 0.35rem; margin-left: auto; }
 
-.equation {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: clamp(1.4rem, 4vw, 1.8rem);
-  line-height: 2rem;
-  padding: 0 10px;
-  min-height: 4rem;
-  display: block;
-  border-radius: 6px;
-  border: 1px solid var(--line);
-  background-image: linear-gradient(to bottom, transparent calc(2rem - 1px), var(--grid-major) calc(2rem - 1px));
-  background-size: 100% 2rem;
-  overflow-wrap: anywhere;
-}
-.equation sup { font-size: 0.62em; line-height: 0; }
-
-.row { display: flex; gap: 8px; }
+.row { display: flex; gap: 0.5rem; }
 .row input {
-  flex: 1; min-width: 0; font: 400 15px var(--font-mono);
+  flex: 1; min-width: 0; font: 400 1.05rem var(--font-mono);
   color: var(--ink); background: var(--paper);
-  border: 1px solid var(--line); border-radius: 6px; padding: 9px 11px;
+  border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem 0.7rem;
 }
 .row input::placeholder { color: var(--ink-soft); opacity: 0.75; }
 .btn {
-  font: 500 13.5px var(--font-body); cursor: pointer;
+  font: 500 0.92rem var(--font-body); cursor: pointer;
   color: var(--ink); background: var(--card);
-  border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px;
+  border: 1px solid var(--line); border-radius: 6px; padding: 0.45rem 0.8rem;
+  min-height: 2.4rem; white-space: nowrap;
 }
 .btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.btn:hover { border-color: var(--ink-soft); }
+.btn.on { background: var(--pen); border-color: var(--pen); color: #fff; }
+.btn.sq { min-width: 2.4rem; padding-inline: 0.5rem; }
+.btn:hover:not(:disabled) { border-color: var(--ink-soft); }
+.btn:disabled { opacity: 0.45; cursor: default; }
 :focus-visible { outline: 2px solid var(--c1); outline-offset: 2px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.examples { display: grid; gap: 8px; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip {
-  font: 400 13px var(--font-body); cursor: pointer; color: var(--ink);
-  background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px;
-  text-align: left;
+/* ----- graphique ----- */
+.plotcard { display: flex; flex-direction: column; gap: 0.6rem; }
+.plot-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem 1rem; flex-wrap: wrap; }
+.equation {
+  font-family: var(--font-display); font-style: italic;
+  font-size: clamp(1.35rem, 2.2vw, 2rem); line-height: 1.2;
+  min-height: 1.2em; min-width: 0; flex: 1 1 18rem; overflow-wrap: anywhere;
 }
-.chip:hover { border-color: var(--ink-soft); }
-.tip { margin: 0; font-size: 13px; color: var(--ink-soft); }
+.equation sup { font-size: 0.62em; line-height: 0; }
+.tools { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+.tools .sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 0.25rem; }
+.chk {
+  display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.92rem; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 6px; padding: 0 0.7rem; min-height: 2.4rem; background: var(--card);
+}
+.chk input { accent-color: var(--ink); width: 1.05rem; height: 1.05rem; margin: 0; }
+.chk.plain { border: 0; padding: 0; min-height: 0; background: none; }
+.stage {
+  position: relative; width: 100%; aspect-ratio: 5 / 4; min-height: 260px; max-height: 75vh;
+  border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--card);
+}
+.stage canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+.readout { margin: 0; font-family: var(--font-mono); font-size: 0.9rem; color: var(--ink-soft); display: flex; flex-wrap: wrap; gap: 0.2rem 1.1rem; min-height: 1.5em; }
+.readout b { font-weight: 500; color: var(--ink); }
+.curves { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.curves li {
+  display: flex; align-items: center; gap: 0.5rem; max-width: 100%;
+  border: 1px solid var(--line); border-radius: 6px; padding: 0.15rem 0.2rem 0.15rem 0.6rem; background: var(--paper);
+}
+.curves .empty { border: 0; background: none; padding: 0; color: var(--ink-soft); font-size: 0.9rem; }
+.sw { flex: none; width: 0.8rem; height: 0.8rem; border-radius: 3px; }
+.eqtxt { font-family: var(--font-display); font-style: italic; font-size: 1.1rem; overflow-wrap: anywhere; min-width: 0; }
+.eqtxt sup { font-size: 0.65em; line-height: 0; }
+.x {
+  flex: none; width: 1.9rem; height: 1.9rem; border: 0; border-radius: 5px; background: transparent;
+  color: var(--ink-soft); font-size: 1.2rem; line-height: 1; cursor: pointer;
+}
+.x:hover { color: var(--pen); }
 
-.conceptscard { display: grid; gap: 12px; }
-.ainote { margin: 0; font-size: 14px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
-.ainote:empty { display: none; }
-.ai { border-top: 1px solid var(--line); padding-top: 12px; }
-.ai summary { cursor: pointer; font-weight: 600; font-size: 13.5px; }
-.ai-body { display: grid; gap: 10px; margin-top: 10px; }
-.ai .field input { font: 400 14px var(--font-mono); color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-width: 0; width: 100%; }
-@media (min-width: 900px) {
-  .dictate { grid-column: 1; grid-row: 1; }
-  .gdcard { grid-column: 1; grid-row: 2; }
-  .plotcard { grid-column: 2; grid-row: 1 / span 2; position: sticky; top: 16px; }
-  .conceptscard { grid-column: 2; grid-row: 3; }
-}
-.plotcard, .gdcard { display: grid; gap: 12px; }
-.tools { flex-wrap: wrap; align-items: center; }
-.chk { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; cursor: pointer; padding: 0 6px; }
-.chk input { accent-color: var(--ink); width: 16px; height: 16px; }
-.badge { font: 500 12px var(--font-mono); padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-soft); }
+/* ----- colonne de droite ----- */
+.side { display: flex; flex-direction: column; gap: 0.75rem; min-width: 0; }
+.gdcard { display: grid; gap: 0.55rem; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.card-head h2 { font-family: var(--font-display); font-style: italic; font-size: 1.3rem; }
+.badge { font: 500 0.8rem var(--font-mono); padding: 0.15rem 0.6rem; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-soft); white-space: nowrap; }
 .badge.ok { color: var(--ok); border-color: currentColor; }
 .badge.warn { color: var(--c4); border-color: currentColor; }
 .badge.error { color: var(--pen); border-color: currentColor; }
 .badge.run { color: var(--c1); border-color: currentColor; }
-.gd-grid { display: grid; gap: 10px 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-.field { display: grid; gap: 4px; min-width: 0; font-size: 12.5px; color: var(--ink-soft); }
-.field.wide { grid-column: 1 / -1; }
-.field b { font: 500 13px var(--font-mono); color: var(--ink); }
-.field select, .field input[type="number"] {
-  font: 400 14px var(--font-body); color: var(--ink); background: var(--paper);
-  border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-width: 0; width: 100%;
+.gd-form { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.45rem 0.7rem; align-items: center; }
+.gd-form > label { font-size: 0.85rem; color: var(--ink-soft); white-space: nowrap; }
+.gd-form > label b { font: 500 0.95rem var(--font-mono); color: var(--ink); }
+.gd-form select, .gd-form input[type="number"] {
+  font: 400 0.95rem var(--font-body); color: var(--ink); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 6px; padding: 0.3rem 0.5rem; min-width: 0; width: 100%; min-height: 2.3rem;
 }
-.field input[type="range"] { width: 100%; accent-color: var(--ink); margin: 4px 0; }
-.loss-stage { height: 120px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--card); }
+.gd-form input[type="range"] { width: 100%; accent-color: var(--ink); margin: 0; height: 1.6rem; cursor: ew-resize; }
+.pair { display: flex; gap: 0.4rem; min-width: 0; }
+.pair > * { flex: 1 1 0; min-width: 0; }
+.pair .btn { flex: 1.3 1 0; white-space: normal; line-height: 1.15; font-size: 0.85rem; padding-block: 0.2rem; }
+.field { display: grid; gap: 0.2rem; min-width: 0; font-size: 0.82rem; color: var(--ink-soft); }
+.field select, .field input[type="text"], .field input[type="password"] {
+  font: 400 0.95rem var(--font-body); color: var(--ink); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 6px; padding: 0.4rem 0.55rem; min-width: 0; width: 100%; min-height: 2.3rem;
+}
+.gd-actions { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 0.4rem; }
+.gd-actions .btn { min-height: 2.7rem; }
+.gdinfo { margin: 0; font-family: var(--font-mono); font-size: 0.82rem; color: var(--ink-soft); }
+.calc {
+  margin: 0; display: grid; gap: 0.15rem; font-family: var(--font-display); font-size: 1.08rem;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 0.4rem 0.6rem; overflow-wrap: anywhere;
+}
+.calc .rule { font-style: italic; color: var(--ink-soft); font-size: 0.95rem; }
+.calc b { color: var(--pen); font-weight: 600; }
+.calc sub { font-size: 0.7em; }
+.loss-stage { height: 5.5rem; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--card); }
 .loss-stage canvas { width: 100%; height: 100%; display: block; }
-.gdmsg { margin: 0; font-size: 14px; }
+.gdmsg { margin: 0; font-size: 0.95rem; }
 .gdmsg:empty { display: none; }
-.btn:disabled { opacity: 0.45; cursor: default; }
-.concepts { display: grid; gap: 14px; }
-.concepts:empty { display: none; }
-.concept { display: grid; gap: 4px; border-top: 1px solid var(--line); padding-top: 12px; min-width: 0; }
-.concept h4 { margin: 0; font: italic 600 1.1rem var(--font-display); }
-.concept .formula { margin: 0; font-family: var(--font-display); font-style: italic; font-size: 1.1rem; overflow-wrap: anywhere; }
+
+.tabcard { display: flex; flex-direction: column; padding-top: 0.4rem; }
+.tabs { display: flex; gap: 0.2rem; border-bottom: 1px solid var(--line); }
+.tab {
+  font: 600 0.92rem var(--font-body); color: var(--ink-soft); background: none; cursor: pointer;
+  border: 0; border-bottom: 3px solid transparent; padding: 0.55rem 0.8rem; margin-bottom: -1px;
+}
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.tab .count { font: 500 0.75rem var(--font-mono); margin-left: 0.3rem; color: var(--pen); }
+.panel { padding-top: 0.75rem; display: grid; gap: 0.8rem; align-content: start; min-height: 0; }
+.panel h3 { font-size: 0.75rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.chip {
+  font: 400 0.92rem var(--font-body); cursor: pointer; color: var(--ink);
+  background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 0.35rem 0.75rem;
+  text-align: left;
+}
+.chip:hover { border-color: var(--ink-soft); }
+.tip { margin: 0; font-size: 0.88rem; color: var(--ink-soft); }
+.warnbox { margin: 0; font-size: 0.88rem; color: var(--ink); border-left: 3px solid var(--c4); padding: 0.2rem 0 0.2rem 0.6rem; }
+.ainote { margin: 0; font-size: 1rem; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-left: 3px solid var(--c1); border-radius: 6px; padding: 0.5rem 0.7rem; }
+.ainote:empty { display: none; }
+.concepts { display: grid; gap: 0.9rem; }
+.concept { display: grid; gap: 0.25rem; min-width: 0; }
+.concept + .concept { border-top: 1px solid var(--line); padding-top: 0.9rem; }
+.concept h4 { margin: 0; font: italic 600 1.2rem var(--font-display); }
+.concept .formula { margin: 0; font-family: var(--font-display); font-style: italic; font-size: 1.2rem; overflow-wrap: anywhere; }
 .concept .formula sup { font-size: 0.65em; line-height: 0; }
 .concept p { margin: 0; }
-.concept .note { font-size: 14px; max-width: 70ch; }
-.concept .xm { font: 12.5px var(--font-mono); color: var(--ink-soft); }
-.plot-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.plot-head h2 { font-family: var(--font-display); font-size: 1.25rem; font-style: italic; }
-.tools { display: flex; gap: 6px; }
-.chips + h3 { margin-top: 6px; }
-.stage {
-  aspect-ratio: 5 / 4; width: 100%; min-height: 260px; max-height: 78vh;
-  border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--card);
+.concept .xm { font: 0.85rem var(--font-mono); color: var(--ink-soft); }
+.ai-grid { display: grid; gap: 0.6rem; }
+
+/* ----- aide clavier ----- */
+dialog {
+  background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 10px;
+  padding: 1.1rem 1.3rem; max-width: min(36rem, calc(100vw - 32px));
 }
-.stage canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
-.readout { margin: 0; font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-soft); display: flex; flex-wrap: wrap; gap: 4px 16px; min-height: 1.5em; }
-.readout b { font-weight: 500; color: var(--ink); }
-.curves { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.curves li {
-  display: flex; align-items: center; gap: 8px; max-width: 100%;
-  border: 1px solid var(--line); border-radius: 6px; padding: 4px 4px 4px 10px; background: var(--paper);
+dialog::backdrop { background: rgb(10 15 40 / 0.45); }
+dialog h2 { font-family: var(--font-display); font-style: italic; font-size: 1.4rem; margin-bottom: 0.6rem; }
+.keys { display: grid; grid-template-columns: auto 1fr; gap: 0.4rem 1rem; margin: 0 0 1rem; align-items: baseline; }
+.keys dt { white-space: nowrap; }
+.keys dd { margin: 0; }
+kbd { font: 500 0.85rem var(--font-mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0.05rem 0.4rem; background: var(--paper); }
+
+/* ----- grand écran : tout tient dans la fenêtre, pas de défilement de page ----- */
+@media (min-width: 1000px) and (min-height: 540px) {
+  body { height: 100vh; height: 100dvh; overflow: hidden; padding-block: 0.75rem; }
+  .shell {
+    max-width: none; height: 100%;
+    grid-template-columns: minmax(0, 1fr) var(--side);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .cmd { grid-column: 1 / -1; flex-wrap: nowrap; }
+  .plotcard { grid-column: 1; grid-row: 2; min-height: 0; }
+  .stage { flex: 1 1 0; aspect-ratio: auto; min-height: 0; max-height: none; }
+  .side { grid-column: 2; grid-row: 2; min-height: 0; overflow-y: auto; scrollbar-gutter: stable; }
+  .tabcard { flex: 1 1 0; min-height: 13rem; }
+  .panel { flex: 1 1 0; overflow-y: auto; }
 }
-.curves .empty { border: 0; background: none; padding: 0; color: var(--ink-soft); font-size: 13px; }
-.sw { flex: none; width: 12px; height: 12px; border-radius: 3px; }
-.eqtxt { font-family: var(--font-display); font-style: italic; font-size: 1.05rem; overflow-wrap: anywhere; min-width: 0; }
-.eqtxt sup { font-size: 0.65em; line-height: 0; }
-.x {
-  flex: none; width: 26px; height: 26px; border: 0; border-radius: 5px; background: transparent;
-  color: var(--ink-soft); font-size: 18px; line-height: 1; cursor: pointer;
-}
-.x:hover { color: var(--pen); }
 </style>
+</head><body>
 
-<main class="wrap">
-  <header>
-    <h1>Courbe à la voix</h1>
-    <p class="lede">Dites une équation, ou un concept d’apprentissage automatique comme MAE, entropie croisée ou descente de gradient. La courbe se trace. Vous pouvez aussi l’écrire.</p>
-  </header>
-
-  <div class="app">
-    <section class="card dictate" aria-label="Dicter une équation">
-      <div class="speak">
-        <button id="mic" class="mic" type="button" aria-pressed="false" aria-label="Parler">
-          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/></svg>
-        </button>
-        <div class="speak-text">
-          <p id="status" class="status" role="status">Touchez le micro et dites l’équation.</p>
-          <p id="heard" class="heard"></p>
-        </div>
-      </div>
-
-      <div id="eqShow" class="equation" aria-live="polite"></div>
-
+<div class="shell">
+  <header class="card cmd">
+    <div class="brand">
+      <h1>Courbe à la voix</h1>
+      <p>Équations et apprentissage automatique</p>
+    </div>
+    <button id="mic" class="mic" type="button" aria-pressed="false" aria-label="Parler" title="Parler (touche M)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/></svg>
+    </button>
+    <div class="cmd-main">
       <form id="form" class="row" autocomplete="off">
-        <label for="eq" class="sr">Équation écrite</label>
-        <input id="eq" type="text" placeholder="x^2 - 4, sin(x)/x ou MAE" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <label for="eq" class="sr">Équation ou concept</label>
+        <input id="eq" type="text" placeholder="x^2 - 4, sin(x)/x, MAE contre MSE…" autocapitalize="off" autocorrect="off" spellcheck="false">
         <button class="btn primary" type="submit">Tracer</button>
         <button id="askAi" class="btn" type="button" hidden title="Envoyer cette phrase à l’assistant IA">IA</button>
       </form>
-      <p id="aiNote" class="ainote" role="status"></p>
+      <div class="cmd-line">
+        <p id="status" class="status" role="status">Touchez le micro et dites l’équation.</p>
+        <p id="heard" class="heard"></p>
+      </div>
+    </div>
+    <div class="cmd-tools">
+      <button id="fontDown" class="btn sq" type="button" title="Réduire le texte" aria-label="Réduire le texte">A−</button>
+      <button id="fontUp" class="btn sq" type="button" title="Agrandir le texte" aria-label="Agrandir le texte">A+</button>
+      <button id="fullBtn" class="btn sq" type="button" title="Plein écran (touche F)" aria-label="Plein écran">⛶</button>
+      <button id="helpBtn" class="btn sq" type="button" title="Raccourcis clavier (touche ?)" aria-label="Raccourcis clavier">?</button>
+    </div>
+  </header>
 
-      <div class="examples">
+  <section class="card plotcard" aria-label="Graphique">
+    <div class="plot-head">
+      <div id="eqShow" class="equation" aria-live="polite"></div>
+      <div class="tools">
+        <label class="chk" for="dToggle" title="Touche D"><input id="dToggle" type="checkbox"> Dérivée</label>
+        <label class="chk" for="tToggle" title="Touche T"><input id="tToggle" type="checkbox" checked> Tangente</label>
+        <span class="sep" aria-hidden="true"></span>
+        <button id="zout" class="btn sq" type="button" aria-label="Dézoomer" title="Dézoomer (touche −)">−</button>
+        <button id="zin" class="btn sq" type="button" aria-label="Zoomer" title="Zoomer (touche +)">+</button>
+        <button id="reset" class="btn" type="button" title="Touche 0">Recentrer</button>
+        <span class="sep" aria-hidden="true"></span>
+        <button id="clearAll" class="btn" type="button">Effacer</button>
+      </div>
+    </div>
+    <div class="stage"><canvas id="plot" role="img" aria-label="Courbes tracées sur un repère"></canvas></div>
+    <p id="readout" class="readout"></p>
+    <ul id="curves" class="curves"></ul>
+  </section>
+
+  <aside class="side">
+    <section class="card gdcard" aria-label="Descente de gradient">
+      <div class="card-head">
+        <h2>Descente de gradient</h2>
+        <span id="gdBadge" class="badge">Prête</span>
+      </div>
+      <div class="gd-form">
+        <label for="gdFn">Fonction</label>
+        <select id="gdFn"></select>
+        <label for="gdOpt">Méthode</label>
+        <div class="pair">
+          <select id="gdOpt">
+            <option value="sgd">Simple (SGD)</option>
+            <option value="momentum">Momentum</option>
+            <option value="adam">Adam</option>
+          </select>
+          <label for="gdSpeed" class="sr">Vitesse</label>
+          <select id="gdSpeed" title="Vitesse de l’animation">
+            <option value="vslow">Très lente</option>
+            <option value="slow">Lente</option>
+            <option value="normal" selected>Normale</option>
+            <option value="fast">Rapide</option>
+          </select>
+        </div>
+        <label for="gdLr" title="Taux d’apprentissage (la molette le règle aussi)">η = <b id="gdLrVal">0,1</b></label>
+        <input id="gdLr" type="range" min="-3" max="0.5" step="0.01" value="-1" title="Taux d’apprentissage η (molette pour régler)">
+        <label for="gdStart" title="Ou double-cliquez sur le graphique, ou glissez le point rouge">Départ x</label>
+        <div class="pair">
+          <input id="gdStart" type="number" step="0.1" value="7" title="Molette : ±0,1 (Maj : ±1)">
+          <button id="gdPick" class="btn" type="button" aria-pressed="false" title="Le prochain clic sur le graphique place le départ (ou double-cliquez)">Choisir sur le graphique</button>
+        </div>
+      </div>
+      <div class="gd-actions">
+        <button id="gdPlay" class="btn primary" type="button" title="Barre d’espace">Lancer</button>
+        <button id="gdStep" class="btn" type="button" title="Flèche droite">Un pas</button>
+        <button id="gdReset" class="btn" type="button" title="Touche R">Réinitialiser</button>
+      </div>
+      <p id="gdInfo" class="gdinfo"></p>
+      <p id="gdCalc" class="calc" aria-live="polite"></p>
+      <div class="loss-stage"><canvas id="lossChart" role="img" aria-label="Valeur de la fonction à chaque pas de la descente"></canvas></div>
+      <p id="gdMsg" class="gdmsg" role="status"></p>
+    </section>
+
+    <section class="card tabcard" aria-label="Fiches, exemples et assistant">
+      <div class="tabs" role="tablist">
+        <button id="tab-notions" class="tab" type="button" role="tab" aria-controls="panel-notions" aria-selected="false" tabindex="-1">Notions<span id="notionCount" class="count"></span></button>
+        <button id="tab-exemples" class="tab" type="button" role="tab" aria-controls="panel-exemples" aria-selected="true">Exemples</button>
+        <button id="tab-ia" class="tab" type="button" role="tab" aria-controls="panel-ia" aria-selected="false" tabindex="-1">Assistant IA</button>
+      </div>
+
+      <div id="panel-notions" class="panel" role="tabpanel" aria-labelledby="tab-notions" hidden>
+        <p id="aiNote" class="ainote" role="status"></p>
+        <div id="concepts" class="concepts"></div>
+      </div>
+
+      <div id="panel-exemples" class="panel" role="tabpanel" aria-labelledby="tab-exemples">
         <h3>Équations à dire</h3>
         <div id="chips" class="chips"></div>
         <h3>Apprentissage automatique</h3>
         <div id="chipsMl" class="chips"></div>
+        <p class="tip">Pour regrouper, dites « ouvre la parenthèse » et « ferme la parenthèse ». Pour la descente, ajoutez « taux d’apprentissage zéro virgule un », « avec Adam », « avec la dérivée » ou « départ moins deux ». Dites « stop » pour l’arrêter.</p>
       </div>
-      <p class="tip">Pour regrouper, dites « ouvre la parenthèse » et « ferme la parenthèse ». Pour la descente, ajoutez « taux d’apprentissage zéro virgule un », « avec Adam », « avec la dérivée » ou « départ moins deux ». Dites « stop » pour l’arrêter.</p>
 
-      <details id="aiBox" class="ai">
-        <summary>Assistant IA</summary>
-        <div class="ai-body">
-          <p class="tip">Quand l’app ne comprend pas une phrase, elle peut la confier à un modèle de langage qui la traduit en courbes et en commandes. Le modèle ne trace rien lui-même : chaque équation passe par l’analyseur de l’app. La clé reste dans ce navigateur et la phrase n’est envoyée au fournisseur choisi que dans ce cas. L’appel ne fonctionne que dans le fichier téléchargé ou une page hébergée ailleurs, pas dans la page publiée dans Claude.</p>
+      <div id="panel-ia" class="panel" role="tabpanel" aria-labelledby="tab-ia" hidden>
+        <p class="tip">Quand l’app ne comprend pas une phrase, elle peut la confier à un modèle de langage qui la traduit en courbes et en commandes. Le modèle ne trace rien lui-même : chaque équation passe par l’analyseur de l’app. La phrase n’est envoyée au fournisseur choisi que dans ce cas. L’appel ne fonctionne que dans le fichier téléchargé ou une page hébergée ailleurs, pas dans la page publiée dans Claude.</p>
+        <div class="ai-grid">
           <label class="field" for="aiProvider"><span>Fournisseur</span>
             <select id="aiProvider">
               <option value="groq">Groq</option>
@@ -277,73 +398,35 @@ h3 { font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; color: 
           </label>
           <label class="field" for="aiKey"><span id="aiKeyLabel">Clé API Groq</span><input id="aiKey" type="password" autocomplete="off" placeholder="gsk_…" spellcheck="false"></label>
           <label class="field" for="aiModel"><span>Modèle</span><input id="aiModel" type="text" autocomplete="off" spellcheck="false" value="openai/gpt-oss-120b"></label>
-          <label class="chk" for="aiOn"><input id="aiOn" type="checkbox" checked> Utiliser l’IA quand je ne comprends pas</label>
+          <label class="chk plain" for="aiOn"><input id="aiOn" type="checkbox" checked> Utiliser l’IA quand je ne comprends pas</label>
+          <label class="chk plain" for="aiRemember"><input id="aiRemember" type="checkbox"> Mémoriser la clé sur cet ordinateur</label>
+          <p class="warnbox">Sur un ordinateur partagé (salle de cours, amphi), laissez cette case décochée : la clé est alors oubliée à la fermeture de l’onglet.</p>
           <div class="row">
             <button id="aiTest" class="btn" type="button">Tester</button>
             <button id="aiForget" class="btn" type="button">Oublier la clé</button>
           </div>
         </div>
-      </details>
+      </div>
     </section>
+  </aside>
+</div>
 
-      <section class="card plotcard" aria-label="Graphique">
-        <div class="plot-head">
-          <h2>Graphique</h2>
-          <div class="tools">
-            <label class="chk" for="dToggle"><input id="dToggle" type="checkbox"> Dérivée</label>
-            <button id="zout" class="btn" type="button" aria-label="Dézoomer">−</button>
-            <button id="zin" class="btn" type="button" aria-label="Zoomer">+</button>
-            <button id="reset" class="btn" type="button">Recentrer</button>
-            <button id="clearAll" class="btn" type="button">Effacer</button>
-          </div>
-        </div>
-        <div class="stage"><canvas id="plot" role="img" aria-label="Courbes tracées sur un repère"></canvas></div>
-        <p id="readout" class="readout"></p>
-        <ul id="curves" class="curves"></ul>
-      </section>
-
-      <section class="card gdcard" aria-label="Descente de gradient">
-        <div class="plot-head">
-          <h2>Descente de gradient</h2>
-          <span id="gdBadge" class="badge">Prête</span>
-        </div>
-        <div class="gd-grid">
-          <label class="field" for="gdFn"><span>Fonction à minimiser</span><select id="gdFn"></select></label>
-          <label class="field" for="gdOpt"><span>Méthode</span>
-            <select id="gdOpt">
-              <option value="sgd">Descente simple</option>
-              <option value="momentum">Momentum</option>
-              <option value="adam">Adam</option>
-            </select>
-          </label>
-          <label class="field wide" for="gdLr"><span>Taux d’apprentissage η = <b id="gdLrVal">0,1</b></span>
-            <input id="gdLr" type="range" min="-3" max="0.5" step="0.01" value="-1">
-          </label>
-          <label class="field" for="gdStart"><span>Départ x</span><input id="gdStart" type="number" step="0.1" value="7"></label>
-          <label class="field" for="gdSpeed"><span>Vitesse</span>
-            <select id="gdSpeed">
-              <option value="slow">Lente</option>
-              <option value="normal" selected>Normale</option>
-              <option value="fast">Rapide</option>
-            </select>
-          </label>
-        </div>
-        <div class="row">
-          <button id="gdPlay" class="btn primary" type="button">Lancer</button>
-          <button id="gdStep" class="btn" type="button">Un pas</button>
-          <button id="gdReset" class="btn" type="button">Réinitialiser</button>
-        </div>
-        <p id="gdInfo" class="readout"></p>
-        <div class="loss-stage"><canvas id="lossChart" role="img" aria-label="Valeur de la fonction à chaque pas de la descente"></canvas></div>
-        <p id="gdMsg" class="gdmsg" role="status"></p>
-      </section>
-
-      <section id="conceptsCard" class="card conceptscard" aria-label="À propos des courbes" hidden>
-        <h3>À propos des courbes</h3>
-        <div id="concepts" class="concepts"></div>
-      </section>
-  </div>
-</main>
+<dialog id="help" aria-labelledby="helpTitle">
+  <h2 id="helpTitle">Raccourcis clavier</h2>
+  <dl class="keys">
+    <dt><kbd>M</kbd></dt><dd>Parler / arrêter l’écoute</dd>
+    <dt><kbd>/</kbd></dt><dd>Écrire une équation</dd>
+    <dt><kbd>Espace</kbd></dt><dd>Lancer ou mettre en pause la descente</dd>
+    <dt><kbd>→</kbd> ou <kbd>N</kbd></dt><dd>Un pas de descente</dd>
+    <dt><kbd>R</kbd></dt><dd>Réinitialiser la descente</dd>
+    <dt><kbd>D</kbd> / <kbd>T</kbd></dt><dd>Afficher la dérivée / la tangente</dd>
+    <dt><kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd></dt><dd>Zoomer, dézoomer, recentrer</dd>
+    <dt><kbd>F</kbd></dt><dd>Plein écran</dd>
+    <dt><kbd>Échap</kbd></dt><dd>Quitter le champ de saisie</dd>
+  </dl>
+  <p class="tip">Souris : survolez le graphique pour lire les valeurs, glissez pour le déplacer, molette pour zoomer. Double-cliquez pour placer le départ de la descente, ou glissez le point rouge. La molette règle aussi η et le départ x.</p>
+  <form method="dialog"><button class="btn primary" type="submit">Fermer</button></form>
+</dialog>
 
 <script id="engine">
 /* ===== Moteur : texte dicté ou écrit  ->  fonction de x (aucune dépendance au DOM) ===== */
@@ -763,18 +846,20 @@ const Engine = (() => {
   /* Descente de gradient : une étape à la fois, méthodes simple, momentum et Adam. */
   function makeDescent(f, df, x0, lr, method, clamp) {
     const s = { x: x0, lr, method, v: 0, m: 0, u: 0, t: 0, k: 0 };
+    /* Renvoie aussi les grandeurs intermédiaires pour afficher le calcul du pas. */
     s.step = function () {
-      const g = df(s.x);
+      const xPrev = s.x, g = df(xPrev), info = {};
       let dx;
-      if (s.method === 'momentum') { s.v = 0.9 * s.v + g; dx = s.lr * s.v; }
+      if (s.method === 'momentum') { s.v = 0.9 * s.v + g; dx = s.lr * s.v; info.v = s.v; }
       else if (s.method === 'adam') {
         s.t += 1; s.m = 0.9 * s.m + 0.1 * g; s.u = 0.999 * s.u + 0.001 * g * g;
-        dx = (s.lr * (s.m / (1 - Math.pow(0.9, s.t)))) / (Math.sqrt(s.u / (1 - Math.pow(0.999, s.t))) + 1e-8);
+        info.mh = s.m / (1 - Math.pow(0.9, s.t)); info.vh = s.u / (1 - Math.pow(0.999, s.t));
+        dx = (s.lr * info.mh) / (Math.sqrt(info.vh) + 1e-8);
       } else dx = s.lr * g;
-      let nx = s.x - dx, clamped = false;
+      let nx = xPrev - dx, clamped = false;
       if (clamp) { const c = Math.min(clamp[1], Math.max(clamp[0], nx)); clamped = c !== nx; nx = c; }
       s.x = nx; s.k += 1;
-      return { x: nx, g, dx, clamped, y: f(nx) };
+      return Object.assign({ xPrev, x: nx, g, dx, clamped, y: f(nx), lr: s.lr, method: s.method, k: s.k }, info);
     };
     return s;
   }
@@ -841,14 +926,16 @@ const Engine = (() => {
 (function () {
   const E = Engine;
   const $ = (id) => document.getElementById(id);
+  const root = document.documentElement;
   const canvas = $('plot'), ctx = canvas.getContext('2d');
   const lossCv = $('lossChart'), lctx = lossCv.getContext('2d');
   const statusEl = $('status'), heardEl = $('heard'), eqShow = $('eqShow'), readout = $('readout');
   const curvesEl = $('curves'), conceptsEl = $('concepts'), mic = $('mic'), form = $('form'), input = $('eq');
-  const chipsEl = $('chips'), chipsMl = $('chipsMl'), dToggle = $('dToggle');
+  const chipsEl = $('chips'), chipsMl = $('chipsMl'), dToggle = $('dToggle'), tToggle = $('tToggle');
   const gdFn = $('gdFn'), gdOpt = $('gdOpt'), gdLr = $('gdLr'), gdLrVal = $('gdLrVal'), gdStart = $('gdStart'), gdSpeed = $('gdSpeed');
   const gdPlay = $('gdPlay'), gdStepBtn = $('gdStep'), gdResetBtn = $('gdReset'), gdBadge = $('gdBadge'), gdInfo = $('gdInfo'), gdMsg = $('gdMsg');
-  const aiKey = $('aiKey'), aiModel = $('aiModel'), aiOn = $('aiOn'), aiTest = $('aiTest'), aiForget = $('aiForget'), askAi = $('askAi'), aiNote = $('aiNote');
+  const gdPick = $('gdPick'), gdCalc = $('gdCalc'), notionCount = $('notionCount'), help = $('help');
+  const aiKey = $('aiKey'), aiModel = $('aiModel'), aiOn = $('aiOn'), aiRemember = $('aiRemember'), aiTest = $('aiTest'), aiForget = $('aiForget'), askAi = $('askAi'), aiNote = $('aiNote');
 
   const COLORS = ['--c1', '--c2', '--c3', '--c4', '--c5', '--c6'];
   const EXAMPLES = ['x au carré moins quatre', 'sinus de x', 'racine carrée de x', 'un sur x', 'deux x plus trois',
@@ -856,20 +943,21 @@ const Engine = (() => {
   const ML_EXAMPLES = ['MAE contre MSE', 'entropie croisée', 'Huber', 'sigmoïde et ReLU', 'fonction non convexe',
     'descente de gradient', 'descente de gradient sur MSE, taux d’apprentissage zéro virgule un',
     'descente de gradient avec Adam sur la fonction non convexe'];
-  const HINT = 'Survolez ou touchez le graphique pour lire les valeurs et choisir le départ de la descente. Glissez pour déplacer, pincez ou utilisez la molette pour zoomer.';
+  const HINT = 'Survolez le graphique pour lire les valeurs. Glissez pour le déplacer, molette pour zoomer. Double-cliquez ou glissez le point rouge pour choisir le départ de la descente.';
   const DEFAULT_LR = { sgd: 0.1, momentum: 0.05, adam: 0.3 };
   const OPT_NAMES = { sgd: 'descente simple', momentum: 'momentum', adam: 'Adam' };
-  const SPEEDS = { slow: 260, normal: 110, fast: 30 };
+  const SPEEDS = { vslow: 700, slow: 260, normal: 110, fast: 30 };
   const MAXSTEPS = 300;
 
-  let curves = [], uid = 0, W = 0, H = 0, dpr = 1, hoverX = null, lrVal = 0.1;
+  let curves = [], uid = 0, W = 0, H = 0, dpr = 1, S = 1, hoverX = null, lrVal = 0.1;
   const view = { x0: -10, x1: 10, y0: -6, y1: 6 };
-  const gd = { curveId: null, st: null, path: [], losses: [], dxs: [], running: false, done: false, timer: null, clampRun: 0, osc: false };
-  const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const minus = (s) => s.replace('-', '−');
+  const gd = { curveId: null, st: null, path: [], losses: [], dxs: [], last: null, running: false, done: false, timer: null, clampRun: 0, osc: false, pick: false };
+  const css = (n) => getComputedStyle(root).getPropertyValue(n).trim();
+  const minus = (s) => s.replace(/-/g, '−');
   const plain = (h) => h.replace(/<sup>(.*?)<\/sup>/g, '^$1').replace(/<[^>]+>/g, '').replace(/&thinsp;|&nbsp;/g, ' ')
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
   const escHtml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const SUPS = { '-': '⁻', 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
 
   function fmtAxis(v, step) {
     const d = Math.max(0, Math.min(8, -Math.floor(Math.log10(step) + 1e-9)));
@@ -878,7 +966,10 @@ const Engine = (() => {
   }
   function fmtVal(v) {
     if (!isFinite(v)) return 'indéfini';
-    return minus(String(parseFloat(v.toPrecision(4))).replace('.', ',')).replace('e+', '×10^');
+    let s = String(parseFloat(v.toPrecision(4)));
+    const m = /^(-?[\d.]+)e([+-]\d+)$/.exec(s);
+    if (m) s = m[1] + '×10' + [...m[2].replace('+', '')].map((c) => SUPS[c]).join('');
+    return minus(s.replace('.', ','));
   }
   const fmtLr = (v) => String(parseFloat(v.toPrecision(2))).replace('.', ',');
   function nice(range, target) {
@@ -894,12 +985,15 @@ const Engine = (() => {
   }
   const X = (v) => ((v - view.x0) / (view.x1 - view.x0)) * W;
   const Y = (v) => H - ((v - view.y0) / (view.y1 - view.y0)) * H;
+  const xAt = (px) => view.x0 + (px / W) * (view.x1 - view.x0);
   const curveById = (id) => curves.find((c) => String(c.id) === String(id)) || null;
   const gdCurve = () => curveById(gd.curveId);
+  const monoFont = (px) => Math.round(px * S) + 'px "IBM Plex Mono", ui-monospace, monospace';
 
   /* ----- tracé principal ----- */
   function resize() {
     const r = canvas.getBoundingClientRect();
+    S = (parseFloat(getComputedStyle(root).fontSize) || 16) / 16;
     dpr = window.devicePixelRatio || 1; W = r.width; H = r.height;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     draw();
@@ -907,8 +1001,8 @@ const Engine = (() => {
 
   function strokeFn(fn, color, width, dash) {
     const xr = view.x1 - view.x0, N = Math.ceil(W * 1.5);
-    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    ctx.setLineDash(dash || []);
+    ctx.strokeStyle = color; ctx.lineWidth = width * S; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.setLineDash((dash || []).map((d) => d * S));
     ctx.beginPath();
     let down = false, prevPy = 0, prevY = 0;
     for (let i = 0; i <= N; i++) {
@@ -926,23 +1020,36 @@ const Engine = (() => {
     ctx.setLineDash([]);
   }
 
+  const cy = (v) => Math.max(-3000, Math.min(H + 3000, Y(v)));
+
+  /* tangente au point courant de la descente : sa pente est la dérivée qui donne la direction du pas */
+  function drawTangent() {
+    const c = gdCurve();
+    if (!tToggle.checked || !c || !gd.st) return;
+    const x = gd.st.x, y = c.f(x), m = c.dfn(x);
+    if (!isFinite(y) || !isFinite(m)) return;
+    const half = (view.x1 - view.x0) * 0.16;
+    ctx.strokeStyle = css('--pen'); ctx.lineWidth = 2 * S; ctx.setLineDash([9 * S, 6 * S]);
+    ctx.beginPath(); ctx.moveTo(X(x - half), cy(y - m * half)); ctx.lineTo(X(x + half), cy(y + m * half)); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
   function drawDescent() {
     const c = gdCurve();
     if (!c || !gd.path.length) return;
     const col = css('--pen'), cCard = css('--card');
-    const cy = (v) => Math.max(-3000, Math.min(H + 3000, Y(v)));
-    ctx.setLineDash([]); ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.lineJoin = 'round';
+    ctx.setLineDash([]); ctx.strokeStyle = col; ctx.lineWidth = 1.8 * S; ctx.lineJoin = 'round';
     ctx.beginPath();
     gd.path.forEach((p, i) => { const px = X(p.x), py = cy(p.y); if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); });
     ctx.stroke();
     ctx.fillStyle = col;
     gd.path.forEach((p, i) => {
       if (i === gd.path.length - 1) return;
-      ctx.beginPath(); ctx.arc(X(p.x), cy(p.y), 2.6, 0, 6.2832); ctx.fill();
+      ctx.beginPath(); ctx.arc(X(p.x), cy(p.y), 3 * S, 0, 6.2832); ctx.fill();
     });
     const last = gd.path[gd.path.length - 1];
-    ctx.strokeStyle = cCard; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.arc(X(last.x), cy(last.y), 6.5, 0, 6.2832); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = cCard; ctx.lineWidth = 3 * S;
+    ctx.beginPath(); ctx.arc(X(last.x), cy(last.y), 8 * S, 0, 6.2832); ctx.fill(); ctx.stroke();
   }
 
   function draw() {
@@ -951,7 +1058,7 @@ const Engine = (() => {
     const cCard = css('--card'), cMinor = css('--grid-minor'), cMajor = css('--grid-major'), cInk = css('--ink'), cSoft = css('--ink-soft');
     ctx.fillStyle = cCard; ctx.fillRect(0, 0, W, H);
     const xr = view.x1 - view.x0, yr = view.y1 - view.y0;
-    const gx = nice(xr, W / 80), gy = nice(yr, H / 60);
+    const gx = nice(xr, W / (85 * S)), gy = nice(yr, H / (60 * S));
 
     ctx.lineWidth = 1;
     const grid = (step, color, vertical) => {
@@ -960,49 +1067,50 @@ const Engine = (() => {
       else for (const v of ticks(view.y0, view.y1, step)) { const py = Math.round(Y(v)) + 0.5; ctx.moveTo(0, py); ctx.lineTo(W, py); }
       ctx.stroke();
     };
-    if ((gx.minor / xr) * W >= 7) grid(gx.minor, cMinor, true);
-    if ((gy.minor / yr) * H >= 7) grid(gy.minor, cMinor, false);
+    if ((gx.minor / xr) * W >= 8) grid(gx.minor, cMinor, true);
+    if ((gy.minor / yr) * H >= 8) grid(gy.minor, cMinor, false);
     grid(gx.step, cMajor, true); grid(gy.step, cMajor, false);
 
-    ctx.strokeStyle = cInk; ctx.lineWidth = 1.6; ctx.beginPath();
+    ctx.strokeStyle = cInk; ctx.lineWidth = 1.8 * S; ctx.beginPath();
     if (view.y0 <= 0 && view.y1 >= 0) { ctx.moveTo(0, Y(0)); ctx.lineTo(W, Y(0)); }
     if (view.x0 <= 0 && view.x1 >= 0) { ctx.moveTo(X(0), 0); ctx.lineTo(X(0), H); }
     ctx.stroke();
 
-    ctx.font = '11px "IBM Plex Mono", ui-monospace, monospace';
-    const label = (t, x, y) => { ctx.lineWidth = 3; ctx.strokeStyle = cCard; ctx.strokeText(t, x, y); ctx.fillStyle = cSoft; ctx.fillText(t, x, y); };
+    ctx.font = monoFont(12.5);
+    const label = (t, x, y) => { ctx.lineWidth = 3.5 * S; ctx.strokeStyle = cCard; ctx.strokeText(t, x, y); ctx.fillStyle = cSoft; ctx.fillText(t, x, y); };
     const ay = Math.min(Math.max(Y(0), 0), H), ax = Math.min(Math.max(X(0), 0), W);
     ctx.textAlign = 'center';
-    const ly = ay > H - 20 ? ay - 8 : ay + 15;
+    const ly = ay > H - 22 * S ? ay - 9 * S : ay + 17 * S;
     for (const v of ticks(view.x0, view.x1, gx.step)) {
       if (Math.abs(v) < gx.step * 1e-6) continue;
-      const px = X(v); if (px < 14 || px > W - 14) continue;
+      const px = X(v); if (px < 16 * S || px > W - 16 * S) continue;
       label(fmtAxis(v, gx.step), px, ly);
     }
-    const left = ax < 46;
+    const left = ax < 52 * S;
     ctx.textAlign = left ? 'left' : 'right';
-    const lx = left ? ax + 6 : ax - 6;
+    const lx = left ? ax + 7 * S : ax - 7 * S;
     for (const v of ticks(view.y0, view.y1, gy.step)) {
       if (Math.abs(v) < gy.step * 1e-6) continue;
-      const py = Y(v); if (py < 10 || py > H - 8) continue;
-      label(fmtAxis(v, gy.step), lx, py + 4);
+      const py = Y(v); if (py < 12 * S || py > H - 9 * S) continue;
+      label(fmtAxis(v, gy.step), lx, py + 4.5 * S);
     }
-    if (view.x0 <= 0 && view.x1 >= 0 && view.y0 <= 0 && view.y1 >= 0) label('0', lx, ay + 15);
+    if (view.x0 <= 0 && view.x1 >= 0 && view.y0 <= 0 && view.y1 >= 0) label('0', lx, ay + 17 * S);
 
-    if (dToggle.checked) curves.forEach((c) => strokeFn(c.dfn, css(COLORS[c.ci]), 1.6, [7, 5]));
-    curves.forEach((c, idx) => strokeFn(c.f, css(COLORS[c.ci]), idx === curves.length - 1 ? 2.8 : 2.2));
+    if (dToggle.checked) curves.forEach((c) => strokeFn(c.dfn, css(COLORS[c.ci]), 1.8, [7, 5]));
+    curves.forEach((c, idx) => strokeFn(c.f, css(COLORS[c.ci]), idx === curves.length - 1 ? 3.2 : 2.6));
+    drawTangent();
     drawDescent();
 
     if (hoverX !== null) {
       const px = X(hoverX);
-      ctx.strokeStyle = cSoft; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = cSoft; ctx.lineWidth = 1; ctx.setLineDash([4 * S, 4 * S]);
       ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke(); ctx.setLineDash([]);
       for (const c of curves) {
         const y = c.f(hoverX);
         if (!isFinite(y)) continue;
         const py = Y(y); if (py < -10 || py > H + 10) continue;
-        ctx.fillStyle = css(COLORS[c.ci]); ctx.strokeStyle = cCard; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(px, py, 4.5, 0, 6.2832); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = css(COLORS[c.ci]); ctx.strokeStyle = cCard; ctx.lineWidth = 2 * S;
+        ctx.beginPath(); ctx.arc(px, py, 5 * S, 0, 6.2832); ctx.fill(); ctx.stroke();
       }
     }
   }
@@ -1057,6 +1165,25 @@ const Engine = (() => {
 
   function setStatus(msg, kind) { statusEl.textContent = msg; statusEl.className = 'status' + (kind ? ' ' + kind : ''); }
 
+  /* ----- onglets de la colonne de droite ----- */
+  const TABS = ['notions', 'exemples', 'ia'].map((n) => ({ name: n, btn: $('tab-' + n), panel: $('panel-' + n) }));
+  function showTab(name) {
+    for (const t of TABS) {
+      const on = t.name === name;
+      t.btn.setAttribute('aria-selected', String(on)); t.btn.tabIndex = on ? 0 : -1; t.panel.hidden = !on;
+    }
+  }
+  TABS.forEach((t, i) => {
+    t.btn.addEventListener('click', () => showTab(t.name));
+    t.btn.addEventListener('keydown', (e) => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      const n = TABS[(i + d + TABS.length) % TABS.length];
+      showTab(n.name); n.btn.focus();
+    });
+  });
+
   /* ----- courbes et concepts ----- */
   function addCurve(o) {
     const used = curves.map((c) => c.ci);
@@ -1084,7 +1211,12 @@ const Engine = (() => {
   function renderConcepts() {
     conceptsEl.innerHTML = '';
     const ids = [...new Set(curves.filter((c) => c.concept).map((c) => c.concept))];
-    $('conceptsCard').hidden = !ids.length;
+    notionCount.textContent = ids.length ? String(ids.length) : '';
+    if (!ids.length) {
+      const p = document.createElement('p'); p.className = 'tip';
+      p.textContent = 'Tracez un concept (MAE, sigmoïde, entropie croisée…) pour afficher sa fiche ici.';
+      conceptsEl.appendChild(p);
+    }
     for (const id of ids) {
       const d = E.CONCEPTS[id], box = document.createElement('div');
       box.className = 'concept';
@@ -1130,6 +1262,7 @@ const Engine = (() => {
     gdLr.value = String(Math.max(-3, Math.min(0.5, Math.log10(lrVal))).toFixed(2));
     gdLrVal.textContent = fmtLr(lrVal);
     if (gd.st) gd.st.lr = lrVal;
+    renderCalc();
   }
   function defaultStart(c) {
     if (c.start !== undefined) return c.start;
@@ -1137,12 +1270,45 @@ const Engine = (() => {
   }
   function updateGdUi() {
     const has = !!curves.length;
-    for (const el of [gdPlay, gdStepBtn, gdResetBtn, gdFn, gdStart]) el.disabled = !has;
+    for (const el of [gdPlay, gdStepBtn, gdResetBtn, gdFn, gdStart, gdPick]) el.disabled = !has;
     const done = gd.done, started = gd.st && gd.st.k > 0;
     gdPlay.textContent = gd.running ? 'Pause' : (started && !done ? 'Reprendre' : 'Lancer');
-    if (!gd.st) { gdInfo.textContent = 'Tracez une courbe pour lancer la descente.'; return; }
+    if (!gd.st) { gdInfo.textContent = 'Tracez une courbe pour lancer la descente.'; renderCalc(); return; }
     const c = gdCurve(), x = gd.st.x;
-    gdInfo.textContent = 'pas ' + gd.st.k + ' · x = ' + fmtVal(x) + ' · f(x) = ' + fmtVal(c.f(x)) + ' · f′(x) = ' + fmtVal(c.dfn(x));
+    gdInfo.textContent = 'pas ' + gd.st.k + ' · f(x) = ' + fmtVal(c.f(x)) + ' · f′(x) = ' + fmtVal(c.dfn(x));
+    renderCalc();
+  }
+
+  /* Affiche la règle de la méthode, puis le dernier pas avec ses vraies valeurs. */
+  const par = (s) => (s.startsWith('−') ? '(' + s + ')' : s);
+  function renderCalc() {
+    if (!gd.st) { gdCalc.hidden = true; return; }
+    gdCalc.hidden = false;
+    const n = fmtVal, method = gdOpt.value;
+    const RULES = {
+      sgd: 'x<sub>k+1</sub> = x<sub>k</sub> − η · f′(x<sub>k</sub>)',
+      momentum: 'v ← 0,9 · v + f′(x<sub>k</sub>) ; x<sub>k+1</sub> = x<sub>k</sub> − η · v',
+      adam: 'x<sub>k+1</sub> = x<sub>k</sub> − η · m̂ / (√v̂ + ε)'
+    };
+    let html = '<span class="rule">' + RULES[method] + '</span>';
+    const r = gd.last;
+    if (!r) {
+      const c = gdCurve(), x = gd.st.x;
+      html += '<span>Départ : x<sub>0</sub> = ' + n(x) + ' ; f′(x<sub>0</sub>) = ' + n(c.dfn(x)) + ' ; η = ' + fmtLr(lrVal) + '</span>';
+    } else {
+      const a = r.k - 1, b = r.k;
+      if (r.method === 'momentum') {
+        html += '<span>v = ' + n(r.v) + '</span>';
+        html += '<span>x<sub>' + b + '</sub> = ' + n(r.xPrev) + ' − ' + fmtLr(r.lr) + ' × ' + par(n(r.v)) + ' = <b>' + n(r.xPrev - r.dx) + '</b></span>';
+      } else if (r.method === 'adam') {
+        html += '<span>f′(x<sub>' + a + '</sub>) = ' + n(r.g) + ' ; m̂ = ' + n(r.mh) + ' ; √v̂ = ' + n(Math.sqrt(r.vh)) + '</span>';
+        html += '<span>x<sub>' + b + '</sub> = ' + n(r.xPrev) + ' − ' + par(n(r.dx)) + ' = <b>' + n(r.xPrev - r.dx) + '</b></span>';
+      } else {
+        html += '<span>x<sub>' + b + '</sub> = ' + n(r.xPrev) + ' − ' + fmtLr(r.lr) + ' × ' + par(n(r.g)) + ' = <b>' + n(r.xPrev - r.dx) + '</b></span>';
+      }
+      if (r.clamped) html += '<span>Ramené au bord du domaine : x<sub>' + b + '</sub> = ' + n(r.x) + '</span>';
+    }
+    gdCalc.innerHTML = html;
   }
 
   function pause() {
@@ -1155,7 +1321,7 @@ const Engine = (() => {
     opts = opts || {};
     gd.running = false; clearTimeout(gd.timer);
     const c = curveById(gdFn.value) || curves[curves.length - 1] || null;
-    gd.done = false; gd.clampRun = 0; gd.osc = false; gd.dxs = [];
+    gd.done = false; gd.clampRun = 0; gd.osc = false; gd.dxs = []; gd.last = null;
     if (!c) {
       gd.curveId = null; gd.st = null; gd.path = []; gd.losses = [];
       setBadge('Aucune courbe'); setGdMsg(''); updateGdUi(); draw(); drawLoss(); return;
@@ -1171,14 +1337,32 @@ const Engine = (() => {
     updateGdUi(); draw(); drawLoss();
   }
 
+  /* Cherche un creux plus bas que le point d'arrivée sur le domaine utile de la courbe
+     (celui du concept, ou au moins [−10 ; 10]), et pas seulement dans la zone affichée. */
   function localMinNote(c, xEnd, yEnd) {
+    let a, b;
+    if (c.concept) { const v = E.CONCEPTS[c.concept].view; a = v.x0; b = v.x1; }
+    else { a = Math.min(view.x0, -10); b = Math.max(view.x1, 10); }
+    if (c.clamp) { a = Math.max(a, c.clamp[0]); b = Math.min(b, c.clamp[1]); }
+    const N = 1200, xs = [], ys = [];
     let lo = Infinity, hi = -Infinity;
-    for (let i = 0; i <= 600; i++) {
-      const y = c.f(view.x0 + ((view.x1 - view.x0) * i) / 600);
+    for (let i = 0; i <= N; i++) {
+      const x = a + ((b - a) * i) / N, y = c.f(x);
+      xs.push(x); ys.push(y);
       if (isFinite(y) && Math.abs(y) < 1e9) { lo = Math.min(lo, y); hi = Math.max(hi, y); }
     }
-    if (isFinite(lo) && yEnd > lo + 0.05 * (hi - lo)) return ' C’est un minimum local : un autre point de départ donne une valeur plus basse (environ ' + fmtVal(lo) + ').';
-    return '';
+    if (!isFinite(lo)) return '';
+    const tol = 1e-3 * (hi - lo) + 1e-9;
+    let best = null;
+    for (let i = 1; i < N; i++) {
+      const y = ys[i];
+      if (!(y < yEnd - tol) || !(y <= ys[i - 1]) || !(y <= ys[i + 1])) continue;
+      if (!best || y < best.y) best = { x: xs[i], y };
+    }
+    if (best) return ' C’est un minimum local : il existe un creux plus bas vers x ≈ ' + fmtVal(best.x) + ' (f ≈ ' + fmtVal(best.y) + '). Essayez un autre départ.';
+    const edge = [[xs[0], ys[0]], [xs[N], ys[N]]].filter(([, y]) => y < yEnd - tol).sort((p, q) => p[1] - q[1])[0];
+    if (edge) return ' C’est un minimum local : vers x ≈ ' + fmtVal(edge[0]) + ', la fonction descend encore plus bas.';
+    return ' C’est le minimum le plus bas sur [' + fmtVal(a) + ' ; ' + fmtVal(b) + '].';
   }
 
   function finish(kind) {
@@ -1204,6 +1388,7 @@ const Engine = (() => {
     if (!gd.st || gd.done) return false;
     const c = gdCurve(); if (!c) return false;
     const r = gd.st.step();
+    gd.last = r;
     gd.path.push({ x: r.x, y: r.y }); gd.losses.push(r.y);
     gd.dxs.push(r.dx); if (gd.dxs.length > 6) gd.dxs.shift();
     const gNow = c.dfn(r.x);
@@ -1233,6 +1418,26 @@ const Engine = (() => {
     if (!gd.st || gd.done) gdReset({ keepStart: true });
     gd.running = true; setBadge('En cours', 'run'); setGdMsg(''); updateGdUi(); tick();
   }
+  function togglePlay() { if (gd.running) pause(); else play(); }
+  function stepOnce() {
+    if (!curves.length) return;
+    pause();
+    if (!gd.st || gd.done) gdReset({ keepStart: true });
+    gdStepOnce();
+    if (!gd.done) setBadge('En pause');
+    updateGdUi();
+  }
+  function setPick(on) {
+    gd.pick = on;
+    gdPick.classList.toggle('on', on); gdPick.setAttribute('aria-pressed', String(on));
+    gdPick.textContent = on ? 'Cliquez sur le graphique…' : 'Choisir sur le graphique';
+  }
+  function setStartAt(x) {
+    if (!curves.length) return;
+    setPick(false);
+    gdReset({ start: x });
+    setGdMsg('Départ placé en x = ' + fmtVal(gd.st.x) + '. Lancez la descente.');
+  }
 
   /* graphique secondaire : valeur de f à chaque pas */
   function drawLoss() {
@@ -1243,12 +1448,12 @@ const Engine = (() => {
     lctx.setTransform(d, 0, 0, d, 0, 0);
     const cCard = css('--card'), cMajor = css('--grid-major'), cSoft = css('--ink-soft'), col = css('--pen');
     lctx.fillStyle = cCard; lctx.fillRect(0, 0, w, h);
-    lctx.font = '11px "IBM Plex Mono", ui-monospace, monospace';
-    const L = 44, R = 12, T = 14, B = 22, pw = w - L - R, ph = h - T - B;
+    lctx.font = monoFont(11.5);
+    const L = 50 * S, R = 12 * S, T = 16 * S, B = 22 * S, pw = w - L - R, ph = h - T - B;
     lctx.strokeStyle = cMajor; lctx.lineWidth = 1;
     lctx.beginPath(); lctx.moveTo(L + 0.5, T); lctx.lineTo(L + 0.5, T + ph + 0.5); lctx.lineTo(L + pw, T + ph + 0.5); lctx.stroke();
     lctx.fillStyle = cSoft; lctx.textAlign = 'left';
-    lctx.fillText('f(x) selon le pas', L + 8, T + 2);
+    lctx.fillText('f(x) selon le pas', L + 8 * S, T + 2 * S);
     const ys = gd.losses.filter((v) => isFinite(v) && Math.abs(v) < 1e12);
     if (!ys.length) return;
     let lo = Math.min(...ys), hi = Math.max(...ys);
@@ -1256,11 +1461,11 @@ const Engine = (() => {
     const nmax = Math.max(10, gd.losses.length - 1);
     const px = (i) => L + (i / nmax) * pw, py = (v) => T + ph - ((v - lo) / (hi - lo)) * ph;
     lctx.textAlign = 'right';
-    lctx.fillText(fmtVal(hi), L - 5, T + 9);
-    lctx.fillText(fmtVal(lo), L - 5, T + ph);
+    lctx.fillText(fmtVal(hi), L - 5 * S, T + 9 * S);
+    lctx.fillText(fmtVal(lo), L - 5 * S, T + ph);
     lctx.textAlign = 'center';
-    lctx.fillText('0', L, h - 6); lctx.fillText(String(nmax), L + pw, h - 6);
-    lctx.strokeStyle = col; lctx.lineWidth = 2; lctx.lineJoin = 'round'; lctx.beginPath();
+    lctx.fillText('0', L, h - 6 * S); lctx.fillText(String(nmax), L + pw, h - 6 * S);
+    lctx.strokeStyle = col; lctx.lineWidth = 2.2 * S; lctx.lineJoin = 'round'; lctx.beginPath();
     let on = false;
     gd.losses.forEach((v, i) => {
       if (!isFinite(v) || Math.abs(v) >= 1e12) { on = false; return; }
@@ -1268,16 +1473,19 @@ const Engine = (() => {
     });
     lctx.stroke();
     const lastI = gd.losses.length - 1, lv = gd.losses[lastI];
-    if (isFinite(lv) && Math.abs(lv) < 1e12) { lctx.fillStyle = col; lctx.beginPath(); lctx.arc(px(lastI), py(lv), 3.5, 0, 6.2832); lctx.fill(); }
+    if (isFinite(lv) && Math.abs(lv) < 1e12) { lctx.fillStyle = col; lctx.beginPath(); lctx.arc(px(lastI), py(lv), 3.8 * S, 0, 6.2832); lctx.fill(); }
   }
 
   /* ----- exécution des commandes dictées ----- */
   function runActions(acts) {
     const parts = [], names = [], skipped = [];
-    let addedEq = false, target = null, gdReq = false, resetReq = false, optChanged = false, startVal = null, cleared = false;
+    let addedEq = false, target = null, gdReq = false, resetReq = false, optChanged = false, startVal = null, cleared = false, newConcept = false;
     for (const a of acts) {
       if (a.type === 'clear') { curves = []; eqShow.innerHTML = ''; cleared = true; gdReset(); }
-      else if (a.type === 'concept') { const cs = addConcept(a.id); if (!target) target = cs[0]; names.push(E.CONCEPTS[a.id].label); }
+      else if (a.type === 'concept') {
+        if (!curves.some((c) => c.concept === a.id)) newConcept = true;
+        const cs = addConcept(a.id); if (!target) target = cs[0]; names.push(E.CONCEPTS[a.id].label);
+      }
       else if (a.type === 'equation' || a.type === 'curve') {
         try {
           const res = E.parseExpression(a.expr);
@@ -1297,9 +1505,10 @@ const Engine = (() => {
       else if (a.type === 'stop') { pause(); parts.push('Descente en pause'); }
       else if (a.type === 'gd') gdReq = true;
     }
-    if (gdReq && !curves.length) { target = addConcept('mse')[0]; names.push('MSE'); }
+    if (gdReq && !curves.length) { target = addConcept('mse')[0]; names.push('MSE'); newConcept = true; }
     if (addedEq && !curves.some((c) => c.concept)) fitY();
     renderCurves(); updateReadout();
+    if (newConcept) showTab('notions');
     if (!target && gdReq) target = gdCurve() || curves[curves.length - 1];
     if (target) gdFn.value = String(target.id);
     if (gdReq) {
@@ -1312,12 +1521,13 @@ const Engine = (() => {
     if (cleared) msg.push('Tout est effacé');
     if (names.length) msg.push('Courbe tracée : ' + names.join(', '));
     if (skipped.length) parts.push('Expression ignorée : ' + skipped.join(', '));
+    /* les mots que l'app n'a pas compris sont signalés au lieu d'être ignorés en silence */
+    const unknown = acts.unknown || [];
+    if (unknown.length) parts.push('Mots ignorés : « ' + unknown.join(' ') + ' »');
     const all = msg.concat(parts);
-    setStatus((all.length ? all.join(' · ') : 'C’est fait') + '.', 'ok');
-    recenterIfNeeded();
+    setStatus((all.length ? all.join(' · ') : 'C’est fait') + '.' + (unknown.length ? aiHint() : ''), unknown.length || skipped.length ? 'warn' : 'ok');
     draw();
   }
-  function recenterIfNeeded() { /* la vue est déjà réglée par addConcept */ }
 
   function plotResult(res) {
     const c = addCurve({ f: res.f, html: res.html, expr: res.normalized });
@@ -1349,40 +1559,54 @@ const Engine = (() => {
     gemini: { name: 'Google', keyLabel: 'Clé API Gemini', placeholder: 'AIza…', model: 'gemma-4-31b-it' }
   };
   const aiProvider = $('aiProvider'), aiKeyLabel = $('aiKeyLabel');
-  const ai = { provider: 'groq', keys: { groq: '', gemini: '' }, models: { groq: PROVIDERS.groq.model, gemini: PROVIDERS.gemini.model }, on: true, busy: false };
+  const ai = { provider: 'groq', keys: { groq: '', gemini: '' }, models: { groq: PROVIDERS.groq.model, gemini: PROVIDERS.gemini.model }, on: true, remember: false, busy: false };
+  const takeKeys = (src) => {
+    if (!src || typeof src !== 'object') return false;
+    let any = false;
+    for (const k of Object.keys(PROVIDERS)) if (typeof src[k] === 'string' && src[k]) { ai.keys[k] = src[k]; any = true; }
+    return any;
+  };
   try {
     const saved = JSON.parse(localStorage.getItem('cav.ai') || '{}') || {};
     if (typeof saved.provider === 'string' && PROVIDERS[saved.provider]) ai.provider = saved.provider;
     if (typeof saved.on === 'boolean') ai.on = saved.on;
-    if (saved.keys && typeof saved.keys === 'object') {
-      for (const k of Object.keys(PROVIDERS)) {
-        if (typeof saved.keys[k] === 'string') ai.keys[k] = saved.keys[k];
-        if (saved.models && typeof saved.models[k] === 'string' && saved.models[k]) ai.models[k] = saved.models[k];
-      }
-    } else if (typeof saved.key === 'string') {
-      ai.keys.gemini = saved.key;
+    if (saved.models && typeof saved.models === 'object') {
+      for (const k of Object.keys(PROVIDERS)) if (typeof saved.models[k] === 'string' && saved.models[k]) ai.models[k] = saved.models[k];
+    }
+    let hadKeys = takeKeys(saved.keys);
+    if (typeof saved.key === 'string' && saved.key) {
+      ai.keys.gemini = saved.key; hadKeys = true;
       if (typeof saved.model === 'string' && saved.model) ai.models.gemini = saved.model;
     }
+    /* une ancienne version gardait toujours la clé : on respecte ce choix */
+    ai.remember = typeof saved.remember === 'boolean' ? saved.remember : hadKeys;
   } catch (e) { /* stockage indisponible : les réglages ne seront pas gardés */ }
-  const saveAi = () => { try { localStorage.setItem('cav.ai', JSON.stringify({ provider: ai.provider, keys: ai.keys, models: ai.models, on: ai.on })); } catch (e) { /* ignoré */ } };
+  try { takeKeys(JSON.parse(sessionStorage.getItem('cav.ai.keys') || 'null')); } catch (e) { /* ignoré */ }
+
+  /* Sans « mémoriser », la clé ne vit que dans l'onglet (sessionStorage) et disparaît à sa fermeture. */
+  const saveAi = () => {
+    try { localStorage.setItem('cav.ai', JSON.stringify({ provider: ai.provider, keys: ai.remember ? ai.keys : {}, models: ai.models, on: ai.on, remember: ai.remember })); } catch (e) { /* ignoré */ }
+    try { sessionStorage.setItem('cav.ai.keys', JSON.stringify(ai.keys)); } catch (e) { /* ignoré */ }
+  };
   const aiReady = () => ai.on && ai.keys[ai.provider].length > 0;
-  const aiHint = () => (ai.keys[ai.provider] ? '' : ' Pour les phrases libres, ajoutez une clé dans « Assistant IA ».');
+  const aiHint = () => (ai.keys[ai.provider] ? '' : ' Pour les phrases libres, ajoutez une clé dans l’onglet « Assistant IA ».');
   function syncAiUi() {
     const p = PROVIDERS[ai.provider];
     aiProvider.value = ai.provider; aiKeyLabel.textContent = p.keyLabel; aiKey.placeholder = p.placeholder;
-    aiKey.value = ai.keys[ai.provider]; aiModel.value = ai.models[ai.provider]; aiOn.checked = ai.on;
+    aiKey.value = ai.keys[ai.provider]; aiModel.value = ai.models[ai.provider]; aiOn.checked = ai.on; aiRemember.checked = ai.remember;
     askAi.hidden = !ai.keys[ai.provider];
   }
   function readAiFields() {
     ai.keys[ai.provider] = aiKey.value.trim();
     ai.models[ai.provider] = aiModel.value.trim() || PROVIDERS[ai.provider].model;
-    ai.on = aiOn.checked; aiModel.value = ai.models[ai.provider]; askAi.hidden = !ai.keys[ai.provider]; saveAi();
+    ai.on = aiOn.checked; ai.remember = aiRemember.checked;
+    aiModel.value = ai.models[ai.provider]; askAi.hidden = !ai.keys[ai.provider]; saveAi();
   }
 
   function aiStatusText(s) {
     const n = PROVIDERS[ai.provider].name;
     if (s === 400 || s === 401 || s === 403) return n + ' a refusé la requête (' + s + ') : vérifiez la clé API et le nom du modèle.';
-    if (s === 404) return 'Modèle introuvable : vérifiez son nom dans les réglages de l’assistant IA.';
+    if (s === 404) return 'Modèle introuvable : vérifiez son nom dans l’onglet « Assistant IA ».';
     if (s === 413) return 'La demande est trop grande pour ce modèle.';
     if (s === 429) return 'Trop de requêtes ou quota atteint chez ' + n + ' : patientez un moment.';
     return 'Le service ' + n + ' est indisponible (' + s + '). Réessayez plus tard.';
@@ -1441,8 +1665,9 @@ const Engine = (() => {
       if (out.actions.length) runActions(out.actions);
       else if (fb.length) runActions(fb);
       else if (opts && opts.test) setStatus('Connexion réussie : l’assistant répond.', 'ok');
-      else setStatus(out.explain ? 'Pas de courbe pour cette demande : lisez l’explication ci-dessous.' : 'Rien à tracer pour cette demande.', 'warn');
+      else setStatus(out.explain ? 'Pas de courbe pour cette demande : lisez l’explication dans l’onglet « Notions ».' : 'Rien à tracer pour cette demande.', 'warn');
       aiNote.textContent = out.explain ? 'Assistant IA : ' + out.explain : '';
+      if (out.explain && !(opts && opts.test)) showTab('notions');
     } catch (err) { setStatus(aiErrorMessage(err), 'error'); }
     finally { clearTimeout(to); ai.busy = false; askAi.disabled = false; aiTest.disabled = false; }
   }
@@ -1450,6 +1675,7 @@ const Engine = (() => {
   aiKey.addEventListener('change', readAiFields);
   aiModel.addEventListener('change', readAiFields);
   aiOn.addEventListener('change', readAiFields);
+  aiRemember.addEventListener('change', readAiFields);
   aiProvider.addEventListener('change', () => { ai.provider = aiProvider.value; saveAi(); syncAiUi(); });
   aiForget.addEventListener('click', () => { aiKey.value = ''; readAiFields(); setStatus('Clé oubliée.', 'ok'); });
   aiTest.addEventListener('click', () => {
@@ -1510,7 +1736,7 @@ const Engine = (() => {
       if (e.error !== 'aborted') setStatus(m[e.error] || 'La dictée a échoué (' + e.error + ').', 'warn');
     };
     rec.onend = () => { listening = false; paintMic(); };
-    try { rec.start(); } catch (err) { setStatus('Impossible de démarrer le micro. Écrivez l’équation ci-dessous.', 'warn'); }
+    try { rec.start(); } catch (err) { setStatus('Impossible de démarrer le micro. Écrivez l’équation ci-dessus.', 'warn'); }
   }
   mic.addEventListener('click', startListening);
 
@@ -1534,34 +1760,63 @@ const Engine = (() => {
   addChips(ML_EXAMPLES, chipsMl);
 
   /* ----- commandes de la descente ----- */
-  gdPlay.addEventListener('click', () => { if (gd.running) pause(); else play(); });
-  gdStepBtn.addEventListener('click', () => {
-    pause();
-    if (!gd.st || gd.done) gdReset({ keepStart: true });
-    gdStepOnce();
-    if (!gd.done) setBadge('En pause');
-    updateGdUi();
-  });
+  gdPlay.addEventListener('click', togglePlay);
+  gdStepBtn.addEventListener('click', stepOnce);
   gdResetBtn.addEventListener('click', () => gdReset({ keepStart: true }));
+  gdPick.addEventListener('click', () => setPick(!gd.pick));
   gdFn.addEventListener('change', () => gdReset());
   gdOpt.addEventListener('change', () => { lrVal = DEFAULT_LR[gdOpt.value]; syncLrUi(); gdReset({ keepStart: true }); });
-  gdLr.addEventListener('input', () => { lrVal = Math.pow(10, parseFloat(gdLr.value)); gdLrVal.textContent = fmtLr(lrVal); if (gd.st) gd.st.lr = lrVal; });
+  gdLr.addEventListener('input', () => { lrVal = Math.pow(10, parseFloat(gdLr.value)); gdLrVal.textContent = fmtLr(lrVal); if (gd.st) gd.st.lr = lrVal; renderCalc(); });
+  /* la molette règle η et le départ sans avoir à viser le curseur */
+  gdLr.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const v = Math.max(-3, Math.min(0.5, parseFloat(gdLr.value) - Math.sign(e.deltaY) * 0.05));
+    gdLr.value = v.toFixed(2); gdLr.dispatchEvent(new Event('input'));
+  }, { passive: false });
   gdStart.addEventListener('change', () => gdReset({ keepStart: true }));
+  gdStart.addEventListener('wheel', (e) => {
+    if (gdStart.disabled) return;
+    e.preventDefault();
+    const step = e.shiftKey ? 1 : 0.1, v = (parseFloat(gdStart.value) || 0) - Math.sign(e.deltaY) * step;
+    gdStart.value = String(parseFloat(v.toFixed(3))); gdReset({ keepStart: true });
+  }, { passive: false });
   dToggle.addEventListener('change', () => { updateReadout(); draw(); });
-  $('clearAll').addEventListener('click', () => { curves = []; eqShow.innerHTML = ''; renderCurves(); updateReadout(); draw(); setStatus('Tout est effacé.', 'ok'); });
+  tToggle.addEventListener('change', draw);
+  function clearAll() { curves = []; eqShow.innerHTML = ''; renderCurves(); updateReadout(); draw(); setStatus('Tout est effacé.', 'ok'); }
+  $('clearAll').addEventListener('click', clearAll);
 
-  /* ----- navigation dans le graphique ----- */
+  /* ----- navigation dans le graphique -----
+     Clic simple : lecture des valeurs. Double-clic, bouton « Choisir » ou glisser le point rouge : départ de la descente.
+     Glisser ailleurs : déplacer. Molette ou pincement : zoomer. */
   const pts = new Map();
-  let moved = 0;
-  function setHover(px) { hoverX = view.x0 + (px / W) * (view.x1 - view.x0); updateReadout(); }
+  let moved = 0, dragStart = false;
+  function setHover(px) { hoverX = xAt(px); updateReadout(); }
+  function nearMarker(px, py) {
+    if (!gd.st || gd.running || !gd.path.length) return false;
+    const last = gd.path[gd.path.length - 1];
+    return Math.hypot(X(last.x) - px, cy(last.y) - py) < 16 * S;
+  }
   canvas.addEventListener('pointerdown', (e) => {
     canvas.setPointerCapture(e.pointerId);
     pts.set(e.pointerId, { x: e.offsetX, y: e.offsetY }); moved = 0;
+    dragStart = pts.size === 1 && !gd.pick && nearMarker(e.offsetX, e.offsetY);
+    if (pts.size === 1 && !dragStart && !gd.pick) canvas.style.cursor = 'grabbing';
   });
   canvas.addEventListener('pointermove', (e) => {
     const p = pts.get(e.pointerId);
-    if (!p) { if (e.pointerType === 'mouse') { setHover(e.offsetX); draw(); } return; }
+    if (!p) {
+      if (e.pointerType === 'mouse') {
+        canvas.style.cursor = gd.pick ? 'copy' : nearMarker(e.offsetX, e.offsetY) ? 'ew-resize' : 'crosshair';
+        setHover(e.offsetX); draw();
+      }
+      return;
+    }
     const nx = e.offsetX, ny = e.offsetY;
+    if (dragStart && pts.size === 1) {
+      moved += Math.abs(nx - p.x); p.x = nx; p.y = ny;
+      setHover(nx); gdReset({ start: xAt(nx) });
+      return;
+    }
     if (pts.size === 1) {
       const xr = view.x1 - view.x0, yr = view.y1 - view.y0, dx = nx - p.x, dy = ny - p.y;
       moved += Math.abs(dx) + Math.abs(dy);
@@ -1578,27 +1833,81 @@ const Engine = (() => {
     draw();
   });
   const release = (e) => {
-    if (pts.size === 1 && moved < 6 && e.type === 'pointerup') {
-      setHover(e.offsetX);
-      if (gd.st && !gd.running) gdReset({ start: hoverX });
-      draw();
+    if (pts.size === 1 && e.type === 'pointerup') {
+      if (dragStart) setGdMsg('Départ placé en x = ' + fmtVal(gd.st.x) + '. Lancez la descente.');
+      else if (moved < 6) {
+        setHover(e.offsetX);
+        if (gd.pick) setStartAt(hoverX);
+        draw();
+      }
     }
     pts.delete(e.pointerId);
+    dragStart = false;
+    if (!pts.size) canvas.style.cursor = '';
   };
   canvas.addEventListener('pointerup', release);
   canvas.addEventListener('pointercancel', release);
   canvas.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' && !pts.size) { hoverX = null; updateReadout(); draw(); } });
+  canvas.addEventListener('dblclick', (e) => { e.preventDefault(); setStartAt(xAt(e.offsetX)); });
   canvas.addEventListener('wheel', (e) => { e.preventDefault(); zoomAt(e.offsetX, e.offsetY, Math.exp(e.deltaY * 0.0012)); draw(); }, { passive: false });
-  $('zin').addEventListener('click', () => { zoomAt(W / 2, H / 2, 0.8); draw(); });
-  $('zout').addEventListener('click', () => { zoomAt(W / 2, H / 2, 1.25); draw(); });
+  const zoomIn = () => { zoomAt(W / 2, H / 2, 0.8); draw(); };
+  const zoomOut = () => { zoomAt(W / 2, H / 2, 1.25); draw(); };
+  $('zin').addEventListener('click', zoomIn);
+  $('zout').addEventListener('click', zoomOut);
   $('reset').addEventListener('click', recenter);
+
+  /* ----- projection : taille du texte, plein écran, aide ----- */
+  let zoom = 1;
+  try { zoom = parseFloat(localStorage.getItem('cav.zoom')) || 1; } catch (e) { /* ignoré */ }
+  function applyZoom(z) {
+    zoom = Math.max(0.8, Math.min(1.6, Math.round(z * 10) / 10));
+    root.style.setProperty('--zoom', String(zoom));
+    try { localStorage.setItem('cav.zoom', String(zoom)); } catch (e) { /* ignoré */ }
+    requestAnimationFrame(() => { resize(); drawLoss(); });
+  }
+  $('fontUp').addEventListener('click', () => applyZoom(zoom + 0.1));
+  $('fontDown').addEventListener('click', () => applyZoom(zoom - 0.1));
+  const fullBtn = $('fullBtn');
+  function toggleFull() {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else if (root.requestFullscreen) root.requestFullscreen().catch(() => setStatus('Le plein écran n’est pas autorisé ici. Utilisez la touche F11 du navigateur.', 'warn'));
+    else setStatus('Le plein écran n’est pas disponible ici. Utilisez la touche F11 du navigateur.', 'warn');
+  }
+  fullBtn.addEventListener('click', toggleFull);
+  document.addEventListener('fullscreenchange', () => {
+    const on = !!document.fullscreenElement;
+    fullBtn.setAttribute('aria-label', on ? 'Quitter le plein écran' : 'Plein écran');
+    fullBtn.title = (on ? 'Quitter le plein écran' : 'Plein écran') + ' (touche F)';
+  });
+  $('helpBtn').addEventListener('click', () => help.showModal());
+
+  /* ----- raccourcis clavier (télécommande ou clavier du poste de l'enseignant) ----- */
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || help.open) return;
+    const t = e.target;
+    if (t.closest && t.closest('input, select, textarea, [contenteditable]')) {
+      if (e.key === 'Escape') t.blur();
+      return;
+    }
+    if (t.closest && t.closest('button, [role="tab"]') && (e.key === ' ' || e.key === 'Enter' || e.key.startsWith('Arrow'))) return;
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    const A = {
+      ' ': togglePlay, ArrowRight: stepOnce, n: stepOnce, r: () => gdReset({ keepStart: true }),
+      d: () => { dToggle.checked = !dToggle.checked; updateReadout(); draw(); },
+      t: () => { tToggle.checked = !tToggle.checked; draw(); },
+      m: startListening, f: toggleFull, '+': zoomIn, '=': zoomIn, '-': zoomOut, '0': recenter,
+      '/': () => input.focus(), '?': () => help.showModal()
+    };
+    if (A[k]) { e.preventDefault(); A[k](); }
+  });
 
   /* ----- démarrage : un exemple déjà tracé ----- */
   const redraw = () => { draw(); drawLoss(); };
   new ResizeObserver(resize).observe(canvas);
   new ResizeObserver(drawLoss).observe(lossCv);
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
-  new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  new MutationObserver(redraw).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  if (zoom !== 1) applyZoom(zoom);
   updateReadout();
   syncLrUi();
   const first = E.parseExpression('x au carré moins quatre');
