@@ -1,0 +1,1614 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0}[hidden]{display:none!important}</style></head><body><title>Courbe à la voix</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>
+/* Mise en page : une carte de dictée et une feuille à carreaux pour la courbe, empilées sur téléphone, côte à côte sur grand écran. Encre bleue sur papier quadrillé, stylo rouge pour l'écoute. */
+:root {
+  --paper: #f3f5fc;
+  --card: #fbfcff;
+  --grid-minor: #dfe4f6;
+  --grid-major: #b4c0ea;
+  --ink: #17246b;
+  --ink-soft: #4a5699;
+  --line: #ccd4ef;
+  --pen: #c8302c;
+  --ok: #1b7a52;
+  --c1: #1d3fbf;
+  --c2: #c8302c;
+  --c3: #0d867a;
+  --c4: #b4650d;
+  --c5: #7a3db0;
+  --c6: #5d8a12;
+  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0d1330;
+    --card: #141c44;
+    --grid-minor: #202b5e;
+    --grid-major: #35438c;
+    --ink: #e6eaff;
+    --ink-soft: #a4afe0;
+    --line: #2a3571;
+    --pen: #ff6e68;
+    --ok: #52c994;
+    --c1: #86a0ff;
+    --c2: #ff7d76;
+    --c3: #45d3c5;
+    --c4: #f2a64d;
+    --c5: #c7a0ff;
+    --c6: #92d654;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0d1330;
+  --card: #141c44;
+  --grid-minor: #202b5e;
+  --grid-major: #35438c;
+  --ink: #e6eaff;
+  --ink-soft: #a4afe0;
+  --line: #2a3571;
+  --pen: #ff6e68;
+  --ok: #52c994;
+  --c1: #86a0ff;
+  --c2: #ff7d76;
+  --c3: #45d3c5;
+  --c4: #f2a64d;
+  --c5: #c7a0ff;
+  --c6: #92d654;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 18px; }
+h1 {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(1.9rem, 5vw, 2.7rem);
+  line-height: 1.1;
+  margin: 0;
+  text-wrap: balance;
+}
+.lede { margin: 6px 0 0; color: var(--ink-soft); max-width: 60ch; }
+h2, h3 { margin: 0; font-weight: 600; }
+h3 { font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-soft); }
+
+.app { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) {
+  .app { grid-template-columns: 350px minmax(0, 1fr); align-items: start; }
+}
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+.dictate { display: grid; gap: 16px; }
+
+.speak { display: flex; gap: 14px; align-items: center; }
+.mic {
+  flex: none; width: 76px; height: 76px; border-radius: 50%;
+  border: 0; background: var(--ink); color: var(--paper);
+  display: grid; place-items: center; cursor: pointer;
+}
+.mic.on { background: var(--pen); color: #fff; animation: ring 1.4s ease-out infinite; }
+@keyframes ring {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--pen) 55%, transparent); }
+  100% { box-shadow: 0 0 0 20px color-mix(in srgb, var(--pen) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) { .mic.on { animation: none; } }
+.speak-text { min-width: 0; display: grid; gap: 4px; }
+.status { margin: 0; font-weight: 500; }
+.status.ok { color: var(--ok); }
+.status.warn, .status.error { color: var(--pen); }
+.heard { margin: 0; font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-soft); overflow-wrap: anywhere; min-height: 1.4em; }
+
+.equation {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(1.4rem, 4vw, 1.8rem);
+  line-height: 2rem;
+  padding: 0 10px;
+  min-height: 4rem;
+  display: block;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background-image: linear-gradient(to bottom, transparent calc(2rem - 1px), var(--grid-major) calc(2rem - 1px));
+  background-size: 100% 2rem;
+  overflow-wrap: anywhere;
+}
+.equation sup { font-size: 0.62em; line-height: 0; }
+
+.row { display: flex; gap: 8px; }
+.row input {
+  flex: 1; min-width: 0; font: 400 15px var(--font-mono);
+  color: var(--ink); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 6px; padding: 9px 11px;
+}
+.row input::placeholder { color: var(--ink-soft); opacity: 0.75; }
+.btn {
+  font: 500 13.5px var(--font-body); cursor: pointer;
+  color: var(--ink); background: var(--card);
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px;
+}
+.btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn:hover { border-color: var(--ink-soft); }
+:focus-visible { outline: 2px solid var(--c1); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.examples { display: grid; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font: 400 13px var(--font-body); cursor: pointer; color: var(--ink);
+  background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px;
+  text-align: left;
+}
+.chip:hover { border-color: var(--ink-soft); }
+.tip { margin: 0; font-size: 13px; color: var(--ink-soft); }
+
+.conceptscard { display: grid; gap: 12px; }
+.ainote { margin: 0; font-size: 14px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+.ainote:empty { display: none; }
+.ai { border-top: 1px solid var(--line); padding-top: 12px; }
+.ai summary { cursor: pointer; font-weight: 600; font-size: 13.5px; }
+.ai-body { display: grid; gap: 10px; margin-top: 10px; }
+.ai .field input { font: 400 14px var(--font-mono); color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-width: 0; width: 100%; }
+@media (min-width: 900px) {
+  .dictate { grid-column: 1; grid-row: 1; }
+  .gdcard { grid-column: 1; grid-row: 2; }
+  .plotcard { grid-column: 2; grid-row: 1 / span 2; position: sticky; top: 16px; }
+  .conceptscard { grid-column: 2; grid-row: 3; }
+}
+.plotcard, .gdcard { display: grid; gap: 12px; }
+.tools { flex-wrap: wrap; align-items: center; }
+.chk { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; cursor: pointer; padding: 0 6px; }
+.chk input { accent-color: var(--ink); width: 16px; height: 16px; }
+.badge { font: 500 12px var(--font-mono); padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-soft); }
+.badge.ok { color: var(--ok); border-color: currentColor; }
+.badge.warn { color: var(--c4); border-color: currentColor; }
+.badge.error { color: var(--pen); border-color: currentColor; }
+.badge.run { color: var(--c1); border-color: currentColor; }
+.gd-grid { display: grid; gap: 10px 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.field { display: grid; gap: 4px; min-width: 0; font-size: 12.5px; color: var(--ink-soft); }
+.field.wide { grid-column: 1 / -1; }
+.field b { font: 500 13px var(--font-mono); color: var(--ink); }
+.field select, .field input[type="number"] {
+  font: 400 14px var(--font-body); color: var(--ink); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-width: 0; width: 100%;
+}
+.field input[type="range"] { width: 100%; accent-color: var(--ink); margin: 4px 0; }
+.loss-stage { height: 120px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--card); }
+.loss-stage canvas { width: 100%; height: 100%; display: block; }
+.gdmsg { margin: 0; font-size: 14px; }
+.gdmsg:empty { display: none; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.concepts { display: grid; gap: 14px; }
+.concepts:empty { display: none; }
+.concept { display: grid; gap: 4px; border-top: 1px solid var(--line); padding-top: 12px; min-width: 0; }
+.concept h4 { margin: 0; font: italic 600 1.1rem var(--font-display); }
+.concept .formula { margin: 0; font-family: var(--font-display); font-style: italic; font-size: 1.1rem; overflow-wrap: anywhere; }
+.concept .formula sup { font-size: 0.65em; line-height: 0; }
+.concept p { margin: 0; }
+.concept .note { font-size: 14px; max-width: 70ch; }
+.concept .xm { font: 12.5px var(--font-mono); color: var(--ink-soft); }
+.plot-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.plot-head h2 { font-family: var(--font-display); font-size: 1.25rem; font-style: italic; }
+.tools { display: flex; gap: 6px; }
+.chips + h3 { margin-top: 6px; }
+.stage {
+  aspect-ratio: 5 / 4; width: 100%; min-height: 260px; max-height: 78vh;
+  border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--card);
+}
+.stage canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+.readout { margin: 0; font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-soft); display: flex; flex-wrap: wrap; gap: 4px 16px; min-height: 1.5em; }
+.readout b { font-weight: 500; color: var(--ink); }
+.curves { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.curves li {
+  display: flex; align-items: center; gap: 8px; max-width: 100%;
+  border: 1px solid var(--line); border-radius: 6px; padding: 4px 4px 4px 10px; background: var(--paper);
+}
+.curves .empty { border: 0; background: none; padding: 0; color: var(--ink-soft); font-size: 13px; }
+.sw { flex: none; width: 12px; height: 12px; border-radius: 3px; }
+.eqtxt { font-family: var(--font-display); font-style: italic; font-size: 1.05rem; overflow-wrap: anywhere; min-width: 0; }
+.eqtxt sup { font-size: 0.65em; line-height: 0; }
+.x {
+  flex: none; width: 26px; height: 26px; border: 0; border-radius: 5px; background: transparent;
+  color: var(--ink-soft); font-size: 18px; line-height: 1; cursor: pointer;
+}
+.x:hover { color: var(--pen); }
+</style>
+
+<main class="wrap">
+  <header>
+    <h1>Courbe à la voix</h1>
+    <p class="lede">Dites une équation, ou un concept d’apprentissage automatique comme MAE, entropie croisée ou descente de gradient. La courbe se trace. Vous pouvez aussi l’écrire.</p>
+  </header>
+
+  <div class="app">
+    <section class="card dictate" aria-label="Dicter une équation">
+      <div class="speak">
+        <button id="mic" class="mic" type="button" aria-pressed="false" aria-label="Parler">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/></svg>
+        </button>
+        <div class="speak-text">
+          <p id="status" class="status" role="status">Touchez le micro et dites l’équation.</p>
+          <p id="heard" class="heard"></p>
+        </div>
+      </div>
+
+      <div id="eqShow" class="equation" aria-live="polite"></div>
+
+      <form id="form" class="row" autocomplete="off">
+        <label for="eq" class="sr">Équation écrite</label>
+        <input id="eq" type="text" placeholder="x^2 - 4, sin(x)/x ou MAE" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <button class="btn primary" type="submit">Tracer</button>
+        <button id="askAi" class="btn" type="button" hidden title="Envoyer cette phrase à l’assistant IA">IA</button>
+      </form>
+      <p id="aiNote" class="ainote" role="status"></p>
+
+      <div class="examples">
+        <h3>Équations à dire</h3>
+        <div id="chips" class="chips"></div>
+        <h3>Apprentissage automatique</h3>
+        <div id="chipsMl" class="chips"></div>
+      </div>
+      <p class="tip">Pour regrouper, dites « ouvre la parenthèse » et « ferme la parenthèse ». Pour la descente, ajoutez « taux d’apprentissage zéro virgule un », « avec Adam », « avec la dérivée » ou « départ moins deux ». Dites « stop » pour l’arrêter.</p>
+
+      <details id="aiBox" class="ai">
+        <summary>Assistant IA</summary>
+        <div class="ai-body">
+          <p class="tip">Quand l’app ne comprend pas une phrase, elle peut la confier à un modèle de langage qui la traduit en courbes et en commandes. Le modèle ne trace rien lui-même : chaque équation passe par l’analyseur de l’app. La clé reste dans ce navigateur et la phrase n’est envoyée au fournisseur choisi que dans ce cas. L’appel ne fonctionne que dans le fichier téléchargé ou une page hébergée ailleurs, pas dans la page publiée dans Claude.</p>
+          <label class="field" for="aiProvider"><span>Fournisseur</span>
+            <select id="aiProvider">
+              <option value="groq">Groq</option>
+              <option value="gemini">Google Gemini</option>
+            </select>
+          </label>
+          <label class="field" for="aiKey"><span id="aiKeyLabel">Clé API Groq</span><input id="aiKey" type="password" autocomplete="off" placeholder="gsk_…" spellcheck="false"></label>
+          <label class="field" for="aiModel"><span>Modèle</span><input id="aiModel" type="text" autocomplete="off" spellcheck="false" value="openai/gpt-oss-120b"></label>
+          <label class="chk" for="aiOn"><input id="aiOn" type="checkbox" checked> Utiliser l’IA quand je ne comprends pas</label>
+          <div class="row">
+            <button id="aiTest" class="btn" type="button">Tester</button>
+            <button id="aiForget" class="btn" type="button">Oublier la clé</button>
+          </div>
+        </div>
+      </details>
+    </section>
+
+      <section class="card plotcard" aria-label="Graphique">
+        <div class="plot-head">
+          <h2>Graphique</h2>
+          <div class="tools">
+            <label class="chk" for="dToggle"><input id="dToggle" type="checkbox"> Dérivée</label>
+            <button id="zout" class="btn" type="button" aria-label="Dézoomer">−</button>
+            <button id="zin" class="btn" type="button" aria-label="Zoomer">+</button>
+            <button id="reset" class="btn" type="button">Recentrer</button>
+            <button id="clearAll" class="btn" type="button">Effacer</button>
+          </div>
+        </div>
+        <div class="stage"><canvas id="plot" role="img" aria-label="Courbes tracées sur un repère"></canvas></div>
+        <p id="readout" class="readout"></p>
+        <ul id="curves" class="curves"></ul>
+      </section>
+
+      <section class="card gdcard" aria-label="Descente de gradient">
+        <div class="plot-head">
+          <h2>Descente de gradient</h2>
+          <span id="gdBadge" class="badge">Prête</span>
+        </div>
+        <div class="gd-grid">
+          <label class="field" for="gdFn"><span>Fonction à minimiser</span><select id="gdFn"></select></label>
+          <label class="field" for="gdOpt"><span>Méthode</span>
+            <select id="gdOpt">
+              <option value="sgd">Descente simple</option>
+              <option value="momentum">Momentum</option>
+              <option value="adam">Adam</option>
+            </select>
+          </label>
+          <label class="field wide" for="gdLr"><span>Taux d’apprentissage η = <b id="gdLrVal">0,1</b></span>
+            <input id="gdLr" type="range" min="-3" max="0.5" step="0.01" value="-1">
+          </label>
+          <label class="field" for="gdStart"><span>Départ x</span><input id="gdStart" type="number" step="0.1" value="7"></label>
+          <label class="field" for="gdSpeed"><span>Vitesse</span>
+            <select id="gdSpeed">
+              <option value="slow">Lente</option>
+              <option value="normal" selected>Normale</option>
+              <option value="fast">Rapide</option>
+            </select>
+          </label>
+        </div>
+        <div class="row">
+          <button id="gdPlay" class="btn primary" type="button">Lancer</button>
+          <button id="gdStep" class="btn" type="button">Un pas</button>
+          <button id="gdReset" class="btn" type="button">Réinitialiser</button>
+        </div>
+        <p id="gdInfo" class="readout"></p>
+        <div class="loss-stage"><canvas id="lossChart" role="img" aria-label="Valeur de la fonction à chaque pas de la descente"></canvas></div>
+        <p id="gdMsg" class="gdmsg" role="status"></p>
+      </section>
+
+      <section id="conceptsCard" class="card conceptscard" aria-label="À propos des courbes" hidden>
+        <h3>À propos des courbes</h3>
+        <div id="concepts" class="concepts"></div>
+      </section>
+  </div>
+</main>
+
+<script id="engine">
+/* ===== Moteur : texte dicté ou écrit  ->  fonction de x (aucune dépendance au DOM) ===== */
+const Engine = (() => {
+  const FUNCS = { sin: Math.sin, cos: Math.cos, tan: Math.tan, asin: Math.asin, acos: Math.acos, atan: Math.atan,
+    sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh, exp: Math.exp, ln: Math.log, log: Math.log10,
+    sqrt: Math.sqrt, cbrt: Math.cbrt, abs: Math.abs };
+  const CONSTS = { pi: Math.PI, e: Math.E };
+  const NAMES = [...Object.keys(FUNCS), 'pi', 'e', 'x'].sort((a, b) => b.length - a.length);
+  const NUM = { zero: 0, un: 1, une: 1, deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8, neuf: 9,
+    dix: 10, onze: 11, douze: 12, treize: 13, quatorze: 14, quinze: 15, seize: 16,
+    vingt: 20, vingts: 20, trente: 30, quarante: 40, cinquante: 50, soixante: 60, cent: 100, cents: 100 };
+  const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+
+  const fail = (msg) => { const e = new Error(msg); e.friendly = true; return e; };
+
+  function wordsToDigits(s) {
+    s = s.replace(/\b(virgule|point)((?:\s+(?:zero|une?|deux|trois|quatre|cinq|six|sept|huit|neuf))+)/g,
+      (m, v, d) => v + ' ' + d.trim().split(/\s+/).map((w) => NUM[w]).join(''));
+    const t = s.split(/\s+/).filter(Boolean), out = [];
+    let i = 0;
+    while (i < t.length) {
+      if (!(t[i] in NUM)) { out.push(t[i]); i++; continue; }
+      let acc = 0, last = -1, j = i;
+      while (j < t.length) {
+        const w = t[j];
+        if (w in NUM) {
+          const v = NUM[w];
+          if (v === 100) acc = acc === 0 ? 100 : (acc < 10 ? acc * 100 : acc + 100);
+          else if (v === 20 && last === 4) acc = acc - 4 + 80;
+          else acc += v;
+          last = v; j++;
+        } else if (w === 'et' && j > i && j + 1 < t.length && NUM[t[j - 1]] >= 20 && NUM[t[j - 1]] <= 60 && (t[j + 1] === 'un' || t[j + 1] === 'onze')) {
+          j++;
+        } else break;
+      }
+      out.push(String(acc));
+      i = j;
+    }
+    return out.join(' ');
+  }
+
+  function normalize(raw) {
+    let s = String(raw).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    s = s.replace(/[’‘`´]/g, "'").replace(/[−–—]/g, '-').replace(/[×·⋅]/g, '*').replace(/÷/g, '/')
+      .replace(/√/g, ' sqrt ').replace(/π/g, ' pi ');
+    s = s.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => '^' + [...m].map((c) => SUP.indexOf(c)).join(''));
+    s = s.replace(/(\d),(\d)/g, '$1.$2');
+    s = s.replace(/\b(?:trace|tracer|dessine|dessiner|affiche|afficher|montre|montrer|donne|donner)(?:\s+(?:moi|nous))?\b/g, ' ');
+    s = s.replace(/\b(?:(?:la|le|une|un)\s+)?(?:courbe|fonction|graphe|graphique|equation|representation graphique)\b(?:\s+(?:representative|de|d'|du))?/g, ' ');
+    const parts = s.split(/=|\b(?:est\s+)?egale?s?(?:\s+a)?\b/).map((p) => p.trim()).filter(Boolean);
+    if (parts.length) s = parts[parts.length - 1]; else s = '';
+    const R = [
+      [/\bracine\s+carree(?:\s+(?:de|d'))?/g, ' sqrt '],
+      [/\bracine\s+cubique(?:\s+(?:de|d'))?/g, ' cbrt '],
+      [/\bracine(?:\s+(?:de|d'))?/g, ' sqrt '],
+      [/\bvaleur\s+absolue(?:\s+(?:de|d'))?/g, ' abs '],
+      [/\blogarithme\s+(?:neperien|naturel)(?:\s+(?:de|d'))?/g, ' ln '],
+      [/\blogarithme\s+decimal(?:\s+(?:de|d'))?/g, ' log '],
+      [/\blogarithme(?:\s+(?:de|d'))?/g, ' ln '],
+      [/\bexponentielle(?:\s+(?:de|d'))?/g, ' exp '],
+      [/\barc\s*(?:tangente|tan)(?:\s+(?:de|d'))?/g, ' atan '],
+      [/\barc\s*(?:sinus|sin)(?:\s+(?:de|d'))?/g, ' asin '],
+      [/\barc\s*(?:cosinus|cos)(?:\s+(?:de|d'))?/g, ' acos '],
+      [/\bsinus(?:\s+(?:de|d'))?/g, ' sin '],
+      [/\bcosinus(?:\s+(?:de|d'))?/g, ' cos '],
+      [/\btangente(?:\s+(?:de|d'))?/g, ' tan '],
+      [/\b(?:au\s+)?carree?\b(?:\s+de\b)?/g, ' ^2 '],
+      [/\b(?:au\s+)?cube\b/g, ' ^3 '],
+      [/\b(?:a\s+la\s+)?puissance\b|\bexposant\b|\belevee?\s+a\s+la\b|\belevee?\s+a\b/g, ' ^ '],
+      [/\bdivisee?\s+par\b|\bsur\b/g, ' / '],
+      [/\bmultipliee?\s+par\b|\bfois\b/g, ' * '],
+      [/\bplus\b/g, ' + '],
+      [/\bmoins\b/g, ' - '],
+      [/\bouvr(?:e|ir|ez)(?:\s+la)?\s+parenthese(?:\s+ouverte)?\b|\bparenthese\s+(?:ouverte|ouvrante)\b/g, ' ( '],
+      [/\bferm(?:e|er|ez)(?:\s+la)?\s+parenthese(?:\s+fermee)?\b|\bparenthese\s+(?:fermee|fermante)\b/g, ' ) '],
+      [/\b(?:ics|iks|eks|ixe|ix)\b/g, ' x '],
+    ];
+    for (const [re, to] of R) s = s.replace(re, to);
+    for (let k = 0; k < 3; k++) s = s.replace(/\b([a-z]+)-([a-z]+)\b/g, (m, a, b) => ((a in NUM || a === 'et') && (b in NUM || b === 'et')) ? a + ' ' + b : m);
+    s = wordsToDigits(s);
+    s = s.replace(/(\d)\s*(?:virgule|point)\s*(\d)/g, '$1.$2');
+    return s.replace(/\s+/g, ' ').trim();
+  }
+
+  function tokenize(s) {
+    const out = [];
+    let i = 0;
+    while (i < s.length) {
+      const c = s[i];
+      if (c === ' ') { i++; continue; }
+      if (/[0-9.]/.test(c)) {
+        const m = /^(?:\d+\.?\d*|\.\d+)/.exec(s.slice(i));
+        if (!m) throw fail('Un nombre est mal écrit.');
+        out.push({ t: 'num', v: parseFloat(m[0]) }); i += m[0].length; continue;
+      }
+      if (/[a-z]/.test(c)) {
+        const word = /^[a-z]+/.exec(s.slice(i))[0];
+        let rest = word;
+        while (rest) {
+          const name = NAMES.find((n) => rest.startsWith(n));
+          if (!name) throw fail('Je ne connais pas le mot « ' + word + ' ».');
+          if (name === 'x') out.push({ t: 'x' });
+          else if (name in CONSTS) out.push({ t: 'const', v: CONSTS[name], name });
+          else out.push({ t: 'fn', name });
+          rest = rest.slice(name.length);
+        }
+        i += word.length; continue;
+      }
+      if ('+-*/^'.includes(c)) { out.push({ t: 'op', v: c }); i++; continue; }
+      if (c === '(' || c === ')') { out.push({ t: c }); i++; continue; }
+      throw fail('Je ne reconnais pas le caractère « ' + c + ' ».');
+    }
+    return out;
+  }
+
+  const show = (tk) => tk.t === 'num' ? String(tk.v) : tk.t === 'op' ? tk.v : tk.t === 'fn' || tk.t === 'const' ? tk.name : tk.t;
+
+  function parse(tokens) {
+    let p = 0;
+    const peek = () => tokens[p];
+    const isOp = (v) => peek() && peek().t === 'op' && peek().v === v;
+    const startsPrimary = (tk) => tk && (tk.t === 'num' || tk.t === 'x' || tk.t === 'const' || tk.t === 'fn' || tk.t === '(');
+
+    function expr() {
+      let l = term();
+      while (peek() && peek().t === 'op' && (peek().v === '+' || peek().v === '-')) {
+        const o = tokens[p++].v, a = l, b = term();
+        l = o === '+' ? (x) => a(x) + b(x) : (x) => a(x) - b(x);
+      }
+      return l;
+    }
+    function term() {
+      let l = unary();
+      for (;;) {
+        const tk = peek();
+        if (!tk) break;
+        if (tk.t === 'op' && (tk.v === '*' || tk.v === '/')) {
+          p++;
+          const a = l, b = unary();
+          l = tk.v === '*' ? (x) => a(x) * b(x) : (x) => a(x) / b(x);
+        } else if (startsPrimary(tk)) {
+          const a = l, b = power();
+          l = (x) => a(x) * b(x);
+        } else break;
+      }
+      return l;
+    }
+    function unary() {
+      if (isOp('-')) { p++; const f = unary(); return (x) => -f(x); }
+      if (isOp('+')) { p++; return unary(); }
+      return power();
+    }
+    function power() {
+      const b = primary();
+      if (isOp('^')) { p++; const e = unary(); return (x) => Math.pow(b(x), e(x)); }
+      return b;
+    }
+    function chain() {
+      let neg = false;
+      if (isOp('-')) { p++; neg = true; } else if (isOp('+')) p++;
+      if (!startsPrimary(peek())) throw fail('Il manque ce que la fonction doit calculer.');
+      let l = power();
+      while (startsPrimary(peek()) && peek().t !== 'fn') { const a = l, b = power(); l = (x) => a(x) * b(x); }
+      return neg ? (x) => -l(x) : l;
+    }
+    function fnCall(name) {
+      const fn = FUNCS[name];
+      let pw = null;
+      if (isOp('^')) { p++; pw = unary(); }
+      let arg;
+      if (peek() && peek().t === '(') {
+        p++; arg = expr();
+        if (!peek() || peek().t !== ')') throw fail('Il manque une parenthèse fermante.');
+        p++;
+      } else arg = chain();
+      const f = (x) => fn(arg(x));
+      return pw ? (x) => Math.pow(f(x), pw(x)) : f;
+    }
+    function primary() {
+      const tk = tokens[p++];
+      if (!tk) throw fail('L’expression est incomplète : il manque quelque chose à la fin.');
+      if (tk.t === 'num' || tk.t === 'const') { const v = tk.v; return () => v; }
+      if (tk.t === 'x') return (x) => x;
+      if (tk.t === '(') {
+        const f = expr();
+        if (!peek() || peek().t !== ')') throw fail('Il manque une parenthèse fermante.');
+        p++; return f;
+      }
+      if (tk.t === 'fn') return fnCall(tk.name);
+      if (tk.t === ')') throw fail('Il y a une parenthèse fermante en trop.');
+      throw fail('Je ne comprends pas « ' + show(tk) + ' » à cet endroit.');
+    }
+
+    if (!tokens.length) throw fail('Je n’ai rien compris à écrire.');
+    const f = expr();
+    if (p < tokens.length) {
+      if (tokens[p].t === ')') throw fail('Il y a une parenthèse fermante en trop.');
+      throw fail('Je ne comprends pas « ' + show(tokens[p]) + ' » à cet endroit.');
+    }
+    return f;
+  }
+
+  function pretty(s) {
+    const plain = s.replace(/\bsqrt\b/g, '√').replace(/\bcbrt\b/g, '∛').replace(/\bpi\b/g, 'π')
+      .replace(/(\d)\.(\d)/g, '$1,$2')
+      .replace(/\s*\*\s*/g, '·').replace(/\s*\/\s*/g, ' / ')
+      .replace(/\s*-\s*/g, ' − ').replace(/\s*\+\s*/g, ' + ')
+      .replace(/\s*\^\s*/g, '^').replace(/\^\s*−\s*/g, '^−')
+      .replace(/\(\s*−\s*/g, '(−').replace(/^\s*−\s*/, '−')
+      .replace(/(\d)\s+(?=[xπ(])/g, '$1').replace(/\s+/g, ' ').trim();
+    let out = '', i = 0;
+    while (i < plain.length) {
+      const c = plain[i];
+      if (c === '^') {
+        let exp = '';
+        if (plain[i + 1] === '(') {
+          let d = 0, k = i + 1;
+          for (; k < plain.length; k++) {
+            if (plain[k] === '(') d++;
+            else if (plain[k] === ')') { d--; if (d === 0) break; }
+          }
+          exp = plain.slice(i + 2, k); i = k + 1;
+        } else {
+          const m = /^−?(?:\d+(?:,\d+)?|x|π)/.exec(plain.slice(i + 1));
+          if (!m) { out += '^'; i++; continue; }
+          exp = m[0]; i += 1 + m[0].length;
+        }
+        out += '<sup>' + exp + '</sup>';
+        continue;
+      }
+      out += c; i++;
+    }
+    return out;
+  }
+
+  function parseExpression(raw) {
+    const normalized = normalize(raw);
+    if (!normalized) throw fail('Je n’ai pas trouvé d’équation.');
+    const f = parse(tokenize(normalized));
+    return { f, normalized, html: pretty(normalized) };
+  }
+
+  /* ===== Concepts d'apprentissage automatique ===== */
+  const sgn = (v) => (v > 0 ? 1 : v < 0 ? -1 : 0);
+  const sigm = (v) => (v >= 0 ? 1 / (1 + Math.exp(-v)) : Math.exp(v) / (1 + Math.exp(v)));
+  const softplus = (v) => Math.max(v, 0) + Math.log1p(Math.exp(-Math.abs(v)));
+  const logcosh = (v) => Math.abs(v) + Math.log1p(Math.exp(-2 * Math.abs(v))) - Math.LN2;
+  const huber = (v) => (Math.abs(v) <= 1 ? 0.5 * v * v : Math.abs(v) - 0.5);
+  const xlogx = (p) => (p <= 0 ? 0 : p * Math.log(p));
+  const EDGE = [1e-4, 1 - 1e-4];
+
+  const CONCEPTS = {
+    mae: {
+      label: 'MAE', title: 'MAE, erreur absolue moyenne', formula: '|ŷ − y|', xmeaning: 'x = erreur ŷ − y',
+      note: 'Chaque unité d’erreur coûte pareil. Robuste aux valeurs aberrantes, mais le gradient reste égal à ±1 près du minimum : avec un pas fixe, la descente oscille autour de 0 sans ralentir.',
+      view: { x0: -4, x1: 4, y0: -0.6, y1: 4.6 }, start: 3,
+      aliases: ['mae', 'm a e', 'erreur absolue moyenne', 'erreur absolue', 'mean absolute error', 'perte l1', 'perte l 1', 'norme l1', 'l1', 'l 1'],
+      curves: [{ html: 'MAE(x) = |x|', f: Math.abs, df: sgn }]
+    },
+    mse: {
+      label: 'MSE', title: 'MSE, erreur quadratique moyenne', formula: '(ŷ − y)<sup>2</sup>', xmeaning: 'x = erreur ŷ − y',
+      note: 'L’erreur est élevée au carré : les grosses erreurs pèsent beaucoup plus. Le gradient 2x diminue près du minimum, donc la descente ralentit toute seule.',
+      view: { x0: -4, x1: 4, y0: -1, y1: 10 }, start: 3,
+      aliases: ['mse', 'm s e', 'erreur quadratique moyenne', 'erreur quadratique', 'mean squared error', 'mean square error', 'moindres carres', 'perte quadratique', 'perte l2', 'perte l 2', 'norme l2', 'l2', 'l 2'],
+      curves: [{ html: 'MSE(x) = x<sup>2</sup>', f: (v) => v * v, df: (v) => 2 * v }]
+    },
+    huber: {
+      label: 'Huber', title: 'Perte de Huber', formula: '½(ŷ − y)<sup>2</sup> si |ŷ − y| ≤ δ, sinon δ(|ŷ − y| − ½δ)', xmeaning: 'x = erreur ŷ − y, avec δ = 1',
+      note: 'Parabole près de zéro, droite au-delà de δ. Elle garde la douceur de MSE sans laisser les valeurs aberrantes dominer.',
+      view: { x0: -4, x1: 4, y0: -0.5, y1: 4 }, start: 3.5,
+      aliases: ['perte de huber', 'huber', 'hubert', 'houbert', 'uber'],
+      curves: [{ html: 'Huber(x), δ = 1', f: huber, df: (v) => Math.max(-1, Math.min(1, v)) }]
+    },
+    logcosh: {
+      label: 'Log-cosh', title: 'Perte log-cosh', formula: 'ln(cosh(ŷ − y))', xmeaning: 'x = erreur ŷ − y',
+      note: 'Proche de x²/2 près de 0 et de |x| − ln 2 loin de 0. Sa dérivée, tanh(x), reste lisse partout.',
+      view: { x0: -4, x1: 4, y0: -0.3, y1: 3.7 }, start: 3,
+      aliases: ['log cosinus hyperbolique', 'logarithme cosinus hyperbolique', 'log cosh', 'logcosh'],
+      curves: [{ html: 'log-cosh(x)', f: logcosh, df: Math.tanh }]
+    },
+    ce: {
+      label: 'Entropie croisée', title: 'Entropie croisée binaire', formula: '−[y·ln(p) + (1 − y)·ln(1 − p)]', xmeaning: 'x = probabilité p prédite pour la classe 1',
+      note: 'Si la vraie classe est 1, la perte −ln(p) explose quand p tend vers 0 : une prédiction sûre et fausse coûte très cher. Pour la classe 0, c’est le miroir −ln(1 − p).',
+      view: { x0: -0.05, x1: 1.05, y0: -0.3, y1: 5 }, start: 0.15, clamp: EDGE,
+      aliases: ['entropie croisee binaire', 'binary cross entropy', 'entropie croisee', 'entropie croise', 'cross entropie', 'cross entropy', 'log loss', 'perte logarithmique', 'entropy', 'entropie', 'bce'],
+      curves: [
+        { html: 'y = 1 : −ln(x)', f: (p) => (p > 0 && p <= 1 ? -Math.log(p) : NaN), df: (p) => -1 / p },
+        { html: 'y = 0 : −ln(1 − x)', f: (p) => (p >= 0 && p < 1 ? -Math.log(1 - p) : NaN), df: (p) => 1 / (1 - p) }
+      ]
+    },
+    entropy: {
+      label: 'Entropie binaire', title: 'Entropie de Shannon (binaire)', formula: '−p·ln(p) − (1 − p)·ln(1 − p)', xmeaning: 'x = probabilité p',
+      note: 'Mesure l’incertitude : maximale (ln 2 ≈ 0,69) quand p = 0,5, nulle quand le résultat est certain.',
+      view: { x0: -0.05, x1: 1.05, y0: -0.1, y1: 0.9 }, start: 0.2, clamp: EDGE,
+      aliases: ['entropie de shannon', 'entropie binaire', 'binary entropy', 'shannon'],
+      curves: [{ html: 'H(x) = −x·ln x − (1 − x)·ln(1 − x)', f: (p) => (p >= 0 && p <= 1 ? -xlogx(p) - xlogx(1 - p) : NaN), df: (p) => Math.log((1 - p) / p) }]
+    },
+    hinge: {
+      label: 'Hinge', title: 'Perte hinge (SVM)', formula: 'max(0, 1 − y·ŷ)', xmeaning: 'x = marge y·ŷ',
+      note: 'Nulle dès que la marge dépasse 1 : un exemple bien classé avec assez de marge ne coûte plus rien et n’influence plus l’apprentissage.',
+      view: { x0: -2, x1: 3, y0: -0.5, y1: 3.5 }, start: -1,
+      aliases: ['hinge loss', 'perte hinge', 'perte charniere', 'charniere', 'hinge', 'svm'],
+      curves: [{ html: 'hinge(x) = max(0, 1 − x)', f: (v) => Math.max(0, 1 - v), df: (v) => (v < 1 ? -1 : 0) }]
+    },
+    sigmoid: {
+      label: 'Sigmoïde', title: 'Sigmoïde', formula: '1 / (1 + e<sup>−x</sup>)', xmeaning: 'x = score brut (logit)',
+      note: 'Écrase tout score dans ]0 ; 1[ pour en faire une probabilité. Sa dérivée σ(1 − σ) ne dépasse pas 0,25 : le gradient s’évanouit aux extrémités.',
+      view: { x0: -6, x1: 6, y0: -0.2, y1: 1.2 }, start: 2,
+      aliases: ['fonction logistique', 'sigmoide', 'sigmoid', 'logistique'],
+      curves: [{ html: 'σ(x) = 1 / (1 + e<sup>−x</sup>)', f: sigm, df: (v) => sigm(v) * (1 - sigm(v)) }]
+    },
+    relu: {
+      label: 'ReLU', title: 'ReLU', formula: 'max(0, x)', xmeaning: 'x = entrée du neurone',
+      note: 'Simple et rapide ; sa dérivée vaut 0 ou 1. Un neurone resté à gauche de 0 reçoit un gradient nul et cesse de s’entraîner.',
+      view: { x0: -4, x1: 4, y0: -1, y1: 4 }, start: 3,
+      aliases: ['rectified linear unit', 'rectified linear', 'rectifieur', 'r e l u', 're lu', 'relu'],
+      curves: [{ html: 'ReLU(x) = max(0, x)', f: (v) => Math.max(0, v), df: (v) => (v > 0 ? 1 : 0) }]
+    },
+    leaky: {
+      label: 'Leaky ReLU', title: 'Leaky ReLU', formula: 'x si x > 0, sinon 0,1·x', xmeaning: 'x = entrée du neurone',
+      note: 'Garde une petite pente à gauche de 0 pour que le gradient ne s’annule jamais.',
+      view: { x0: -4, x1: 4, y0: -1, y1: 4 }, start: 3,
+      aliases: ['relu qui fuit', 'relu avec fuite', 'relu a fuite', 'leaky relu', 'leaky'],
+      curves: [{ html: 'leaky ReLU(x)', f: (v) => (v > 0 ? v : 0.1 * v), df: (v) => (v > 0 ? 1 : 0.1) }]
+    },
+    tanh: {
+      label: 'Tanh', title: 'Tangente hyperbolique', formula: '(e<sup>x</sup> − e<sup>−x</sup>) / (e<sup>x</sup> + e<sup>−x</sup>)', xmeaning: 'x = entrée du neurone',
+      note: 'Comme la sigmoïde mais centrée sur 0, avec des valeurs dans ]−1 ; 1[. Sa dérivée 1 − tanh² est maximale en 0.',
+      view: { x0: -4, x1: 4, y0: -1.4, y1: 1.4 }, start: 2,
+      aliases: ['tangente hyperbolique', 'tanh'],
+      curves: [{ html: 'tanh(x)', f: Math.tanh, df: (v) => 1 - Math.tanh(v) * Math.tanh(v) }]
+    },
+    softplus: {
+      label: 'Softplus', title: 'Softplus', formula: 'ln(1 + e<sup>x</sup>)', xmeaning: 'x = entrée du neurone',
+      note: 'Version lisse de ReLU : dérivable partout, avec la sigmoïde pour dérivée.',
+      view: { x0: -4, x1: 4, y0: -0.5, y1: 4.5 }, start: 3,
+      aliases: ['soft plus', 'softplus'],
+      curves: [{ html: 'softplus(x) = ln(1 + e<sup>x</sup>)', f: softplus, df: sigm }]
+    },
+    gauss: {
+      label: 'Gaussienne', title: 'Gaussienne', formula: 'e<sup>−x²/2</sup>', xmeaning: 'x = écart au centre',
+      note: 'La courbe en cloche, maximale en 0. Loin du centre la pente tend vers 0 : une descente de gradient y reste presque immobile.',
+      view: { x0: -4, x1: 4, y0: -0.2, y1: 1.2 }, start: 2.5,
+      aliases: ['courbe en cloche', 'loi normale', 'gaussienne', 'cloche'],
+      curves: [{ html: 'G(x) = e<sup>−x²/2</sup>', f: (v) => Math.exp(-v * v / 2), df: (v) => -v * Math.exp(-v * v / 2) }]
+    },
+    nonconvex: {
+      label: 'Non convexe', title: 'Fonction non convexe', formula: '¼x<sup>4</sup> − x<sup>2</sup> + 0,3x', xmeaning: 'x = un paramètre du modèle',
+      note: 'Deux creux : un minimum global vers x ≈ −1,49 et un minimum local vers x ≈ 1,34. Selon le point de départ, la descente de gradient finit dans l’un ou dans l’autre.',
+      view: { x0: -3, x1: 3, y0: -2.2, y1: 4.5 }, start: 2.5,
+      aliases: ['fonction non convexe', 'minima locaux', 'minimum local', 'paysage de perte', 'non convexe', 'paysage'],
+      curves: [{ html: 'f(x) = ¼x<sup>4</sup> − x<sup>2</sup> + 0,3x', f: (v) => 0.25 * v ** 4 - v * v + 0.3 * v, df: (v) => v ** 3 - 2 * v + 0.3 }]
+    }
+  };
+
+  const ALIASES = [];
+  for (const [id, c] of Object.entries(CONCEPTS)) for (const a of c.aliases) ALIASES.push([a, id]);
+  ALIASES.sort((a, b) => b[0].length - a[0].length);
+  const FILL = new Set(('le la les l de du des d un une et contre versus vs avec sur a au aux en courbe courbes fonction fonctions perte pertes loss ' +
+    'trace tracer montre montrer affiche afficher dessine dessiner moi donne compare comparer lance lancer demarre demarrer commence pour sa son ses ' +
+    'x y egale egal est mon ma je veux voir voudrais s il plait svp stp ok alors puis ensuite applique appliquer calcule sans ni ou').split(' '));
+  const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  function light(raw) {
+    let s = String(raw).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    s = s.replace(/['’‘`´]/g, ' ').replace(/(\d),(\d)/g, '$1.$2').replace(/[,;:!?«»"]/g, ' ').replace(/\.(?=\s|$)/g, ' ');
+    for (let k = 0; k < 2; k++) s = s.replace(/([a-z])-([a-z])/g, '$1 $2');
+    s = wordsToDigits(s.replace(/\s+/g, ' ').trim());
+    return s.replace(/(\d)\s*(?:virgule|point)\s*(\d)/g, '$1.$2');
+  }
+
+  /* Texte dicté -> liste d'actions, ou null si c'est une équation à tracer. */
+  function interpret(raw) {
+    let w = ' ' + light(raw) + ' ';
+    const hits = [];
+    for (const [alias, id] of ALIASES) {
+      const m = new RegExp('(^|[^a-z0-9])(' + escRe(alias) + ')(?![a-z0-9])').exec(w);
+      if (!m) continue;
+      const at = m.index + m[1].length;
+      w = w.slice(0, at) + ' '.repeat(alias.length) + w.slice(at + alias.length);
+      if (!hits.some((h) => h.id === id)) hits.push({ id, at });
+    }
+    hits.sort((a, b) => a.at - b.at);
+    const f = { gd: false, stop: false, clear: false, reset: false };
+    let lr = null, opt = null, deriv = null, start = null;
+    const take = (re, fn) => { w = w.replace(re, (...a) => { fn(a); return ' '; }); };
+    take(/\bsans\s+(?:la\s+|sa\s+)?(?:derivee|pente)\b/g, () => { deriv = false; });
+    take(/\b(?:derivee|derivation|derivative|pente)\b/g, () => { if (deriv === null) deriv = true; });
+    take(/\b(?:(?:taux|pas|vitesse|rythme)\s+d\s*apprentissage|learning\s*rate|eta|alpha)(?:\s+(?:de|a|egal|egale|est|vaut|of|is|to|=))*\s*(\d+(?:\.\d+)?)/g, (a) => { lr = parseFloat(a[1]); });
+    take(/\bmomentum\b|\belan\b/g, () => { opt = 'momentum'; });
+    take(/\badam\b|\ba dame\b|\badan\b/g, () => { opt = 'adam'; });
+    take(/\bsgd\b|\bdescente simple\b|\bclassique\b/g, () => { opt = 'sgd'; });
+    take(/\bdepart(?:\s+(?:en|a|de|x|egal|egale))*\s*(moins\s+)?(\d+(?:\.\d+)?)/g, (a) => { start = (a[1] ? -1 : 1) * parseFloat(a[2]); });
+    take(/\b(?:stop|arrete\w*|pause|attends?)\b/g, () => { f.stop = true; });
+    take(/\b(?:efface\w*|tout effacer|nettoie\w*|supprime\w*)\b/g, () => { f.clear = true; });
+    take(/\b(?:reinitialise\w*|recommence\w*|reset|remets? a zero)\b/g, () => { f.reset = true; });
+    take(/\b(?:descente(?:\s+(?:de|du))?(?:\s+gradi[ae]nts?)?|gradi[ae]nts?(?:\s+descend\w+)?|descent)\b/g, () => { f.gd = true; });
+
+    const left = w.replace(/[()]/g, ' ').split(/\s+/).filter((t) => t && !FILL.has(t));
+    if (left.some((t) => /[+\-*\/^=]/.test(t))) return null;
+    const acts = [];
+    if (f.clear) acts.push({ type: 'clear' });
+    for (const h of hits) acts.push({ type: 'concept', id: h.id });
+    if (deriv !== null) acts.push({ type: 'deriv', value: deriv });
+    if (opt) acts.push({ type: 'opt', value: opt });
+    if (lr !== null) acts.push({ type: 'lr', value: lr });
+    if (start !== null) acts.push({ type: 'start', value: start });
+    if (f.reset) acts.push({ type: 'reset' });
+    if (f.stop) acts.push({ type: 'stop' });
+    if (f.gd) acts.push({ type: 'gd' });
+    if (!acts.length) return null;
+    acts.unknown = left.filter((t) => !/^[\d.]+$/.test(t));
+    return acts;
+  }
+
+  /* Descente de gradient : une étape à la fois, méthodes simple, momentum et Adam. */
+  function makeDescent(f, df, x0, lr, method, clamp) {
+    const s = { x: x0, lr, method, v: 0, m: 0, u: 0, t: 0, k: 0 };
+    s.step = function () {
+      const g = df(s.x);
+      let dx;
+      if (s.method === 'momentum') { s.v = 0.9 * s.v + g; dx = s.lr * s.v; }
+      else if (s.method === 'adam') {
+        s.t += 1; s.m = 0.9 * s.m + 0.1 * g; s.u = 0.999 * s.u + 0.001 * g * g;
+        dx = (s.lr * (s.m / (1 - Math.pow(0.9, s.t)))) / (Math.sqrt(s.u / (1 - Math.pow(0.999, s.t))) + 1e-8);
+      } else dx = s.lr * g;
+      let nx = s.x - dx, clamped = false;
+      if (clamp) { const c = Math.min(clamp[1], Math.max(clamp[0], nx)); clamped = c !== nx; nx = c; }
+      s.x = nx; s.k += 1;
+      return { x: nx, g, dx, clamped, y: f(nx) };
+    };
+    return s;
+  }
+  const numDeriv = (f) => (x) => { const h = 1e-5 * (1 + Math.abs(x)); return (f(x + h) - f(x - h)) / (2 * h); };
+
+  /* ===== Assistant IA : consigne envoyée au modèle, puis réponse JSON -> actions ===== */
+  function llmPrompt(texts, state) {
+    const ids = Object.entries(CONCEPTS).map(([id, c]) => id + ' (' + c.label + ')').join(', ');
+    const list = texts.slice(0, 3).map((t) => JSON.stringify(String(t).slice(0, 400))).join(' | ');
+    return [
+      'Tu es le module d’interprétation d’une application web qui trace des courbes. L’utilisateur parle ou écrit en français. La dictée vocale contient parfois des erreurs de reconnaissance (par exemple « mais » pour MAE, « uber » pour Huber) : interprète au mieux.',
+      'Réponds UNIQUEMENT par un objet JSON, sans texte autour ni balises, de cette forme :',
+      '{"actions":[...],"explication":"une ou deux phrases en français"}',
+      'Actions possibles :',
+      '{"type":"concept","id":"<id>"} avec id parmi : ' + ids + '.',
+      '{"type":"equation","expr":"x^2 - 4"} : courbe y = expr.',
+      '{"type":"curve","label":"nom court","expr":"..."} : courbe nommée pour une fonction qui n’est pas dans la liste (perte focale, GELU approchée, etc.).',
+      'Syntaxe de expr : la variable x, des nombres avec point décimal, + - * / ^, des parenthèses, les fonctions sin cos tan asin acos atan sinh cosh tanh exp ln log sqrt cbrt abs, et les constantes pi et e. Exemples : "sin(x)/x", "2*x^2 - 3*x + 1", "0.5*x*(1 + tanh(0.79788*(x + 0.044715*x^3)))". Pas de max, min, if ni de fonction par morceaux : choisis alors un concept ou une approximation lisse.',
+      '{"type":"deriv","value":true} pour afficher ou masquer la dérivée (true ou false).',
+      '{"type":"opt","value":"sgd"} avec sgd, momentum ou adam. {"type":"lr","value":0.1} taux d’apprentissage. {"type":"start","value":2} point de départ.',
+      '{"type":"gd"} lance la descente de gradient sur la dernière courbe. {"type":"stop"} la met en pause. {"type":"reset"} la remet au départ. {"type":"clear"} efface toutes les courbes.',
+      'Règles : 4 actions au plus, 3 courbes au plus ; n’invente jamais d’identifiant de concept. Pour toute question de cours (pourquoi, comment, explique, compare), tu DOIS tracer la ou les courbes qui l’illustrent (un concept de la liste, ou une courbe nommée) et expliquer dans "explication" en 2 à 4 phrases ; ajoute {"type":"deriv","value":true} quand la question porte sur le gradient, la pente, la saturation ou l’apprentissage. N’utilise une liste d’actions vide que si la demande n’a aucun rapport avec les courbes ou l’apprentissage automatique.',
+      'Exemple 1. Demande : « explique pourquoi le gradient disparaît avec la sigmoïde ». Réponse : {"actions":[{"type":"concept","id":"sigmoid"},{"type":"deriv","value":true}],"explication":"La dérivée de la sigmoïde vaut au plus 0,25 et tend vers 0 quand |x| est grand. En rétropropagation ces facteurs se multiplient d’une couche à l’autre, et le gradient devient presque nul dans les premières couches."}',
+      'Exemple 2. Demande : « compare MAE et MSE pour les valeurs aberrantes ». Réponse : {"actions":[{"type":"concept","id":"mae"},{"type":"concept","id":"mse"}],"explication":"MSE élève l’erreur au carré : une valeur aberrante pèse énormément. MAE croît linéairement, donc elle résiste mieux."}',
+      'État actuel : courbes = ' + JSON.stringify((state && state.curves) || []) + ' ; méthode = ' + ((state && state.opt) || 'sgd') + ' ; taux d’apprentissage = ' + ((state && state.lr) || 0.1) + '.',
+      'Demande (transcriptions possibles séparées par |) : ' + list
+    ].join('\n');
+  }
+
+  const LLM_OPTS = new Set(['sgd', 'momentum', 'adam']);
+  function parseLLM(text) {
+    const s = String(text || '');
+    const a = s.indexOf('{'), b = s.lastIndexOf('}');
+    if (a < 0 || b <= a) return null;
+    let obj;
+    try { obj = JSON.parse(s.slice(a, b + 1)); } catch (e) { return null; }
+    if (!obj || typeof obj !== 'object') return null;
+    const str = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
+    const num = (v) => { const n = typeof v === 'number' ? v : typeof v === 'string' ? parseFloat(v.replace(',', '.')) : NaN; return isFinite(n) ? n : null; };
+    const acts = [];
+    let curvesLeft = 3;
+    for (const it of (Array.isArray(obj.actions) ? obj.actions : []).slice(0, 4)) {
+      if (!it || typeof it !== 'object') continue;
+      const t = it.type;
+      if (t === 'concept') { if (typeof it.id === 'string' && Object.prototype.hasOwnProperty.call(CONCEPTS, it.id)) acts.push({ type: 'concept', id: it.id }); }
+      else if (t === 'equation' || t === 'curve') {
+        const expr = str(it.expr, 200);
+        if (expr && curvesLeft > 0) { curvesLeft--; acts.push(t === 'curve' ? { type: 'curve', label: str(it.label, 60) || 'courbe', expr } : { type: 'equation', expr }); }
+      }
+      else if (t === 'deriv') acts.push({ type: 'deriv', value: it.value === true || it.value === 'true' });
+      else if (t === 'opt') { if (LLM_OPTS.has(it.value)) acts.push({ type: 'opt', value: it.value }); }
+      else if (t === 'lr') { const v = num(it.value); if (v !== null && v > 0) acts.push({ type: 'lr', value: v }); }
+      else if (t === 'start') { const v = num(it.value); if (v !== null) acts.push({ type: 'start', value: v }); }
+      else if (t === 'gd' || t === 'stop' || t === 'clear' || t === 'reset') acts.push({ type: t });
+    }
+    return { actions: acts, explain: str(obj.explication !== undefined ? obj.explication : obj.explanation, 500) };
+  }
+
+  return { parseExpression, normalize, pretty, interpret, makeDescent, numDeriv, CONCEPTS, llmPrompt, parseLLM };
+})();
+</script>
+
+<script id="app">
+(function () {
+  const E = Engine;
+  const $ = (id) => document.getElementById(id);
+  const canvas = $('plot'), ctx = canvas.getContext('2d');
+  const lossCv = $('lossChart'), lctx = lossCv.getContext('2d');
+  const statusEl = $('status'), heardEl = $('heard'), eqShow = $('eqShow'), readout = $('readout');
+  const curvesEl = $('curves'), conceptsEl = $('concepts'), mic = $('mic'), form = $('form'), input = $('eq');
+  const chipsEl = $('chips'), chipsMl = $('chipsMl'), dToggle = $('dToggle');
+  const gdFn = $('gdFn'), gdOpt = $('gdOpt'), gdLr = $('gdLr'), gdLrVal = $('gdLrVal'), gdStart = $('gdStart'), gdSpeed = $('gdSpeed');
+  const gdPlay = $('gdPlay'), gdStepBtn = $('gdStep'), gdResetBtn = $('gdReset'), gdBadge = $('gdBadge'), gdInfo = $('gdInfo'), gdMsg = $('gdMsg');
+  const aiKey = $('aiKey'), aiModel = $('aiModel'), aiOn = $('aiOn'), aiTest = $('aiTest'), aiForget = $('aiForget'), askAi = $('askAi'), aiNote = $('aiNote');
+
+  const COLORS = ['--c1', '--c2', '--c3', '--c4', '--c5', '--c6'];
+  const EXAMPLES = ['x au carré moins quatre', 'sinus de x', 'racine carrée de x', 'un sur x', 'deux x plus trois',
+    'exponentielle de moins x au carré', 'x puissance trois moins trois x', 'valeur absolue de x'];
+  const ML_EXAMPLES = ['MAE contre MSE', 'entropie croisée', 'Huber', 'sigmoïde et ReLU', 'fonction non convexe',
+    'descente de gradient', 'descente de gradient sur MSE, taux d’apprentissage zéro virgule un',
+    'descente de gradient avec Adam sur la fonction non convexe'];
+  const HINT = 'Survolez ou touchez le graphique pour lire les valeurs et choisir le départ de la descente. Glissez pour déplacer, pincez ou utilisez la molette pour zoomer.';
+  const DEFAULT_LR = { sgd: 0.1, momentum: 0.05, adam: 0.3 };
+  const OPT_NAMES = { sgd: 'descente simple', momentum: 'momentum', adam: 'Adam' };
+  const SPEEDS = { slow: 260, normal: 110, fast: 30 };
+  const MAXSTEPS = 300;
+
+  let curves = [], uid = 0, W = 0, H = 0, dpr = 1, hoverX = null, lrVal = 0.1;
+  const view = { x0: -10, x1: 10, y0: -6, y1: 6 };
+  const gd = { curveId: null, st: null, path: [], losses: [], dxs: [], running: false, done: false, timer: null, clampRun: 0, osc: false };
+  const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const minus = (s) => s.replace('-', '−');
+  const plain = (h) => h.replace(/<sup>(.*?)<\/sup>/g, '^$1').replace(/<[^>]+>/g, '').replace(/&thinsp;|&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  const escHtml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  function fmtAxis(v, step) {
+    const d = Math.max(0, Math.min(8, -Math.floor(Math.log10(step) + 1e-9)));
+    const t = String(parseFloat((Math.abs(v) < step * 1e-6 ? 0 : v).toFixed(d)));
+    return minus(t.replace('.', ','));
+  }
+  function fmtVal(v) {
+    if (!isFinite(v)) return 'indéfini';
+    return minus(String(parseFloat(v.toPrecision(4))).replace('.', ',')).replace('e+', '×10^');
+  }
+  const fmtLr = (v) => String(parseFloat(v.toPrecision(2))).replace('.', ',');
+  function nice(range, target) {
+    const raw = range / Math.max(3, target), pow = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / pow;
+    const mant = m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10;
+    return { step: mant * pow, minor: (mant * pow) / (mant === 2 ? 4 : 5) };
+  }
+  function ticks(lo, hi, step) {
+    const a = Math.ceil(lo / step - 1e-9), b = Math.floor(hi / step + 1e-9), r = [];
+    if (b - a > 500) return r;
+    for (let k = a; k <= b; k++) r.push(k * step);
+    return r;
+  }
+  const X = (v) => ((v - view.x0) / (view.x1 - view.x0)) * W;
+  const Y = (v) => H - ((v - view.y0) / (view.y1 - view.y0)) * H;
+  const curveById = (id) => curves.find((c) => String(c.id) === String(id)) || null;
+  const gdCurve = () => curveById(gd.curveId);
+
+  /* ----- tracé principal ----- */
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1; W = r.width; H = r.height;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    draw();
+  }
+
+  function strokeFn(fn, color, width, dash) {
+    const xr = view.x1 - view.x0, N = Math.ceil(W * 1.5);
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.setLineDash(dash || []);
+    ctx.beginPath();
+    let down = false, prevPy = 0, prevY = 0;
+    for (let i = 0; i <= N; i++) {
+      const x = view.x0 + (xr * i) / N, y = fn(x);
+      if (!isFinite(y)) { down = false; continue; }
+      let py = Y(y);
+      if (Math.abs(py) > 1e7) { down = false; continue; }
+      const px = (i / N) * W;
+      if (down && Math.sign(prevY) !== Math.sign(y) && Math.abs(py - prevPy) > H * 0.25) down = false;
+      prevPy = py; prevY = y;
+      py = Math.max(-5 * H, Math.min(6 * H, py));
+      if (!down) { ctx.moveTo(px, py); down = true; } else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function drawDescent() {
+    const c = gdCurve();
+    if (!c || !gd.path.length) return;
+    const col = css('--pen'), cCard = css('--card');
+    const cy = (v) => Math.max(-3000, Math.min(H + 3000, Y(v)));
+    ctx.setLineDash([]); ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    gd.path.forEach((p, i) => { const px = X(p.x), py = cy(p.y); if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); });
+    ctx.stroke();
+    ctx.fillStyle = col;
+    gd.path.forEach((p, i) => {
+      if (i === gd.path.length - 1) return;
+      ctx.beginPath(); ctx.arc(X(p.x), cy(p.y), 2.6, 0, 6.2832); ctx.fill();
+    });
+    const last = gd.path[gd.path.length - 1];
+    ctx.strokeStyle = cCard; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(X(last.x), cy(last.y), 6.5, 0, 6.2832); ctx.fill(); ctx.stroke();
+  }
+
+  function draw() {
+    if (!W || !H) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cCard = css('--card'), cMinor = css('--grid-minor'), cMajor = css('--grid-major'), cInk = css('--ink'), cSoft = css('--ink-soft');
+    ctx.fillStyle = cCard; ctx.fillRect(0, 0, W, H);
+    const xr = view.x1 - view.x0, yr = view.y1 - view.y0;
+    const gx = nice(xr, W / 80), gy = nice(yr, H / 60);
+
+    ctx.lineWidth = 1;
+    const grid = (step, color, vertical) => {
+      ctx.strokeStyle = color; ctx.beginPath();
+      if (vertical) for (const v of ticks(view.x0, view.x1, step)) { const px = Math.round(X(v)) + 0.5; ctx.moveTo(px, 0); ctx.lineTo(px, H); }
+      else for (const v of ticks(view.y0, view.y1, step)) { const py = Math.round(Y(v)) + 0.5; ctx.moveTo(0, py); ctx.lineTo(W, py); }
+      ctx.stroke();
+    };
+    if ((gx.minor / xr) * W >= 7) grid(gx.minor, cMinor, true);
+    if ((gy.minor / yr) * H >= 7) grid(gy.minor, cMinor, false);
+    grid(gx.step, cMajor, true); grid(gy.step, cMajor, false);
+
+    ctx.strokeStyle = cInk; ctx.lineWidth = 1.6; ctx.beginPath();
+    if (view.y0 <= 0 && view.y1 >= 0) { ctx.moveTo(0, Y(0)); ctx.lineTo(W, Y(0)); }
+    if (view.x0 <= 0 && view.x1 >= 0) { ctx.moveTo(X(0), 0); ctx.lineTo(X(0), H); }
+    ctx.stroke();
+
+    ctx.font = '11px "IBM Plex Mono", ui-monospace, monospace';
+    const label = (t, x, y) => { ctx.lineWidth = 3; ctx.strokeStyle = cCard; ctx.strokeText(t, x, y); ctx.fillStyle = cSoft; ctx.fillText(t, x, y); };
+    const ay = Math.min(Math.max(Y(0), 0), H), ax = Math.min(Math.max(X(0), 0), W);
+    ctx.textAlign = 'center';
+    const ly = ay > H - 20 ? ay - 8 : ay + 15;
+    for (const v of ticks(view.x0, view.x1, gx.step)) {
+      if (Math.abs(v) < gx.step * 1e-6) continue;
+      const px = X(v); if (px < 14 || px > W - 14) continue;
+      label(fmtAxis(v, gx.step), px, ly);
+    }
+    const left = ax < 46;
+    ctx.textAlign = left ? 'left' : 'right';
+    const lx = left ? ax + 6 : ax - 6;
+    for (const v of ticks(view.y0, view.y1, gy.step)) {
+      if (Math.abs(v) < gy.step * 1e-6) continue;
+      const py = Y(v); if (py < 10 || py > H - 8) continue;
+      label(fmtAxis(v, gy.step), lx, py + 4);
+    }
+    if (view.x0 <= 0 && view.x1 >= 0 && view.y0 <= 0 && view.y1 >= 0) label('0', lx, ay + 15);
+
+    if (dToggle.checked) curves.forEach((c) => strokeFn(c.dfn, css(COLORS[c.ci]), 1.6, [7, 5]));
+    curves.forEach((c, idx) => strokeFn(c.f, css(COLORS[c.ci]), idx === curves.length - 1 ? 2.8 : 2.2));
+    drawDescent();
+
+    if (hoverX !== null) {
+      const px = X(hoverX);
+      ctx.strokeStyle = cSoft; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke(); ctx.setLineDash([]);
+      for (const c of curves) {
+        const y = c.f(hoverX);
+        if (!isFinite(y)) continue;
+        const py = Y(y); if (py < -10 || py > H + 10) continue;
+        ctx.fillStyle = css(COLORS[c.ci]); ctx.strokeStyle = cCard; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(px, py, 4.5, 0, 6.2832); ctx.fill(); ctx.stroke();
+      }
+    }
+  }
+
+  function updateReadout() {
+    if (hoverX === null) { readout.textContent = HINT; return; }
+    readout.innerHTML = '';
+    const xs = document.createElement('span');
+    xs.innerHTML = 'x = <b>' + fmtVal(hoverX) + '</b>';
+    readout.appendChild(xs);
+    for (const c of curves) {
+      const s = document.createElement('span');
+      let h = '<span class="sw" style="display:inline-block;vertical-align:-1px;background:var(' + COLORS[c.ci] + ')"></span> y = <b>' + fmtVal(c.f(hoverX)) + '</b>';
+      if (dToggle.checked) h += ' · y′ = <b>' + fmtVal(c.dfn(hoverX)) + '</b>';
+      s.innerHTML = h;
+      readout.appendChild(s);
+    }
+  }
+
+  /* ----- vue ----- */
+  function fitY() {
+    const ys = [];
+    for (const c of curves) for (let i = 0; i <= 400; i++) {
+      const y = c.f(view.x0 + ((view.x1 - view.x0) * i) / 400);
+      if (isFinite(y) && Math.abs(y) < 1e9) ys.push(y);
+    }
+    if (!ys.length) { view.y0 = -6; view.y1 = 6; return; }
+    ys.sort((a, b) => a - b);
+    let lo = ys[Math.floor(ys.length * 0.04)], hi = ys[Math.max(0, Math.ceil(ys.length * 0.96) - 1)];
+    if (hi - lo < 1e-9) { lo -= 1; hi += 1; }
+    if (lo > 0 && lo < (hi - lo) * 1.5) lo = 0;
+    else if (hi < 0 && -hi < (hi - lo) * 1.5) hi = 0;
+    const pad = (hi - lo) * 0.12;
+    view.y0 = lo - pad; view.y1 = hi + pad;
+  }
+  function unionInto(v, o) { v.x0 = Math.min(v.x0, o.x0); v.x1 = Math.max(v.x1, o.x1); v.y0 = Math.min(v.y0, o.y0); v.y1 = Math.max(v.y1, o.y1); }
+  function recenter() {
+    const ids = [...new Set(curves.filter((c) => c.concept).map((c) => c.concept))];
+    if (ids.length) {
+      const v = Object.assign({}, E.CONCEPTS[ids[0]].view);
+      ids.slice(1).forEach((id) => unionInto(v, E.CONCEPTS[id].view));
+      Object.assign(view, v);
+    } else { view.x0 = -10; view.x1 = 10; fitY(); }
+    draw();
+  }
+  function zoomAt(px, py, f) {
+    const xr = view.x1 - view.x0, yr = view.y1 - view.y0;
+    const xv = view.x0 + (px / W) * xr, yv = view.y0 + ((H - py) / H) * yr;
+    view.x0 = xv - (xv - view.x0) * f; view.x1 = xv + (view.x1 - xv) * f;
+    view.y0 = yv - (yv - view.y0) * f; view.y1 = yv + (view.y1 - yv) * f;
+  }
+
+  function setStatus(msg, kind) { statusEl.textContent = msg; statusEl.className = 'status' + (kind ? ' ' + kind : ''); }
+
+  /* ----- courbes et concepts ----- */
+  function addCurve(o) {
+    const used = curves.map((c) => c.ci);
+    let ci = COLORS.findIndex((_, i) => !used.includes(i));
+    if (ci < 0) ci = curves.length % COLORS.length;
+    const c = Object.assign({ id: ++uid, ci, prefix: 'y = ' }, o);
+    c.text = plain(c.prefix + c.html);
+    c.dfn = c.df || E.numDeriv(c.f);
+    curves.push(c);
+    if (curves.length > COLORS.length) curves.shift();
+    return c;
+  }
+
+  function addConcept(id) {
+    const def = E.CONCEPTS[id];
+    const existing = curves.filter((c) => c.concept === id);
+    if (existing.length) return existing;
+    const hadConcept = curves.some((c) => c.concept);
+    const added = def.curves.map((k) => addCurve({ f: k.f, df: k.df, html: k.html, prefix: '', concept: id, clamp: def.clamp, start: def.start }));
+    if (hadConcept) unionInto(view, def.view); else Object.assign(view, def.view);
+    eqShow.innerHTML = def.label + '&thinsp;:&nbsp;' + def.formula;
+    return added;
+  }
+
+  function renderConcepts() {
+    conceptsEl.innerHTML = '';
+    const ids = [...new Set(curves.filter((c) => c.concept).map((c) => c.concept))];
+    $('conceptsCard').hidden = !ids.length;
+    for (const id of ids) {
+      const d = E.CONCEPTS[id], box = document.createElement('div');
+      box.className = 'concept';
+      box.innerHTML = '<h4>' + d.title + '</h4><p class="formula">' + d.formula + '</p><p class="note">' + d.note + '</p><p class="xm">' + d.xmeaning + '</p>';
+      conceptsEl.appendChild(box);
+    }
+  }
+
+  function renderCurves() {
+    curvesEl.innerHTML = '';
+    if (!curves.length) {
+      const li = document.createElement('li'); li.className = 'empty';
+      li.textContent = 'Aucune courbe. Dites ou écrivez une équation, ou un concept comme MAE.';
+      curvesEl.appendChild(li);
+    }
+    for (const c of curves) {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="sw" style="background:var(' + COLORS[c.ci] + ')"></span><span class="eqtxt">' + c.prefix + c.html + '</span>';
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'x'; b.textContent = '×'; b.setAttribute('aria-label', 'Retirer la courbe ' + c.text);
+      b.addEventListener('click', () => {
+        curves = curves.filter((k) => k.id !== c.id);
+        if (curves.some((k) => k.concept)) recenter(); else fitY();
+        renderCurves(); updateReadout(); draw();
+      });
+      li.appendChild(b); curvesEl.appendChild(li);
+    }
+    const keep = gd.curveId;
+    gdFn.innerHTML = '';
+    for (const c of curves) {
+      const o = document.createElement('option'); o.value = String(c.id); o.textContent = c.text; gdFn.appendChild(o);
+    }
+    if (curves.some((c) => c.id === keep)) gdFn.value = String(keep);
+    else if (curves.length) gdFn.value = String(curves[curves.length - 1].id);
+    if (!curves.some((c) => c.id === gd.curveId)) gdReset();
+    renderConcepts();
+  }
+
+  /* ----- descente de gradient ----- */
+  function setBadge(text, kind) { gdBadge.textContent = text; gdBadge.className = 'badge' + (kind ? ' ' + kind : ''); }
+  function setGdMsg(text) { gdMsg.textContent = text; }
+  function syncLrUi() {
+    gdLr.value = String(Math.max(-3, Math.min(0.5, Math.log10(lrVal))).toFixed(2));
+    gdLrVal.textContent = fmtLr(lrVal);
+    if (gd.st) gd.st.lr = lrVal;
+  }
+  function defaultStart(c) {
+    if (c.start !== undefined) return c.start;
+    return Math.round((view.x0 + 0.85 * (view.x1 - view.x0)) * 2) / 2;
+  }
+  function updateGdUi() {
+    const has = !!curves.length;
+    for (const el of [gdPlay, gdStepBtn, gdResetBtn, gdFn, gdStart]) el.disabled = !has;
+    const done = gd.done, started = gd.st && gd.st.k > 0;
+    gdPlay.textContent = gd.running ? 'Pause' : (started && !done ? 'Reprendre' : 'Lancer');
+    if (!gd.st) { gdInfo.textContent = 'Tracez une courbe pour lancer la descente.'; return; }
+    const c = gdCurve(), x = gd.st.x;
+    gdInfo.textContent = 'pas ' + gd.st.k + ' · x = ' + fmtVal(x) + ' · f(x) = ' + fmtVal(c.f(x)) + ' · f′(x) = ' + fmtVal(c.dfn(x));
+  }
+
+  function pause() {
+    gd.running = false; clearTimeout(gd.timer);
+    if (!gd.done && gd.st && gd.st.k > 0) setBadge('En pause');
+    updateGdUi();
+  }
+
+  function gdReset(opts) {
+    opts = opts || {};
+    gd.running = false; clearTimeout(gd.timer);
+    const c = curveById(gdFn.value) || curves[curves.length - 1] || null;
+    gd.done = false; gd.clampRun = 0; gd.osc = false; gd.dxs = [];
+    if (!c) {
+      gd.curveId = null; gd.st = null; gd.path = []; gd.losses = [];
+      setBadge('Aucune courbe'); setGdMsg(''); updateGdUi(); draw(); drawLoss(); return;
+    }
+    gd.curveId = c.id;
+    let x0 = opts.start !== undefined ? opts.start : (opts.keepStart ? parseFloat(gdStart.value) : defaultStart(c));
+    if (!isFinite(x0)) x0 = defaultStart(c);
+    if (c.clamp) x0 = Math.min(c.clamp[1], Math.max(c.clamp[0], x0));
+    gdStart.value = String(parseFloat(x0.toFixed(3)));
+    gd.st = E.makeDescent(c.f, c.dfn, x0, lrVal, gdOpt.value, c.clamp);
+    gd.path = [{ x: x0, y: c.f(x0) }]; gd.losses = [c.f(x0)];
+    setBadge('Prête'); setGdMsg('Réglez le taux d’apprentissage, puis lancez la descente.');
+    updateGdUi(); draw(); drawLoss();
+  }
+
+  function localMinNote(c, xEnd, yEnd) {
+    let lo = Infinity, hi = -Infinity;
+    for (let i = 0; i <= 600; i++) {
+      const y = c.f(view.x0 + ((view.x1 - view.x0) * i) / 600);
+      if (isFinite(y) && Math.abs(y) < 1e9) { lo = Math.min(lo, y); hi = Math.max(hi, y); }
+    }
+    if (isFinite(lo) && yEnd > lo + 0.05 * (hi - lo)) return ' C’est un minimum local : un autre point de départ donne une valeur plus basse (environ ' + fmtVal(lo) + ').';
+    return '';
+  }
+
+  function finish(kind) {
+    gd.done = true; gd.running = false; clearTimeout(gd.timer);
+    const c = gdCurve(), x = gd.st.x, y = c.f(x), k = gd.st.k;
+    if (kind === 'conv') {
+      setBadge('Converge', 'ok');
+      setGdMsg('Converge vers x ≈ ' + fmtVal(x) + ' en ' + k + ' pas, avec f(x) ≈ ' + fmtVal(y) + '.' + localMinNote(c, x, y));
+    } else if (kind === 'div') {
+      setBadge('Diverge', 'error');
+      setGdMsg('Diverge : le taux d’apprentissage est trop grand pour cette courbe. Essayez une valeur plus petite.');
+    } else if (kind === 'edge') {
+      setBadge('Bord atteint', 'warn');
+      setGdMsg('Le point a atteint le bord du domaine, vers lequel la valeur continue de baisser.');
+    } else {
+      setBadge(gd.osc ? 'Oscille' : 'Limite de pas', 'warn');
+      setGdMsg(MAXSTEPS + ' pas sans convergence.' + (gd.osc ? ' Le point oscille de part et d’autre du minimum : réduisez le taux d’apprentissage.' : ' Augmentez le taux d’apprentissage ou changez de méthode.'));
+    }
+    updateGdUi();
+  }
+
+  function gdStepOnce() {
+    if (!gd.st || gd.done) return false;
+    const c = gdCurve(); if (!c) return false;
+    const r = gd.st.step();
+    gd.path.push({ x: r.x, y: r.y }); gd.losses.push(r.y);
+    gd.dxs.push(r.dx); if (gd.dxs.length > 6) gd.dxs.shift();
+    const gNow = c.dfn(r.x);
+    if (!isFinite(r.y) || !isFinite(r.x) || Math.abs(r.x) > 1e6 || Math.abs(r.y) > 1e9) finish('div');
+    else if (Math.abs(gNow) < 1e-3 && Math.abs(r.dx) < 1e-3) finish('conv');
+    else {
+      gd.clampRun = r.clamped ? gd.clampRun + 1 : 0;
+      if (gd.clampRun >= 3) finish('edge');
+      else if (gd.st.k >= MAXSTEPS) finish('max');
+      else {
+        const d = gd.dxs;
+        gd.osc = d.length === 6 && d.every((v, i) => i === 0 || (v * d[i - 1] < 0)) && Math.abs(d[5]) > 1e-3 && Math.abs(d[5]) > 0.5 * Math.abs(d[0]);
+        if (gd.running) { setBadge(gd.osc ? 'Oscille' : 'En cours', gd.osc ? 'warn' : 'run'); setGdMsg(gd.osc ? 'Le point saute de part et d’autre du minimum : réduisez le taux d’apprentissage.' : ''); }
+      }
+    }
+    updateGdUi(); draw(); drawLoss();
+    return !gd.done;
+  }
+
+  function tick() {
+    if (!gd.running) return;
+    if (gdStepOnce()) gd.timer = setTimeout(tick, SPEEDS[gdSpeed.value] || 110);
+    else { gd.running = false; updateGdUi(); }
+  }
+  function play() {
+    if (!curves.length) return;
+    if (!gd.st || gd.done) gdReset({ keepStart: true });
+    gd.running = true; setBadge('En cours', 'run'); setGdMsg(''); updateGdUi(); tick();
+  }
+
+  /* graphique secondaire : valeur de f à chaque pas */
+  function drawLoss() {
+    const r = lossCv.getBoundingClientRect();
+    if (!r.width) return;
+    const w = r.width, h = r.height, d = window.devicePixelRatio || 1;
+    if (lossCv.width !== Math.round(w * d) || lossCv.height !== Math.round(h * d)) { lossCv.width = Math.round(w * d); lossCv.height = Math.round(h * d); }
+    lctx.setTransform(d, 0, 0, d, 0, 0);
+    const cCard = css('--card'), cMajor = css('--grid-major'), cSoft = css('--ink-soft'), col = css('--pen');
+    lctx.fillStyle = cCard; lctx.fillRect(0, 0, w, h);
+    lctx.font = '11px "IBM Plex Mono", ui-monospace, monospace';
+    const L = 44, R = 12, T = 14, B = 22, pw = w - L - R, ph = h - T - B;
+    lctx.strokeStyle = cMajor; lctx.lineWidth = 1;
+    lctx.beginPath(); lctx.moveTo(L + 0.5, T); lctx.lineTo(L + 0.5, T + ph + 0.5); lctx.lineTo(L + pw, T + ph + 0.5); lctx.stroke();
+    lctx.fillStyle = cSoft; lctx.textAlign = 'left';
+    lctx.fillText('f(x) selon le pas', L + 8, T + 2);
+    const ys = gd.losses.filter((v) => isFinite(v) && Math.abs(v) < 1e12);
+    if (!ys.length) return;
+    let lo = Math.min(...ys), hi = Math.max(...ys);
+    if (hi - lo < 1e-12) { hi = lo + 1; }
+    const nmax = Math.max(10, gd.losses.length - 1);
+    const px = (i) => L + (i / nmax) * pw, py = (v) => T + ph - ((v - lo) / (hi - lo)) * ph;
+    lctx.textAlign = 'right';
+    lctx.fillText(fmtVal(hi), L - 5, T + 9);
+    lctx.fillText(fmtVal(lo), L - 5, T + ph);
+    lctx.textAlign = 'center';
+    lctx.fillText('0', L, h - 6); lctx.fillText(String(nmax), L + pw, h - 6);
+    lctx.strokeStyle = col; lctx.lineWidth = 2; lctx.lineJoin = 'round'; lctx.beginPath();
+    let on = false;
+    gd.losses.forEach((v, i) => {
+      if (!isFinite(v) || Math.abs(v) >= 1e12) { on = false; return; }
+      if (!on) { lctx.moveTo(px(i), py(v)); on = true; } else lctx.lineTo(px(i), py(v));
+    });
+    lctx.stroke();
+    const lastI = gd.losses.length - 1, lv = gd.losses[lastI];
+    if (isFinite(lv) && Math.abs(lv) < 1e12) { lctx.fillStyle = col; lctx.beginPath(); lctx.arc(px(lastI), py(lv), 3.5, 0, 6.2832); lctx.fill(); }
+  }
+
+  /* ----- exécution des commandes dictées ----- */
+  function runActions(acts) {
+    const parts = [], names = [], skipped = [];
+    let addedEq = false, target = null, gdReq = false, resetReq = false, optChanged = false, startVal = null, cleared = false;
+    for (const a of acts) {
+      if (a.type === 'clear') { curves = []; eqShow.innerHTML = ''; cleared = true; gdReset(); }
+      else if (a.type === 'concept') { const cs = addConcept(a.id); if (!target) target = cs[0]; names.push(E.CONCEPTS[a.id].label); }
+      else if (a.type === 'equation' || a.type === 'curve') {
+        try {
+          const res = E.parseExpression(a.expr);
+          const named = a.type === 'curve';
+          const c = addCurve({ f: res.f, expr: res.normalized, prefix: named ? '' : 'y = ', html: named ? escHtml(a.label) + ' : ' + res.html : res.html });
+          if (!target) target = c;
+          addedEq = true;
+          names.push(named ? a.label : 'y = ' + plain(res.html));
+          eqShow.innerHTML = named ? escHtml(a.label) + '&thinsp;:&nbsp;' + res.html : 'y&thinsp;=&nbsp;' + res.html;
+        } catch (err) { if (!err.friendly) throw err; skipped.push(a.expr); }
+      }
+      else if (a.type === 'deriv') { dToggle.checked = a.value; parts.push(a.value ? 'Dérivée affichée' : 'Dérivée masquée'); }
+      else if (a.type === 'opt') { gdOpt.value = a.value; lrVal = DEFAULT_LR[a.value]; syncLrUi(); optChanged = true; parts.push('Méthode : ' + OPT_NAMES[a.value]); }
+      else if (a.type === 'lr') { lrVal = Math.max(0.001, a.value); syncLrUi(); parts.push('Taux d’apprentissage : ' + fmtLr(lrVal)); }
+      else if (a.type === 'start') startVal = a.value;
+      else if (a.type === 'reset') resetReq = true;
+      else if (a.type === 'stop') { pause(); parts.push('Descente en pause'); }
+      else if (a.type === 'gd') gdReq = true;
+    }
+    if (gdReq && !curves.length) { target = addConcept('mse')[0]; names.push('MSE'); }
+    if (addedEq && !curves.some((c) => c.concept)) fitY();
+    renderCurves(); updateReadout();
+    if (!target && gdReq) target = gdCurve() || curves[curves.length - 1];
+    if (target) gdFn.value = String(target.id);
+    if (gdReq) {
+      gdReset(startVal !== null ? { start: startVal } : { keepStart: false });
+      play(); parts.push('Descente lancée');
+    } else if (target || optChanged || resetReq || startVal !== null) {
+      gdReset(startVal !== null ? { start: startVal } : (target ? {} : { keepStart: true }));
+    }
+    const msg = [];
+    if (cleared) msg.push('Tout est effacé');
+    if (names.length) msg.push('Courbe tracée : ' + names.join(', '));
+    if (skipped.length) parts.push('Expression ignorée : ' + skipped.join(', '));
+    const all = msg.concat(parts);
+    setStatus((all.length ? all.join(' · ') : 'C’est fait') + '.', 'ok');
+    recenterIfNeeded();
+    draw();
+  }
+  function recenterIfNeeded() { /* la vue est déjà réglée par addConcept */ }
+
+  function plotResult(res) {
+    const c = addCurve({ f: res.f, html: res.html, expr: res.normalized });
+    fitY(); renderCurves();
+    eqShow.innerHTML = 'y&thinsp;=&nbsp;' + res.html;
+    gdFn.value = String(c.id); gdReset();
+    updateReadout(); draw();
+  }
+
+  function tryPlot(raw) {
+    const acts = E.interpret(raw);
+    if (acts && acts.unknown.length && aiReady()) { askLLM([raw], { fallback: acts }); return true; }
+    if (acts) { runActions(acts); return true; }
+    try {
+      plotResult(E.parseExpression(raw));
+      setStatus('Courbe tracée.', 'ok');
+      return true;
+    } catch (err) {
+      if (!err.friendly) throw err;
+      if (aiReady()) { askLLM([raw]); return true; }
+      setStatus('Je n’ai pas pu tracer « ' + raw + ' ». ' + err.message + aiHint(), 'error');
+      return false;
+    }
+  }
+
+  /* ----- assistant IA ----- */
+  const PROVIDERS = {
+    groq: { name: 'Groq', keyLabel: 'Clé API Groq', placeholder: 'gsk_…', model: 'openai/gpt-oss-120b' },
+    gemini: { name: 'Google', keyLabel: 'Clé API Gemini', placeholder: 'AIza…', model: 'gemma-4-31b-it' }
+  };
+  const aiProvider = $('aiProvider'), aiKeyLabel = $('aiKeyLabel');
+  const ai = { provider: 'groq', keys: { groq: '', gemini: '' }, models: { groq: PROVIDERS.groq.model, gemini: PROVIDERS.gemini.model }, on: true, busy: false };
+  try {
+    const saved = JSON.parse(localStorage.getItem('cav.ai') || '{}') || {};
+    if (typeof saved.provider === 'string' && PROVIDERS[saved.provider]) ai.provider = saved.provider;
+    if (typeof saved.on === 'boolean') ai.on = saved.on;
+    if (saved.keys && typeof saved.keys === 'object') {
+      for (const k of Object.keys(PROVIDERS)) {
+        if (typeof saved.keys[k] === 'string') ai.keys[k] = saved.keys[k];
+        if (saved.models && typeof saved.models[k] === 'string' && saved.models[k]) ai.models[k] = saved.models[k];
+      }
+    } else if (typeof saved.key === 'string') {
+      ai.keys.gemini = saved.key;
+      if (typeof saved.model === 'string' && saved.model) ai.models.gemini = saved.model;
+    }
+  } catch (e) { /* stockage indisponible : les réglages ne seront pas gardés */ }
+  const saveAi = () => { try { localStorage.setItem('cav.ai', JSON.stringify({ provider: ai.provider, keys: ai.keys, models: ai.models, on: ai.on })); } catch (e) { /* ignoré */ } };
+  const aiReady = () => ai.on && ai.keys[ai.provider].length > 0;
+  const aiHint = () => (ai.keys[ai.provider] ? '' : ' Pour les phrases libres, ajoutez une clé dans « Assistant IA ».');
+  function syncAiUi() {
+    const p = PROVIDERS[ai.provider];
+    aiProvider.value = ai.provider; aiKeyLabel.textContent = p.keyLabel; aiKey.placeholder = p.placeholder;
+    aiKey.value = ai.keys[ai.provider]; aiModel.value = ai.models[ai.provider]; aiOn.checked = ai.on;
+    askAi.hidden = !ai.keys[ai.provider];
+  }
+  function readAiFields() {
+    ai.keys[ai.provider] = aiKey.value.trim();
+    ai.models[ai.provider] = aiModel.value.trim() || PROVIDERS[ai.provider].model;
+    ai.on = aiOn.checked; aiModel.value = ai.models[ai.provider]; askAi.hidden = !ai.keys[ai.provider]; saveAi();
+  }
+
+  function aiStatusText(s) {
+    const n = PROVIDERS[ai.provider].name;
+    if (s === 400 || s === 401 || s === 403) return n + ' a refusé la requête (' + s + ') : vérifiez la clé API et le nom du modèle.';
+    if (s === 404) return 'Modèle introuvable : vérifiez son nom dans les réglages de l’assistant IA.';
+    if (s === 413) return 'La demande est trop grande pour ce modèle.';
+    if (s === 429) return 'Trop de requêtes ou quota atteint chez ' + n + ' : patientez un moment.';
+    return 'Le service ' + n + ' est indisponible (' + s + '). Réessayez plus tard.';
+  }
+  function aiErrorMessage(err) {
+    if (err && err.status) return aiStatusText(err.status) + (err.detail ? ' Détail de ' + PROVIDERS[ai.provider].name + ' : ' + err.detail : '');
+    if (err && err.name === 'AbortError') return 'L’IA n’a pas répondu à temps. Réessayez.';
+    return 'Impossible de joindre ' + PROVIDERS[ai.provider].name + '. Ouvrez le fichier téléchargé ou hébergez la page : la page publiée dans Claude bloque les appels externes.';
+  }
+
+  /* [url, en-têtes, corps] selon le fournisseur ; « full » ajoute les réglages facultatifs */
+  function buildRequest(prompt, full) {
+    const key = ai.keys[ai.provider], model = ai.models[ai.provider].replace(/^models\//, '');
+    if (!/^[A-Za-z0-9._\/-]+$/.test(model)) throw Object.assign(new Error('modèle'), { status: 404 });
+    if (ai.provider === 'groq') {
+      const body = { model, messages: [{ role: 'user', content: prompt }] };
+      if (full) { body.temperature = 0.2; body.max_completion_tokens = 2048; if (/gpt-oss/.test(model)) body.reasoning_effort = 'low'; }
+      return ['https://api.groq.com/openai/v1/chat/completions', { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key }, body];
+    }
+    const body = { contents: [{ role: 'user', parts: [{ text: prompt }] }] };
+    if (full) body.generationConfig = { temperature: 0.2 };
+    return ['https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body];
+  }
+  function replyText(data) {
+    if (ai.provider === 'groq') {
+      const m = (((data || {}).choices || [])[0] || {}).message || {};
+      return typeof m.content === 'string' ? m.content : '';
+    }
+    const parts = ((((data || {}).candidates || [])[0] || {}).content || {}).parts || [];
+    return parts.filter((p) => p && !p.thought && typeof p.text === 'string').map((p) => p.text).join('');
+  }
+
+  async function askLLM(texts, opts) {
+    if (ai.busy) return;
+    ai.busy = true; askAi.disabled = true; aiTest.disabled = true;
+    setStatus('Je demande à l’assistant IA…'); aiNote.textContent = '';
+    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 45000);
+    try {
+      const state = { curves: curves.map((c) => c.text), opt: gdOpt.value, lr: lrVal };
+      const prompt = E.llmPrompt(texts, state);
+      const send = (full) => { const [url, headers, body] = buildRequest(prompt, full); return fetch(url, { method: 'POST', headers, body: JSON.stringify(body), signal: ctl.signal }); };
+      let resp = await send(true);
+      if (resp.status >= 500) {
+        setStatus(PROVIDERS[ai.provider].name + ' a répondu par une erreur ' + resp.status + '. Nouvel essai…');
+        await new Promise((r) => setTimeout(r, 1500));
+        resp = await send(false);
+      }
+      if (!resp.ok) {
+        let detail = '';
+        try { const j = await resp.json(); detail = (j && j.error && j.error.message) || ''; } catch (e) { /* corps illisible */ }
+        throw Object.assign(new Error('http'), { status: resp.status, detail: String(detail).slice(0, 240) });
+      }
+      const out = E.parseLLM(replyText(await resp.json()));
+      if (!out) { setStatus('La réponse de l’IA est illisible. Reformulez ou écrivez l’équation.', 'error'); return; }
+      const fb = ((opts && opts.fallback) || []).filter((x) => ['concept', 'deriv', 'opt', 'lr', 'start'].includes(x.type));
+      if (out.actions.length) runActions(out.actions);
+      else if (fb.length) runActions(fb);
+      else if (opts && opts.test) setStatus('Connexion réussie : l’assistant répond.', 'ok');
+      else setStatus(out.explain ? 'Pas de courbe pour cette demande : lisez l’explication ci-dessous.' : 'Rien à tracer pour cette demande.', 'warn');
+      aiNote.textContent = out.explain ? 'Assistant IA : ' + out.explain : '';
+    } catch (err) { setStatus(aiErrorMessage(err), 'error'); }
+    finally { clearTimeout(to); ai.busy = false; askAi.disabled = false; aiTest.disabled = false; }
+  }
+
+  aiKey.addEventListener('change', readAiFields);
+  aiModel.addEventListener('change', readAiFields);
+  aiOn.addEventListener('change', readAiFields);
+  aiProvider.addEventListener('change', () => { ai.provider = aiProvider.value; saveAi(); syncAiUi(); });
+  aiForget.addEventListener('click', () => { aiKey.value = ''; readAiFields(); setStatus('Clé oubliée.', 'ok'); });
+  aiTest.addEventListener('click', () => {
+    readAiFields();
+    if (!ai.keys[ai.provider]) { setStatus('Collez d’abord une clé API ' + PROVIDERS[ai.provider].name + '.', 'warn'); return; }
+    askLLM(['test de connexion : réponds avec une liste d’actions vide et une explication qui dit bonjour'], { test: true });
+  });
+  askAi.addEventListener('click', () => {
+    const raw = input.value.trim();
+    if (!raw) { setStatus('Écrivez d’abord une phrase dans le champ.', 'warn'); return; }
+    readAiFields(); heardEl.textContent = ''; askLLM([raw], { fallback: E.interpret(raw) || [] });
+  });
+  syncAiUi();
+
+  /* ----- voix ----- */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec = null, listening = false;
+  function paintMic() { mic.classList.toggle('on', listening); mic.setAttribute('aria-pressed', String(listening)); mic.setAttribute('aria-label', listening ? 'Arrêter l’écoute' : 'Parler'); }
+
+  function handleVoice(alts) {
+    for (const a of alts) {
+      const acts = E.interpret(a);
+      if (acts) {
+        heardEl.textContent = 'Entendu : « ' + a + ' »';
+        if (acts.unknown.length && aiReady()) { askLLM(alts, { fallback: acts }); return; }
+        runActions(acts); return;
+      }
+      try {
+        const res = E.parseExpression(a);
+        heardEl.textContent = 'Entendu : « ' + a + ' »';
+        plotResult(res); setStatus('Courbe tracée.', 'ok'); return;
+      } catch (err) { if (!err.friendly) throw err; }
+    }
+    heardEl.textContent = 'Entendu : « ' + alts[0] + ' »';
+    if (aiReady()) { askLLM(alts); return; }
+    try { E.parseExpression(alts[0]); } catch (err) { setStatus('Je n’ai pas compris. ' + (err.friendly ? err.message : '') + aiHint(), 'error'); }
+  }
+
+  function startListening() {
+    if (listening && rec) { rec.stop(); return; }
+    if (!SR) { setStatus('La dictée vocale n’existe pas dans ce navigateur. Utilisez Chrome, Edge ou Safari, ou écrivez l’équation.', 'warn'); return; }
+    rec = new SR();
+    rec.lang = 'fr-FR'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 3;
+    rec.onstart = () => { listening = true; paintMic(); setStatus('Je vous écoute. Dites l’équation ou le concept.'); heardEl.textContent = ''; };
+    rec.onresult = (e) => {
+      const r = e.results[e.results.length - 1];
+      if (r.isFinal) handleVoice([...r].map((a) => a.transcript));
+      else heardEl.textContent = 'Entendu : « ' + r[0].transcript + ' »';
+    };
+    rec.onerror = (e) => {
+      const m = {
+        'not-allowed': 'Le micro est bloqué ici. Ouvrez la page directement dans Chrome ou Safari et autorisez le micro, ou écrivez l’équation.',
+        'service-not-allowed': 'Le micro est bloqué ici. Ouvrez la page directement dans Chrome ou Safari et autorisez le micro, ou écrivez l’équation.',
+        'no-speech': 'Je n’ai rien entendu. Touchez le micro et réessayez.',
+        'audio-capture': 'Aucun micro détecté.',
+        'network': 'La dictée a besoin d’une connexion internet.'
+      };
+      if (e.error !== 'aborted') setStatus(m[e.error] || 'La dictée a échoué (' + e.error + ').', 'warn');
+    };
+    rec.onend = () => { listening = false; paintMic(); };
+    try { rec.start(); } catch (err) { setStatus('Impossible de démarrer le micro. Écrivez l’équation ci-dessous.', 'warn'); }
+  }
+  mic.addEventListener('click', startListening);
+
+  /* ----- saisie écrite et exemples ----- */
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const raw = input.value.trim();
+    if (!raw) { setStatus('Écrivez une équation, par exemple x^2 - 4, ou un concept comme MAE.', 'warn'); return; }
+    heardEl.textContent = '';
+    tryPlot(raw);
+  });
+  const addChips = (list, host) => {
+    for (const phrase of list) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.textContent = phrase;
+      b.addEventListener('click', () => { heardEl.textContent = 'Dit : « ' + phrase + ' »'; tryPlot(phrase); });
+      host.appendChild(b);
+    }
+  };
+  addChips(EXAMPLES, chipsEl);
+  addChips(ML_EXAMPLES, chipsMl);
+
+  /* ----- commandes de la descente ----- */
+  gdPlay.addEventListener('click', () => { if (gd.running) pause(); else play(); });
+  gdStepBtn.addEventListener('click', () => {
+    pause();
+    if (!gd.st || gd.done) gdReset({ keepStart: true });
+    gdStepOnce();
+    if (!gd.done) setBadge('En pause');
+    updateGdUi();
+  });
+  gdResetBtn.addEventListener('click', () => gdReset({ keepStart: true }));
+  gdFn.addEventListener('change', () => gdReset());
+  gdOpt.addEventListener('change', () => { lrVal = DEFAULT_LR[gdOpt.value]; syncLrUi(); gdReset({ keepStart: true }); });
+  gdLr.addEventListener('input', () => { lrVal = Math.pow(10, parseFloat(gdLr.value)); gdLrVal.textContent = fmtLr(lrVal); if (gd.st) gd.st.lr = lrVal; });
+  gdStart.addEventListener('change', () => gdReset({ keepStart: true }));
+  dToggle.addEventListener('change', () => { updateReadout(); draw(); });
+  $('clearAll').addEventListener('click', () => { curves = []; eqShow.innerHTML = ''; renderCurves(); updateReadout(); draw(); setStatus('Tout est effacé.', 'ok'); });
+
+  /* ----- navigation dans le graphique ----- */
+  const pts = new Map();
+  let moved = 0;
+  function setHover(px) { hoverX = view.x0 + (px / W) * (view.x1 - view.x0); updateReadout(); }
+  canvas.addEventListener('pointerdown', (e) => {
+    canvas.setPointerCapture(e.pointerId);
+    pts.set(e.pointerId, { x: e.offsetX, y: e.offsetY }); moved = 0;
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    const p = pts.get(e.pointerId);
+    if (!p) { if (e.pointerType === 'mouse') { setHover(e.offsetX); draw(); } return; }
+    const nx = e.offsetX, ny = e.offsetY;
+    if (pts.size === 1) {
+      const xr = view.x1 - view.x0, yr = view.y1 - view.y0, dx = nx - p.x, dy = ny - p.y;
+      moved += Math.abs(dx) + Math.abs(dy);
+      view.x0 -= (dx * xr) / W; view.x1 -= (dx * xr) / W;
+      view.y0 += (dy * yr) / H; view.y1 += (dy * yr) / H;
+    } else if (pts.size === 2) {
+      const o = [...pts.entries()].find(([id]) => id !== e.pointerId)[1];
+      const d0 = Math.hypot(p.x - o.x, p.y - o.y), d1 = Math.hypot(nx - o.x, ny - o.y);
+      if (d0 > 0 && d1 > 0) zoomAt((nx + o.x) / 2, (ny + o.y) / 2, d0 / d1);
+      moved += 10;
+    }
+    p.x = nx; p.y = ny;
+    if (e.pointerType === 'mouse') setHover(nx);
+    draw();
+  });
+  const release = (e) => {
+    if (pts.size === 1 && moved < 6 && e.type === 'pointerup') {
+      setHover(e.offsetX);
+      if (gd.st && !gd.running) gdReset({ start: hoverX });
+      draw();
+    }
+    pts.delete(e.pointerId);
+  };
+  canvas.addEventListener('pointerup', release);
+  canvas.addEventListener('pointercancel', release);
+  canvas.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' && !pts.size) { hoverX = null; updateReadout(); draw(); } });
+  canvas.addEventListener('wheel', (e) => { e.preventDefault(); zoomAt(e.offsetX, e.offsetY, Math.exp(e.deltaY * 0.0012)); draw(); }, { passive: false });
+  $('zin').addEventListener('click', () => { zoomAt(W / 2, H / 2, 0.8); draw(); });
+  $('zout').addEventListener('click', () => { zoomAt(W / 2, H / 2, 1.25); draw(); });
+  $('reset').addEventListener('click', recenter);
+
+  /* ----- démarrage : un exemple déjà tracé ----- */
+  const redraw = () => { draw(); drawLoss(); };
+  new ResizeObserver(resize).observe(canvas);
+  new ResizeObserver(drawLoss).observe(lossCv);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
+  new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  updateReadout();
+  syncLrUi();
+  const first = E.parseExpression('x au carré moins quatre');
+  const c0 = addCurve({ f: first.f, html: first.html, expr: first.normalized });
+  fitY(); renderCurves();
+  eqShow.innerHTML = 'y&thinsp;=&nbsp;' + first.html;
+  gdFn.value = String(c0.id); gdReset();
+  heardEl.textContent = 'Exemple : « x au carré moins quatre »';
+  setStatus('Touchez le micro et dites votre équation ou un concept.');
+  resize();
+})();
+</script>
+</body></html>
