@@ -258,18 +258,78 @@ dialog h2 { font-family: var(--font-display); font-style: italic; font-size: 1.4
 .keys dd { margin: 0; }
 kbd { font: 500 0.85rem var(--font-mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0.05rem 0.4rem; background: var(--paper); }
 
+/* ----- vues principales ----- */
+.maintabs { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.mtab {
+  font: 600 1rem var(--font-body); color: var(--ink-soft); background: var(--card); cursor: pointer;
+  border: 1px solid var(--line); border-radius: 8px; padding: 0.45rem 1rem; display: inline-flex; align-items: center; gap: 0.55rem;
+}
+.mtab:hover { border-color: var(--ink-soft); }
+.mtab[aria-selected="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.mtab kbd { background: transparent; color: inherit; border-color: currentColor; opacity: 0.6; font-size: 0.75rem; }
+.mtab .count { font: 500 0.78rem var(--font-mono); color: var(--pen); }
+.mtab[aria-selected="true"] .count { color: inherit; }
+.view { display: grid; gap: 0.75rem; grid-template-columns: minmax(0, 1fr); }
+.course { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 2.6rem; }
+.course .dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; background: var(--ink-soft); flex: none; }
+.course.on { border-color: var(--pen); color: var(--pen); }
+.course.on .dot { background: var(--pen); animation: blink 1.2s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .course.on .dot { animation: none; } }
+
+/* ----- synthèse du cours ----- */
+.transcard, .synthcard { display: flex; flex-direction: column; gap: 0.6rem; }
+.transcard textarea {
+  font: 400 1rem/1.5 var(--font-body); color: var(--ink); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 6px; padding: 0.6rem 0.75rem; min-height: 14rem; width: 100%; resize: vertical;
+}
+.row.wrap { flex-wrap: wrap; align-items: center; }
+.synthbody { display: grid; gap: 1.1rem; align-content: start; }
+.synthbody h3 { font-size: 0.75rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.4rem; }
+.synthbody ol { margin: 0; padding-left: 1.4rem; display: grid; gap: 0.4rem; font-size: 1.08rem; }
+.synthbody dl { margin: 0; display: grid; gap: 0.45rem; }
+.synthbody dt { font: italic 600 1.1rem var(--font-display); }
+.synthbody dd { margin: 0 0 0.2rem; }
+.props { display: grid; gap: 0.6rem; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
+.prop { border: 1px solid var(--line); border-left: 3px solid var(--c1); border-radius: 6px; padding: 0.6rem 0.75rem; background: var(--paper); display: grid; gap: 0.35rem; align-content: start; }
+.prop.anim { border-left-color: var(--pen); }
+.prop h4 { margin: 0; font: italic 600 1.1rem var(--font-display); }
+.prop p { margin: 0; font-size: 0.95rem; }
+.prop .what { font: 0.82rem var(--font-mono); color: var(--ink-soft); overflow-wrap: anywhere; }
+.prop .btn { justify-self: start; }
+
+/* ----- illustrations ----- */
+.illuslist { display: grid; gap: 0.5rem; align-content: start; }
+.illuslist h3 { font-size: 0.75rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-soft); margin-top: 0.3rem; }
+.illus-item {
+  display: grid; gap: 0.1rem; width: 100%; text-align: left; cursor: pointer; color: var(--ink);
+  background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem 0.65rem; font: 600 0.95rem var(--font-body);
+}
+.illus-item small { font-weight: 400; color: var(--ink-soft); font-size: 0.8rem; line-height: 1.3; }
+.illus-item:hover { border-color: var(--ink-soft); }
+.illus-item[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 3px 0 0 var(--pen); }
+.illus-item.proposed { background: var(--paper); }
+.caption { margin: 0; font-size: 1.02rem; max-width: 80ch; }
+.params { display: flex; flex-wrap: wrap; gap: 0.5rem 1.4rem; align-items: end; }
+.param { display: grid; gap: 0.15rem; font-size: 0.85rem; color: var(--ink-soft); min-width: 12rem; }
+.param b { font: 500 0.9rem var(--font-mono); color: var(--ink); }
+.param input[type="range"] { accent-color: var(--ink); width: 100%; cursor: ew-resize; }
+.param select, .tools select { font: 400 0.92rem var(--font-body); color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 0.3rem 0.5rem; min-height: 2.3rem; }
+
 /* ----- grand écran : tout tient dans la fenêtre, pas de défilement de page ----- */
 @media (min-width: 1000px) and (min-height: 540px) {
   body { height: 100vh; height: 100dvh; overflow: hidden; padding-block: 0.75rem; }
-  .shell {
-    max-width: none; height: 100%;
-    grid-template-columns: minmax(0, 1fr) var(--side);
-    grid-template-rows: auto minmax(0, 1fr);
-  }
-  .cmd { grid-column: 1 / -1; flex-wrap: nowrap; }
-  .plotcard { grid-column: 1; grid-row: 2; min-height: 0; }
+  .shell { max-width: none; height: 100%; grid-template-rows: auto auto minmax(0, 1fr); }
+  .cmd { flex-wrap: nowrap; }
+  .view { min-height: 0; }
+  .view-courbes { grid-template-columns: minmax(0, 1fr) var(--side); }
+  .view-synth { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); }
+  .view-illus { grid-template-columns: clamp(15rem, 21vw, 21rem) minmax(0, 1fr); }
+  .plotcard { min-height: 0; }
   .stage { flex: 1 1 0; aspect-ratio: auto; min-height: 0; max-height: none; }
-  .side { grid-column: 2; grid-row: 2; min-height: 0; overflow-y: auto; scrollbar-gutter: stable; }
+  .side, .synthcard, .illuslist { min-height: 0; overflow-y: auto; scrollbar-gutter: stable; }
+  .transcard { min-height: 0; }
+  .transcard textarea { flex: 1 1 0; min-height: 6rem; resize: none; }
   .tabcard { flex: 1 1 0; min-height: 13rem; }
   .panel { flex: 1 1 0; overflow-y: auto; }
 }
@@ -282,9 +342,10 @@ kbd { font: 500 0.85rem var(--font-mono); border: 1px solid var(--line); border-
       <h1>Courbe à la voix</h1>
       <p>Équations et apprentissage automatique</p>
     </div>
-    <button id="mic" class="mic" type="button" aria-pressed="false" aria-label="Parler" title="Parler (touche M)">
+    <button id="mic" class="mic" type="button" aria-pressed="false" aria-label="Commande vocale" title="Commande vocale : une phrase (touche M)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/></svg>
     </button>
+    <button id="courseBtn" class="btn course" type="button" aria-pressed="false" title="Transcrire le cours en continu pour la synthèse (touche L)"><span class="dot" aria-hidden="true"></span><span id="courseLbl">Écouter le cours</span></button>
     <div class="cmd-main">
       <form id="form" class="row" autocomplete="off">
         <label for="eq" class="sr">Équation ou concept</label>
@@ -305,6 +366,13 @@ kbd { font: 500 0.85rem var(--font-mono); border: 1px solid var(--line); border-
     </div>
   </header>
 
+  <nav class="maintabs" role="tablist" aria-label="Vues">
+    <button id="vt-courbes" class="mtab" type="button" role="tab" aria-controls="view-courbes" aria-selected="true">Courbes <kbd>1</kbd></button>
+    <button id="vt-synthese" class="mtab" type="button" role="tab" aria-controls="view-synthese" aria-selected="false" tabindex="-1">Synthèse du cours <span id="synthCount" class="count"></span><kbd>2</kbd></button>
+    <button id="vt-illus" class="mtab" type="button" role="tab" aria-controls="view-illus" aria-selected="false" tabindex="-1">Illustrations <kbd>3</kbd></button>
+  </nav>
+
+  <div id="view-courbes" class="view view-courbes" role="tabpanel" aria-labelledby="vt-courbes">
   <section class="card plotcard" aria-label="Graphique">
     <div class="plot-head">
       <div id="eqShow" class="equation" aria-live="polite"></div>
@@ -409,16 +477,66 @@ kbd { font: 500 0.85rem var(--font-mono); border: 1px solid var(--line); border-
       </div>
     </section>
   </aside>
+  </div>
+
+  <div id="view-synthese" class="view view-synth" role="tabpanel" aria-labelledby="vt-synthese" hidden>
+    <section class="card transcard" aria-label="Transcription du cours">
+      <div class="card-head"><h2>Transcription</h2><span id="transCount" class="badge">0 mot</span></div>
+      <p class="tip">Cliquez sur « Écouter le cours » : ce que vous dites s’ajoute ici. Vous pouvez aussi coller ou corriger le texte. La commande vocale reste disponible : l’écoute du cours se met en pause le temps d’une commande.</p>
+      <textarea id="transcript" spellcheck="true" aria-label="Transcription du cours" placeholder="La transcription du cours apparaîtra ici…"></textarea>
+      <p id="interim" class="heard" aria-live="off"></p>
+      <div class="row wrap">
+        <button id="synthBtn" class="btn primary" type="button">Synthétiser</button>
+        <button id="synthExport" class="btn" type="button">Télécharger la synthèse</button>
+        <button id="transClear" class="btn" type="button">Nouveau cours</button>
+      </div>
+      <p class="warnbox">La dictée de Chrome envoie le son à Google pour la transcription et peut capter les voix de la salle : prévenez les étudiants.</p>
+    </section>
+    <section class="card synthcard" aria-label="Synthèse">
+      <div class="card-head"><h2 id="synthTitle">Synthèse</h2><span id="synthState" class="badge">vide</span></div>
+      <div id="synthBody" class="synthbody"></div>
+    </section>
+  </div>
+
+  <div id="view-illus" class="view view-illus" role="tabpanel" aria-labelledby="vt-illus" hidden>
+    <aside class="card illuslist" aria-label="Choix de l’animation">
+      <div id="illusProposed" class="illuslist"></div>
+      <h3>Bibliothèque</h3>
+      <div id="illusLib" class="illuslist"></div>
+    </aside>
+    <section class="card plotcard illuscard" aria-label="Animation">
+      <div class="plot-head">
+        <h2 id="illusTitle" class="equation"></h2>
+        <div class="tools">
+          <button id="ilPlay" class="btn primary" type="button" title="Barre d’espace">Pause</button>
+          <button id="ilRestart" class="btn" type="button" title="Touche R">Recommencer</button>
+          <button id="ilSeed" class="btn" type="button" title="Nouvelles données au hasard">Nouveau tirage</button>
+          <label class="sr" for="ilSpeed">Vitesse</label>
+          <select id="ilSpeed" title="Vitesse">
+            <option value="0.25">× 0,25</option>
+            <option value="0.5">× 0,5</option>
+            <option value="1" selected>× 1</option>
+            <option value="2">× 2</option>
+          </select>
+        </div>
+      </div>
+      <div class="stage"><canvas id="illusCv" role="img" aria-label="Animation pédagogique"></canvas></div>
+      <p id="illusCaption" class="caption"></p>
+      <div id="illusParams" class="params"></div>
+    </section>
+  </div>
 </div>
 
 <dialog id="help" aria-labelledby="helpTitle">
   <h2 id="helpTitle">Raccourcis clavier</h2>
   <dl class="keys">
-    <dt><kbd>M</kbd></dt><dd>Parler / arrêter l’écoute</dd>
+    <dt><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></dt><dd>Courbes, Synthèse du cours, Illustrations</dd>
+    <dt><kbd>M</kbd></dt><dd>Commande vocale (une phrase)</dd>
+    <dt><kbd>L</kbd></dt><dd>Écouter le cours en continu / arrêter</dd>
     <dt><kbd>/</kbd></dt><dd>Écrire une équation</dd>
-    <dt><kbd>Espace</kbd></dt><dd>Lancer ou mettre en pause la descente</dd>
+    <dt><kbd>Espace</kbd></dt><dd>Lancer ou mettre en pause la descente (ou l’animation)</dd>
     <dt><kbd>→</kbd> ou <kbd>N</kbd></dt><dd>Un pas de descente</dd>
-    <dt><kbd>R</kbd></dt><dd>Réinitialiser la descente</dd>
+    <dt><kbd>R</kbd></dt><dd>Réinitialiser la descente (ou recommencer l’animation)</dd>
     <dt><kbd>D</kbd> / <kbd>T</kbd></dt><dd>Afficher la dérivée / la tangente</dd>
     <dt><kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd></dt><dd>Zoomer, dézoomer, recentrer</dd>
     <dt><kbd>F</kbd></dt><dd>Plein écran</dd>
@@ -866,21 +984,28 @@ const Engine = (() => {
   const numDeriv = (f) => (x) => { const h = 1e-5 * (1 + Math.abs(x)); return (f(x + h) - f(x - h)) / (2 * h); };
 
   /* ===== Assistant IA : consigne envoyée au modèle, puis réponse JSON -> actions ===== */
-  function llmPrompt(texts, state) {
+  /* Format des actions, partagé par l'assistant (une phrase) et par la synthèse du cours. */
+  function actionDoc() {
     const ids = Object.entries(CONCEPTS).map(([id, c]) => id + ' (' + c.label + ')').join(', ');
-    const list = texts.slice(0, 3).map((t) => JSON.stringify(String(t).slice(0, 400))).join(' | ');
     return [
-      'Tu es le module d’interprétation d’une application web qui trace des courbes. L’utilisateur parle ou écrit en français. La dictée vocale contient parfois des erreurs de reconnaissance (par exemple « mais » pour MAE, « uber » pour Huber) : interprète au mieux.',
-      'Réponds UNIQUEMENT par un objet JSON, sans texte autour ni balises, de cette forme :',
-      '{"actions":[...],"explication":"une ou deux phrases en français"}',
-      'Actions possibles :',
       '{"type":"concept","id":"<id>"} avec id parmi : ' + ids + '.',
       '{"type":"equation","expr":"x^2 - 4"} : courbe y = expr.',
       '{"type":"curve","label":"nom court","expr":"..."} : courbe nommée pour une fonction qui n’est pas dans la liste (perte focale, GELU approchée, etc.).',
       'Syntaxe de expr : la variable x, des nombres avec point décimal, + - * / ^, des parenthèses, les fonctions sin cos tan asin acos atan sinh cosh tanh exp ln log sqrt cbrt abs, et les constantes pi et e. Exemples : "sin(x)/x", "2*x^2 - 3*x + 1", "0.5*x*(1 + tanh(0.79788*(x + 0.044715*x^3)))". Pas de max, min, if ni de fonction par morceaux : choisis alors un concept ou une approximation lisse.',
       '{"type":"deriv","value":true} pour afficher ou masquer la dérivée (true ou false).',
       '{"type":"opt","value":"sgd"} avec sgd, momentum ou adam. {"type":"lr","value":0.1} taux d’apprentissage. {"type":"start","value":2} point de départ.',
-      '{"type":"gd"} lance la descente de gradient sur la dernière courbe. {"type":"stop"} la met en pause. {"type":"reset"} la remet au départ. {"type":"clear"} efface toutes les courbes.',
+      '{"type":"gd"} lance la descente de gradient sur la dernière courbe. {"type":"stop"} la met en pause. {"type":"reset"} la remet au départ. {"type":"clear"} efface toutes les courbes.'
+    ];
+  }
+
+  function llmPrompt(texts, state) {
+    const list = texts.slice(0, 3).map((t) => JSON.stringify(String(t).slice(0, 400))).join(' | ');
+    return [
+      'Tu es le module d’interprétation d’une application web qui trace des courbes. L’utilisateur parle ou écrit en français. La dictée vocale contient parfois des erreurs de reconnaissance (par exemple « mais » pour MAE, « uber » pour Huber) : interprète au mieux.',
+      'Réponds UNIQUEMENT par un objet JSON, sans texte autour ni balises, de cette forme :',
+      '{"actions":[...],"explication":"une ou deux phrases en français"}',
+      'Actions possibles :',
+      ...actionDoc(),
       'Règles : 4 actions au plus, 3 courbes au plus ; n’invente jamais d’identifiant de concept. Pour toute question de cours (pourquoi, comment, explique, compare), tu DOIS tracer la ou les courbes qui l’illustrent (un concept de la liste, ou une courbe nommée) et expliquer dans "explication" en 2 à 4 phrases ; ajoute {"type":"deriv","value":true} quand la question porte sur le gradient, la pente, la saturation ou l’apprentissage. N’utilise une liste d’actions vide que si la demande n’a aucun rapport avec les courbes ou l’apprentissage automatique.',
       'Exemple 1. Demande : « explique pourquoi le gradient disparaît avec la sigmoïde ». Réponse : {"actions":[{"type":"concept","id":"sigmoid"},{"type":"deriv","value":true}],"explication":"La dérivée de la sigmoïde vaut au plus 0,25 et tend vers 0 quand |x| est grand. En rétropropagation ces facteurs se multiplient d’une couche à l’autre, et le gradient devient presque nul dans les premières couches."}',
       'Exemple 2. Demande : « compare MAE et MSE pour les valeurs aberrantes ». Réponse : {"actions":[{"type":"concept","id":"mae"},{"type":"concept","id":"mse"}],"explication":"MSE élève l’erreur au carré : une valeur aberrante pèse énormément. MAE croît linéairement, donc elle résiste mieux."}',
@@ -889,19 +1014,43 @@ const Engine = (() => {
     ].join('\n');
   }
 
-  const LLM_OPTS = new Set(['sgd', 'momentum', 'adam']);
-  function parseLLM(text) {
+  /* Synthèse progressive : l'IA reçoit la synthèse déjà faite et le nouveau passage, et renvoie la synthèse complète. */
+  function synthPrompt(prev, segment, o) {
+    o = o || {};
+    return [
+      'Tu es l’assistant pédagogique d’un enseignant. Tu suis son cours oral (souvent en apprentissage automatique ou en mathématiques) grâce à une transcription automatique en français. Elle contient des erreurs de reconnaissance (mots mal entendus, pas de ponctuation) : corrige-les d’après le contexte.',
+      'Tu reçois la synthèse déjà faite et un NOUVEAU passage du cours. Renvoie la synthèse COMPLÈTE mise à jour : garde ce qui reste juste, ajoute ce qui est nouveau, fusionne les doublons, respecte l’ordre du cours.',
+      'Réponds UNIQUEMENT par un objet JSON, sans texte autour ni balises, de cette forme :',
+      '{"titre":"titre court du cours","points":["..."],"notions":[{"nom":"...","definition":"..."}],"courbes":[{"titre":"...","pourquoi":"...","actions":[...]}],"illustrations":[{"id":"...","params":{},"pourquoi":"..."}]}',
+      'points : 3 à 12 idées clés, une phrase claire chacune, fidèles à ce que dit l’enseignant. N’invente pas de contenu qu’il n’a pas abordé.',
+      'notions : 0 à 10 termes importants, chacun avec une définition simple d’une phrase.',
+      'courbes : 0 à 6 courbes qui aident à comprendre ce qui a été dit. "pourquoi" explique en 1 ou 2 phrases ce que l’étudiant doit observer. "actions" (4 au plus) suit ce format :',
+      ...actionDoc(),
+      'illustrations : 0 à 4 animations, choisies UNIQUEMENT dans ce catalogue, avec des paramètres dans les bornes indiquées. "pourquoi" dit ce que l’animation montre en lien avec le cours. Catalogue :',
+      o.catalog || '',
+      'Si le passage ne contient rien d’utile (bavardage, consignes pratiques), renvoie la synthèse actuelle inchangée.',
+      'Synthèse actuelle : ' + JSON.stringify(prev || {}),
+      'Nouveau passage' + (o.parts > 1 ? ' (partie ' + o.part + ' sur ' + o.parts + ')' : '') + ' : ' + JSON.stringify(String(segment))
+    ].join('\n');
+  }
+
+  function extractJSON(text) {
     const s = String(text || '');
     const a = s.indexOf('{'), b = s.lastIndexOf('}');
     if (a < 0 || b <= a) return null;
     let obj;
     try { obj = JSON.parse(s.slice(a, b + 1)); } catch (e) { return null; }
-    if (!obj || typeof obj !== 'object') return null;
-    const str = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
+    return obj && typeof obj === 'object' && !Array.isArray(obj) ? obj : null;
+  }
+  const str = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
+
+  const LLM_OPTS = new Set(['sgd', 'momentum', 'adam']);
+  /* Ne garde que des actions connues, avec des valeurs vérifiées. */
+  function sanitizeActions(list) {
     const num = (v) => { const n = typeof v === 'number' ? v : typeof v === 'string' ? parseFloat(v.replace(',', '.')) : NaN; return isFinite(n) ? n : null; };
     const acts = [];
     let curvesLeft = 3;
-    for (const it of (Array.isArray(obj.actions) ? obj.actions : []).slice(0, 4)) {
+    for (const it of (Array.isArray(list) ? list : []).slice(0, 4)) {
       if (!it || typeof it !== 'object') continue;
       const t = it.type;
       if (t === 'concept') { if (typeof it.id === 'string' && Object.prototype.hasOwnProperty.call(CONCEPTS, it.id)) acts.push({ type: 'concept', id: it.id }); }
@@ -915,10 +1064,831 @@ const Engine = (() => {
       else if (t === 'start') { const v = num(it.value); if (v !== null) acts.push({ type: 'start', value: v }); }
       else if (t === 'gd' || t === 'stop' || t === 'clear' || t === 'reset') acts.push({ type: t });
     }
-    return { actions: acts, explain: str(obj.explication !== undefined ? obj.explication : obj.explanation, 500) };
+    return acts;
   }
 
-  return { parseExpression, normalize, pretty, interpret, makeDescent, numDeriv, CONCEPTS, llmPrompt, parseLLM };
+  function parseLLM(text) {
+    const obj = extractJSON(text);
+    if (!obj) return null;
+    return { actions: sanitizeActions(obj.actions), explain: str(obj.explication !== undefined ? obj.explication : obj.explanation, 500) };
+  }
+
+  /* Réponse de synthèse -> objet borné ; les illustrations doivent appartenir au catalogue. */
+  function parseSynth(text, illusIds) {
+    const obj = extractJSON(text);
+    if (!obj) return null;
+    const arr = (v, n) => (Array.isArray(v) ? v.slice(0, n) : []);
+    const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
+    const PLOT = ['concept', 'equation', 'curve'];
+    return {
+      titre: str(obj.titre, 120),
+      points: arr(obj.points, 12).map((p) => str(p, 400)).filter(Boolean),
+      notions: arr(obj.notions, 10).filter(isObj).map((n) => ({ nom: str(n.nom, 80), definition: str(n.definition, 400) })).filter((n) => n.nom),
+      courbes: arr(obj.courbes, 6).filter(isObj)
+        .map((c) => ({ titre: str(c.titre, 100) || 'Courbe', pourquoi: str(c.pourquoi, 400), actions: sanitizeActions(c.actions) }))
+        .filter((c) => c.actions.some((a) => PLOT.includes(a.type))),
+      illustrations: arr(obj.illustrations, 4).filter((i) => isObj(i) && typeof i.id === 'string' && illusIds.includes(i.id))
+        .map((i) => ({ id: i.id, params: isObj(i.params) ? i.params : {}, pourquoi: str(i.pourquoi, 400) }))
+    };
+  }
+
+  return { parseExpression, normalize, pretty, interpret, makeDescent, numDeriv, CONCEPTS, llmPrompt, parseLLM, synthPrompt, parseSynth };
+})();
+</script>
+
+<script id="illus">
+/* ===== Bibliothèque d'animations =====
+   L'IA ne génère jamais de code : elle choisit une animation du catalogue et règle ses paramètres,
+   qui sont ensuite bornés par sanitize(). Chaque animation fournit setup(p, graine), update(état, dt, p)
+   et draw(env, état, p) ; env donne le contexte 2D, la taille, l'échelle du texte et les couleurs du thème. */
+const Illus = (() => {
+  const rng = (seed) => {
+    let s = seed | 0;
+    return () => {
+      s = (s + 0x6D2B79F5) | 0;
+      let t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  const gauss = (r) => { const u = 1 - r(), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  const sig = (v) => (v >= 0 ? 1 / (1 + Math.exp(-v)) : Math.exp(v) / (1 + Math.exp(v)));
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const ease = (k) => { k = clamp(k, 0, 1); return k * k * (3 - 2 * k); };
+  const fmt = (v, d) => {
+    if (!isFinite(v)) return '—';
+    let s = v.toFixed(d === undefined ? 2 : d);
+    if (parseFloat(s) === 0) s = s.replace('-', '');
+    return s.replace('.', ',').replace('-', '−');
+  };
+  const pct = (v) => (isFinite(v) ? Math.round(v * 100) + ' %' : '—');
+  const par = (s) => (s.startsWith('−') ? '(' + s + ')' : s);
+  const SUB = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
+  const SANS = '"IBM Plex Sans", system-ui, sans-serif', MONO = '"IBM Plex Mono", ui-monospace, monospace', SERIF = 'Newsreader, Georgia, serif';
+
+  /* ----- petits outils de dessin ----- */
+  function txt(E, s, x, y, o) {
+    o = o || {};
+    const c = E.ctx;
+    c.font = (o.italic ? 'italic ' : '') + (o.bold ? '600 ' : '') + Math.round((o.size || 13) * E.S) + 'px ' + (o.mono ? MONO : o.serif ? SERIF : SANS);
+    c.fillStyle = o.color || E.C.ink; c.textAlign = o.align || 'left'; c.textBaseline = o.base || 'alphabetic';
+    if (o.halo) { c.strokeStyle = E.C.card; c.lineWidth = 5 * E.S; c.lineJoin = 'round'; c.strokeText(s, x, y); }
+    c.fillText(s, x, y);
+  }
+  function dot(E, x, y, r, fill, stroke, lw) {
+    const c = E.ctx;
+    c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2);
+    if (fill) { c.fillStyle = fill; c.fill(); }
+    if (stroke) { c.strokeStyle = stroke; c.lineWidth = (lw || 1.5) * E.S; c.stroke(); }
+  }
+  function seg(E, x0, y0, x1, y1, color, lw, dash) {
+    const c = E.ctx;
+    c.strokeStyle = color; c.lineWidth = (lw || 1.5) * E.S; c.setLineDash(dash ? dash.map((d) => d * E.S) : []);
+    c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); c.setLineDash([]);
+  }
+  function box(E, b, fill) {
+    const c = E.ctx;
+    if (fill) { c.fillStyle = fill; c.fillRect(b.x, b.y, b.w, b.h); }
+    c.strokeStyle = E.C.line; c.lineWidth = 1; c.strokeRect(Math.round(b.x) + 0.5, Math.round(b.y) + 0.5, Math.round(b.w), Math.round(b.h));
+  }
+  function poly(E, pts, color, lw, dash) {
+    const c = E.ctx;
+    c.strokeStyle = color; c.lineWidth = (lw || 2) * E.S; c.lineJoin = 'round'; c.setLineDash(dash ? dash.map((d) => d * E.S) : []);
+    c.beginPath();
+    let on = false;
+    for (const [x, y] of pts) {
+      if (!isFinite(x) || !isFinite(y)) { on = false; continue; }
+      if (on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; }
+    }
+    c.stroke(); c.setLineDash([]);
+  }
+  function rgb(hex) {
+    const h = String(hex).replace('#', '');
+    const f = h.length === 3 ? h.split('').map((x) => x + x).join('') : h;
+    const n = parseInt(f, 16);
+    return isFinite(n) ? [(n >> 16) & 255, (n >> 8) & 255, n & 255] : [128, 128, 128];
+  }
+  const alpha = (hex, a) => { const [r, g, b] = rgb(hex); return 'rgba(' + r + ',' + g + ',' + b + ',' + clamp(a, 0, 1) + ')'; };
+  const map = (b, x0, x1, y0, y1) => ({ X: (v) => b.x + ((v - x0) / (x1 - x0)) * b.w, Y: (v) => b.y + b.h - ((v - y0) / (y1 - y0)) * b.h });
+  const pad = (E) => 16 * E.S;
+  /* deux zones côte à côte sur écran large, l'une sous l'autre sinon */
+  function split(E, r, top) {
+    const p = pad(E), W = E.W, H = E.H, y0 = p + (top || 0);
+    if (W >= H * 1.15) {
+      const w1 = (W - 3 * p) * r;
+      return [{ x: p, y: y0, w: w1, h: H - p - y0 }, { x: 2 * p + w1, y: y0, w: W - 3 * p - w1, h: H - p - y0 }];
+    }
+    const h1 = (H - 2 * p - y0) * r;
+    return [{ x: p, y: y0, w: W - 2 * p, h: h1 }, { x: p, y: y0 + h1 + p, w: W - 2 * p, h: H - 2 * p - y0 - h1 }];
+  }
+  const inset = (b, l, t, r, bt) => ({ x: b.x + l, y: b.y + t, w: b.w - l - r, h: b.h - t - bt });
+  /* petite courbe d'évolution (perte, erreur) avec échelle logarithmique facultative */
+  function lossPlot(E, b, series, o) {
+    o = o || {};
+    box(E, b);
+    txt(E, o.title || '', b.x + 8 * E.S, b.y + 16 * E.S, { size: 12, color: E.C.soft });
+    const inner = inset(b, 46 * E.S, 24 * E.S, 10 * E.S, 20 * E.S);
+    const all = series.flatMap((s) => s.data).filter((v) => isFinite(v) && v > 0);
+    if (!all.length) return;
+    const tr = o.log ? (v) => Math.log10(Math.max(v, 1e-6)) : (v) => v;
+    let lo = tr(Math.min(...all)), hi = tr(Math.max(...all));
+    if (o.lo !== undefined) lo = Math.max(lo, o.lo);
+    if (hi - lo < 1e-9) { hi += 0.5; lo -= 0.5; }
+    const n = Math.max(o.n || 0, ...series.map((s) => s.data.length - 1), 1);
+    const m = map(inner, 0, n, lo, hi);
+    txt(E, o.log ? fmt(Math.pow(10, hi), 3) : fmt(hi, 2), inner.x - 5 * E.S, inner.y + 9 * E.S, { size: 11, mono: true, align: 'right', color: E.C.soft });
+    txt(E, o.log ? fmt(Math.pow(10, lo), 3) : fmt(lo, 2), inner.x - 5 * E.S, inner.y + inner.h, { size: 11, mono: true, align: 'right', color: E.C.soft });
+    if (o.xlabel) txt(E, o.xlabel, inner.x + inner.w, b.y + b.h - 5 * E.S, { size: 11, align: 'right', color: E.C.soft });
+    for (const s of series) {
+      poly(E, s.data.map((v, i) => [m.X(o.x0 ? i + o.x0 : i), m.Y(clamp(tr(v), lo, hi))]), s.color, s.lw || 2.2);
+      if (s.marks) s.data.forEach((v, i) => dot(E, m.X(o.x0 ? i + o.x0 : i), m.Y(clamp(tr(v), lo, hi)), 3.2 * E.S, s.color));
+    }
+    return m;
+  }
+  /* résout A·x = b (petits systèmes) par élimination de Gauss avec pivot partiel */
+  function solve(A, b) {
+    const n = b.length, M = A.map((row, i) => row.concat([b[i]]));
+    for (let c = 0; c < n; c++) {
+      let p = c;
+      for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      [M[c], M[p]] = [M[p], M[c]];
+      const d = M[c][c] || 1e-12;
+      for (let r = 0; r < n; r++) {
+        if (r === c) continue;
+        const f = M[r][c] / d;
+        for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k];
+      }
+    }
+    return M.map((row, i) => row[n] / (row[i] || 1e-12));
+  }
+
+  /* ===== 1. Neurone ===== */
+  const ACT = {
+    sigmoid: { f: sig, lo: -0.15, hi: 1.15, nom: 'σ' },
+    relu: { f: (v) => Math.max(0, v), lo: -0.6, hi: 5, nom: 'ReLU' },
+    tanh: { f: Math.tanh, lo: -1.25, hi: 1.25, nom: 'tanh' }
+  };
+  function newInputs(st) {
+    st.x = st.w.map(() => Math.round((st.r() * 4 - 2) * 10) / 10);
+    st.z = st.x.reduce((s, v, i) => s + v * st.w[i], st.b);
+  }
+  const neurone = {
+    titre: 'Un neurone artificiel',
+    resume: 'Les entrées sont multipliées par leurs poids, additionnées avec le biais, puis passent dans la fonction d’activation.',
+    params: {
+      entrees: { label: 'Entrées', type: 'range', min: 2, max: 4, step: 1, def: 3 },
+      activation: { label: 'Activation', type: 'choice', options: { sigmoid: 'Sigmoïde', relu: 'ReLU', tanh: 'Tanh' }, def: 'sigmoid' }
+    },
+    setup(p, seed) {
+      const r = rng(seed);
+      const st = { r, t: 0, w: Array.from({ length: p.entrees }, () => Math.round(gauss(r) * 12) / 10 || 0.5), b: Math.round(gauss(r) * 5) / 10 };
+      newInputs(st);
+      return st;
+    },
+    update(st, dt) { st.t += dt; if (st.t > 6.5) { st.t = 0; newInputs(st); } },
+    draw(E, st, p) {
+      const { W, H, S, C } = E, a = ACT[p.activation], t = st.t, n = st.w.length;
+      const R = Math.max(16 * S, Math.min(W, H) * 0.065);
+      const inX = W * 0.07 + R, nx = W * 0.4, ny = H * 0.42;
+      const ys = st.w.map((_, i) => H * 0.12 + (H * 0.58 * i) / Math.max(1, n - 1));
+      const k1 = ease(t / 1.5);
+      st.w.forEach((w, i) => {
+        seg(E, inX + R * 0.7, ys[i], nx - R, ny, w >= 0 ? C.c[0] : C.c[1], 1.2 + Math.min(Math.abs(w), 3) * 2.2);
+        txt(E, 'w' + SUB[i + 1] + ' = ' + fmt(w, 1), lerp(inX, nx, 0.5), lerp(ys[i], ny, 0.5) - 9 * S, { size: 13, mono: true, align: 'center', halo: true, color: w >= 0 ? C.c[0] : C.c[1] });
+        if (t < 1.6) dot(E, lerp(inX + R * 0.7, nx - R, k1), lerp(ys[i], ny, k1), 6 * S, C.pen);
+      });
+      st.x.forEach((v, i) => {
+        dot(E, inX, ys[i], R * 0.7, C.card, C.ink, 2);
+        txt(E, fmt(v, 1), inX, ys[i], { align: 'center', base: 'middle', mono: true, size: 14 });
+        txt(E, 'x' + SUB[i + 1], inX - R * 0.7 - 8 * S, ys[i], { align: 'right', base: 'middle', size: 15, serif: true, italic: true, color: C.soft });
+      });
+      dot(E, nx, ny, R, t > 1.5 ? alpha(C.c[0], 0.15) : C.card, C.ink, 2.5);
+      txt(E, t > 1.6 ? fmt(st.z, 2) : 'Σ', nx, ny, { align: 'center', base: 'middle', size: t > 1.6 ? 16 : 26, serif: t <= 1.6, bold: true });
+      txt(E, '+ biais b = ' + fmt(st.b, 1), nx, ny + R + 18 * S, { align: 'center', mono: true, size: 13, color: C.soft });
+
+      const pb = { x: W * 0.58, y: H * 0.1, w: W * 0.38, h: H * 0.6 };
+      seg(E, nx + R, ny, pb.x - 6 * S, ny, C.soft, 1.5, [5, 4]);
+      box(E, pb);
+      const m = map(pb, -5, 5, a.lo, a.hi);
+      seg(E, pb.x, m.Y(0), pb.x + pb.w, m.Y(0), C.gmaj, 1); seg(E, m.X(0), pb.y, m.X(0), pb.y + pb.h, C.gmaj, 1);
+      const pts = []; for (let i = 0; i <= 200; i++) { const z = -5 + i / 20; pts.push([m.X(z), m.Y(a.f(z))]); }
+      poly(E, pts, C.c[0], 2.6);
+      txt(E, 'activation : ' + a.nom + '(z)', pb.x + 8 * S, pb.y + 18 * S, { size: 13, color: C.soft });
+      if (t > 2.6) {
+        const zc = clamp(st.z, -5, 5), k2 = ease((t - 2.6) / 1), fy = a.f(st.z);
+        seg(E, m.X(zc), m.Y(0), m.X(zc), lerp(m.Y(0), m.Y(fy), k2), C.pen, 2, [5, 4]);
+        if (t > 3.6) { seg(E, m.X(zc), m.Y(fy), pb.x, m.Y(fy), C.pen, 2, [5, 4]); dot(E, m.X(zc), m.Y(fy), 7 * S, C.pen, C.card, 2); }
+        txt(E, 'z', m.X(zc), m.Y(0) + 16 * S, { align: 'center', serif: true, italic: true, size: 15, color: C.pen });
+      }
+      const terms = st.x.map((v, i) => par(fmt(st.w[i], 1)) + '×' + par(fmt(v, 1))).join(' + ');
+      txt(E, 'z = ' + terms + ' + ' + par(fmt(st.b, 1)) + ' = ' + fmt(st.z, 2), W / 2, H - 46 * S, { align: 'center', serif: true, italic: true, size: 18 });
+      if (t > 3.6) txt(E, 'sortie a = ' + a.nom + '(z) = ' + fmt(a.f(st.z), 3), W / 2, H - 18 * S, { align: 'center', serif: true, italic: true, size: 18, bold: true, color: C.pen });
+    }
+  };
+
+  /* ===== 2. Rétropropagation (vrai petit réseau qui apprend XOR) ===== */
+  const XOR = [[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 0]];
+  function xorForward(st) {
+    let loss = 0;
+    const outs = XOR.map(([a, b, y]) => {
+      const h = st.W1.map((w, j) => Math.tanh(w[0] * a + w[1] * b + st.b1[j]));
+      const o = sig(h.reduce((s, v, j) => s + v * st.W2[j], st.b2));
+      loss += -(y * Math.log(o + 1e-9) + (1 - y) * Math.log(1 - o + 1e-9));
+      return { h, o };
+    });
+    return { outs, loss: loss / 4 };
+  }
+  function xorTrain(st, eta) {
+    const n = st.W1.length, gW1 = st.W1.map(() => [0, 0]), gb1 = Array(n).fill(0), gW2 = Array(n).fill(0);
+    let gb2 = 0;
+    XOR.forEach(([a, b, y]) => {
+      const h = st.W1.map((w, j) => Math.tanh(w[0] * a + w[1] * b + st.b1[j]));
+      const o = sig(h.reduce((s, v, j) => s + v * st.W2[j], st.b2));
+      const dz = o - y;
+      gb2 += dz;
+      h.forEach((hv, j) => {
+        gW2[j] += dz * hv;
+        const dh = dz * st.W2[j] * (1 - hv * hv);
+        gW1[j][0] += dh * a; gW1[j][1] += dh * b; gb1[j] += dh;
+      });
+    });
+    for (let j = 0; j < n; j++) {
+      st.W2[j] -= (eta * gW2[j]) / 4; st.b1[j] -= (eta * gb1[j]) / 4;
+      st.W1[j][0] -= (eta * gW1[j][0]) / 4; st.W1[j][1] -= (eta * gW1[j][1]) / 4;
+    }
+    st.b2 -= (eta * gb2) / 4;
+  }
+  const RETRO_CYCLE = 2.4, RETRO_EPOCHS = 30;
+  const retro = {
+    titre: 'Rétropropagation',
+    resume: 'Un petit réseau apprend la fonction XOR : le signal avance (bleu), l’erreur revient en arrière (rouge), puis chaque poids est corrigé selon sa part de responsabilité dans l’erreur.',
+    params: {
+      cachees: { label: 'Neurones cachés', type: 'range', min: 2, max: 6, step: 1, def: 3 },
+      eta: { label: 'Taux d’apprentissage η', type: 'range', min: 0.1, max: 3, step: 0.1, def: 1 }
+    },
+    setup(p, seed) {
+      const r = rng(seed), h = p.cachees;
+      const st = { t: 0, epoch: 0, W1: Array.from({ length: h }, () => [gauss(r), gauss(r)]), b1: Array.from({ length: h }, () => gauss(r) * 0.5), W2: Array.from({ length: h }, () => gauss(r)), b2: 0 };
+      const f = xorForward(st); st.res = f; st.losses = [f.loss];
+      return st;
+    },
+    update(st, dt, p) {
+      st.t += dt;
+      if (st.t >= RETRO_CYCLE) {
+        st.t -= RETRO_CYCLE;
+        for (let k = 0; k < RETRO_EPOCHS; k++) { xorTrain(st, p.eta); st.epoch++; }
+        st.res = xorForward(st); st.losses.push(st.res.loss);
+        if (st.losses.length > 400) st.losses.shift();
+      }
+    },
+    draw(E, st) {
+      const { S, C } = E, t = st.t;
+      const [L, Rb] = split(E, 0.56, 22 * S);
+      const phase = t < 0.9 ? 0 : t < 1.8 ? 1 : 2;
+      const PH = ['1. Propagation avant : on calcule la prédiction', '2. Rétropropagation : l’erreur remonte couche par couche', '3. Mise à jour : w ← w − η · ∂L/∂w'];
+      txt(E, PH[phase], E.W / 2, 22 * S, { align: 'center', size: 16, bold: true, color: phase === 0 ? C.c[0] : phase === 1 ? C.pen : C.ok });
+      const h = st.W1.length, R = Math.max(11 * S, Math.min(L.w, L.h) * 0.05);
+      const xi = L.x + L.w * 0.12, xh = L.x + L.w * 0.5, xo = L.x + L.w * 0.88;
+      const yIn = [L.y + L.h * 0.33, L.y + L.h * 0.67];
+      const yH = st.W1.map((_, j) => L.y + L.h * (0.1 + (0.8 * j) / Math.max(1, h - 1)));
+      const yO = L.y + L.h * 0.5;
+      const flash = phase === 2 ? 1.6 : 0;
+      const ew = (w) => 1 + Math.min(Math.abs(w), 4) * 1.5 + flash;
+      st.W1.forEach((w, j) => w.forEach((wi, i) => seg(E, xi, yIn[i], xh, yH[j], alpha(wi >= 0 ? C.c[0] : C.c[1], 0.8), ew(wi))));
+      st.W2.forEach((w, j) => seg(E, xh, yH[j], xo, yO, alpha(w >= 0 ? C.c[0] : C.c[1], 0.8), ew(w)));
+      const pulse = (x0, y0, x1, y1, k, col) => dot(E, lerp(x0, x1, k), lerp(y0, y1, k), 5 * S, col);
+      if (phase === 0) {
+        const k = t / 0.45;
+        if (k < 1) st.W1.forEach((_, j) => yIn.forEach((y) => pulse(xi, y, xh, yH[j], ease(k), C.c[0])));
+        else yH.forEach((y) => pulse(xh, y, xo, yO, ease(k - 1), C.c[0]));
+      } else if (phase === 1) {
+        const k = (t - 0.9) / 0.45;
+        if (k < 1) yH.forEach((y) => pulse(xo, yO, xh, y, ease(k), C.pen));
+        else st.W1.forEach((_, j) => yIn.forEach((y) => pulse(xh, yH[j], xi, y, ease(k - 1), C.pen)));
+      }
+      yIn.forEach((y, i) => { dot(E, xi, y, R, C.card, C.ink, 2); txt(E, 'x' + SUB[i + 1], xi, y, { align: 'center', base: 'middle', serif: true, italic: true, size: 16 }); });
+      yH.forEach((y, j) => { dot(E, xh, y, R, C.card, C.ink, 2); txt(E, 'h' + SUB[j + 1], xh, y, { align: 'center', base: 'middle', serif: true, italic: true, size: 15 }); });
+      dot(E, xo, yO, R * 1.2, C.card, C.ink, 2.5); txt(E, 'ŷ', xo, yO, { align: 'center', base: 'middle', serif: true, italic: true, size: 18 });
+      txt(E, 'trait épais = poids fort · bleu positif, rouge négatif', L.x + L.w / 2, L.y + L.h - 2 * S, { align: 'center', size: 12, color: C.soft });
+
+      const [b1, b2] = [{ x: Rb.x, y: Rb.y, w: Rb.w, h: Rb.h * 0.5 }, { x: Rb.x, y: Rb.y + Rb.h * 0.56, w: Rb.w, h: Rb.h * 0.44 }];
+      lossPlot(E, b1, [{ data: st.losses, color: C.pen }], { title: 'Perte (entropie croisée) · époque ' + st.epoch, log: true, lo: -3 });
+      box(E, b2);
+      const rowH = Math.min(26 * S, b2.h / 5.4), cx = [0.12, 0.3, 0.55, 0.82].map((k) => b2.x + b2.w * k);
+      ['x₁', 'x₂', 'cible y', 'prédiction ŷ'].forEach((s, i) => txt(E, s, cx[i], b2.y + rowH, { align: 'center', size: 13, color: C.soft }));
+      XOR.forEach(([a, b, y], i) => {
+        const o = st.res.outs[i].o, yy = b2.y + rowH * (i + 2);
+        [a, b, y].forEach((v, k) => txt(E, String(v), cx[k], yy, { align: 'center', mono: true, size: 15 }));
+        txt(E, fmt(o, 2), cx[3], yy, { align: 'center', mono: true, size: 15, bold: true, color: Math.abs(o - y) < 0.5 ? C.ok : C.pen });
+      });
+    }
+  };
+
+  /* ===== 3. Sous-apprentissage et surapprentissage ===== */
+  const truth = (x) => Math.sin(Math.PI * x) * 0.9 + 0.3 * x;
+  function polyfit(pts, d) {
+    const n = d + 1, A = Array.from({ length: n }, () => Array(n).fill(0)), b = Array(n).fill(0);
+    for (const [x, y] of pts) {
+      const pw = [1]; for (let k = 1; k < n; k++) pw.push(pw[k - 1] * x);
+      for (let i = 0; i < n; i++) { b[i] += pw[i] * y; for (let j = 0; j < n; j++) A[i][j] += pw[i] * pw[j]; }
+    }
+    for (let i = 0; i < n; i++) A[i][i] += 1e-7;
+    return solve(A, b);
+  }
+  const peval = (c, x) => c.reduceRight((s, v) => s * x + v, 0);
+  const mse = (c, pts) => pts.reduce((s, [x, y]) => s + (peval(c, x) - y) ** 2, 0) / pts.length;
+  const SUR_STEP = 1.3, SUR_MAX = 12;
+  const sur = {
+    titre: 'Sous-apprentissage et surapprentissage',
+    resume: 'On ajuste des polynômes de degré croissant : trop simple, le modèle rate la tendance ; trop complexe, il apprend le bruit et l’erreur sur les données de test remonte.',
+    params: {
+      bruit: { label: 'Bruit', type: 'range', min: 0, max: 0.6, step: 0.05, def: 0.25 },
+      points: { label: 'Points d’entraînement', type: 'range', min: 8, max: 30, step: 1, def: 12 }
+    },
+    setup(p, seed) {
+      const r = rng(seed), mk = (n) => Array.from({ length: n }, () => { const x = r() * 2 - 1; return [x, truth(x) + gauss(r) * p.bruit]; }).sort((a, b) => a[0] - b[0]);
+      const train = mk(p.points), test = mk(80);
+      const fits = [null];
+      for (let d = 1; d <= SUR_MAX; d++) { const c = polyfit(train, d); fits.push({ c, tr: mse(c, train), te: mse(c, test) }); }
+      let best = 1; for (let d = 2; d <= SUR_MAX; d++) if (fits[d].te < fits[best].te) best = d;
+      return { t: 0, train, test, fits, best };
+    },
+    update(st, dt) { st.t += dt; if (st.t > SUR_STEP * SUR_MAX + 3.5) st.t = 0; },
+    draw(E, st) {
+      const { S, C } = E, d = clamp(Math.floor(st.t / SUR_STEP) + 1, 1, SUR_MAX), f = st.fits[d];
+      const [L, R] = split(E, 0.58, 24 * S);
+      const verdict = d < st.best - 1 ? ['sous-apprentissage : trop simple', C.c[3]] : d > st.best + 2 ? ['surapprentissage : apprend le bruit', C.pen] : ['bon compromis', C.ok];
+      txt(E, 'Polynôme de degré ' + d + ' — ' + verdict[0], E.W / 2, 24 * S, { align: 'center', size: 16, bold: true, color: verdict[1] });
+      box(E, L);
+      const m = map(L, -1.05, 1.05, -2.2, 2.2), c = E.ctx;
+      c.save(); c.beginPath(); c.rect(L.x, L.y, L.w, L.h); c.clip();
+      const curve = (fn) => { const pts = []; for (let i = 0; i <= 300; i++) { const x = -1.05 + (2.1 * i) / 300; pts.push([m.X(x), m.Y(clamp(fn(x), -5, 5))]); } return pts; };
+      poly(E, curve(truth), C.soft, 1.6, [6, 5]);
+      st.test.forEach(([x, y]) => dot(E, m.X(x), m.Y(y), 3 * S, null, alpha(C.soft, 0.7), 1.2));
+      poly(E, curve((x) => peval(f.c, x)), C.pen, 3);
+      st.train.forEach(([x, y]) => dot(E, m.X(x), m.Y(y), 5.5 * S, C.c[0], C.card, 1.5));
+      c.restore();
+      txt(E, '● entraînement   ○ test   - - vraie fonction', L.x + 8 * S, L.y + L.h - 8 * S, { size: 12, color: C.soft });
+      const shown = st.fits.slice(1, d + 1);
+      const mm = lossPlot(E, R, [{ data: shown.map((q) => q.tr), color: C.c[0], marks: true }, { data: shown.map((q) => q.te), color: C.pen, marks: true }],
+        { title: 'Erreur (MSE) selon le degré · bleu : entraînement · rouge : test', log: true, lo: -3, n: SUR_MAX - 1, xlabel: 'degré 1 → ' + SUR_MAX });
+      if (mm && d >= st.best) {
+        const x = mm.X(st.best - 1);
+        seg(E, x, R.y + 26 * S, x, R.y + R.h - 20 * S, C.ok, 1.6, [4, 4]);
+        txt(E, 'meilleur : ' + st.best, x + 4 * S, R.y + 40 * S, { size: 12, color: C.ok });
+      }
+    }
+  };
+
+  /* ===== 4. Frontière de décision (régression logistique) ===== */
+  function lrInit(st) { const r = st.r; st.w = [gauss(r) * 1.5, gauss(r) * 1.5]; st.b = gauss(r) * 1.5; st.step = 0; st.hold = 0; st.losses = []; }
+  function lrLoss(st) {
+    let L = 0, ok = 0;
+    for (const [x, y, c] of st.pts) { const p = sig(st.w[0] * x + st.w[1] * y + st.b); L -= c ? Math.log(p + 1e-9) : Math.log(1 - p + 1e-9); if ((p > 0.5) === !!c) ok++; }
+    return { L: L / st.pts.length, acc: ok / st.pts.length };
+  }
+  const frontiere = {
+    titre: 'Frontière de décision',
+    resume: 'Une régression logistique apprend à séparer deux classes : la droite de décision tourne et se déplace à chaque pas de descente de gradient.',
+    params: {
+      ecart: { label: 'Écart entre les classes', type: 'range', min: 0.5, max: 4, step: 0.1, def: 2.2 },
+      eta: { label: 'Taux d’apprentissage η', type: 'range', min: 0.05, max: 2, step: 0.05, def: 0.5 }
+    },
+    setup(p, seed) {
+      const r = rng(seed), a = r() * Math.PI, ux = Math.cos(a), uy = Math.sin(a), pts = [];
+      for (let i = 0; i < 100; i++) { const c = i % 2, s = c ? 1 : -1; pts.push([s * ux * p.ecart / 2 + gauss(r), s * uy * p.ecart / 2 + gauss(r), c]); }
+      const st = { r, pts, acc: 0 };
+      lrInit(st); st.stat = lrLoss(st); st.losses.push(st.stat.L);
+      return st;
+    },
+    update(st, dt, p) {
+      st.acc += dt;
+      while (st.acc > 0.05) {
+        st.acc -= 0.05;
+        if (st.step < 250) {
+          let g0 = 0, g1 = 0, gb = 0;
+          for (const [x, y, c] of st.pts) { const e = sig(st.w[0] * x + st.w[1] * y + st.b) - c; g0 += e * x; g1 += e * y; gb += e; }
+          const n = st.pts.length;
+          st.w[0] -= (p.eta * g0) / n; st.w[1] -= (p.eta * g1) / n; st.b -= (p.eta * gb) / n;
+          st.step++; st.stat = lrLoss(st); st.losses.push(st.stat.L);
+        } else if ((st.hold += 0.05) > 2.5) { lrInit(st); st.stat = lrLoss(st); st.losses.push(st.stat.L); }
+      }
+    },
+    draw(E, st) {
+      const { S, C } = E, c = E.ctx;
+      const [A, B] = split(E, 0.6);
+      const side = Math.min(A.w, A.h), P = { x: A.x + (A.w - side) / 2, y: A.y + (A.h - side) / 2, w: side, h: side };
+      const D = 4.5, m = map(P, -D, D, -D, D), N = 30, cs = side / N;
+      for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+        const x = -D + ((i + 0.5) * 2 * D) / N, y = D - ((j + 0.5) * 2 * D) / N, pr = sig(st.w[0] * x + st.w[1] * y + st.b);
+        c.fillStyle = pr > 0.5 ? alpha(C.c[1], (pr - 0.5) * 0.55) : alpha(C.c[0], (0.5 - pr) * 0.55);
+        c.fillRect(P.x + i * cs, P.y + j * cs, cs + 0.5, cs + 0.5);
+      }
+      box(E, P);
+      c.save(); c.beginPath(); c.rect(P.x, P.y, P.w, P.h); c.clip();
+      const [w0, w1] = st.w;
+      if (Math.abs(w1) > 1e-6) seg(E, m.X(-D), m.Y((-st.b - w0 * -D) / w1), m.X(D), m.Y((-st.b - w0 * D) / w1), C.ink, 3);
+      else if (Math.abs(w0) > 1e-6) seg(E, m.X(-st.b / w0), P.y, m.X(-st.b / w0), P.y + P.h, C.ink, 3);
+      for (const [x, y, k] of st.pts) {
+        if (k) { const s = 5 * S; c.fillStyle = C.c[1]; c.fillRect(m.X(x) - s, m.Y(y) - s, 2 * s, 2 * s); c.strokeStyle = C.card; c.lineWidth = 1.2 * S; c.strokeRect(m.X(x) - s, m.Y(y) - s, 2 * s, 2 * s); }
+        else dot(E, m.X(x), m.Y(y), 5.5 * S, C.c[0], C.card, 1.2);
+      }
+      c.restore();
+      const b1 = { x: B.x, y: B.y, w: B.w, h: B.h * 0.55 };
+      lossPlot(E, b1, [{ data: st.losses, color: C.pen }], { title: 'Perte (entropie croisée)', n: 250 });
+      const ty = B.y + B.h * 0.55 + 30 * S;
+      txt(E, 'pas ' + st.step + ' · exactitude ' + pct(st.stat.acc), B.x, ty, { size: 16, bold: true });
+      txt(E, 'p = σ(w₁x₁ + w₂x₂ + b)', B.x, ty + 30 * S, { size: 18, serif: true, italic: true });
+      txt(E, 'w₁ = ' + fmt(w0) + '   w₂ = ' + fmt(w1) + '   b = ' + fmt(st.b), B.x, ty + 56 * S, { size: 13, mono: true, color: C.soft });
+      txt(E, '● classe 0   ■ classe 1   — frontière p = 0,5', B.x, ty + 82 * S, { size: 13, color: C.soft });
+    }
+  };
+
+  /* ===== 5. k-moyennes ===== */
+  function kmInit(st) {
+    const r = st.r;
+    st.cent = Array.from({ length: st.k }, () => st.pts[Math.floor(r() * st.pts.length)].slice());
+    st.assign = st.pts.map(() => -1); st.next = 'assign'; st.from = null; st.it = 0; st.done = false; st.t = 0;
+    st.hist = st.cent.map((c) => [c.slice()]); st.label = 'Centres placés au hasard';
+  }
+  const kmeans = {
+    titre: 'k-moyennes (k-means)',
+    resume: 'On alterne deux étapes : chaque point rejoint le centre le plus proche, puis chaque centre se déplace au milieu de ses points, jusqu’à ce que plus rien ne change.',
+    params: {
+      k: { label: 'Nombre de groupes k', type: 'range', min: 2, max: 6, step: 1, def: 3 },
+      points: { label: 'Points', type: 'range', min: 60, max: 300, step: 10, def: 150 }
+    },
+    setup(p, seed) {
+      const r = rng(seed), nb = 3 + Math.floor(r() * 2), centers = Array.from({ length: nb }, () => [r() * 6 - 3, r() * 6 - 3]);
+      const pts = Array.from({ length: p.points }, (_, i) => { const c = centers[i % nb]; return [c[0] + gauss(r) * 0.75, c[1] + gauss(r) * 0.75]; });
+      const st = { r, pts, k: p.k };
+      kmInit(st);
+      return st;
+    },
+    update(st, dt) {
+      st.t += dt;
+      if (st.done) { if (st.t > 3.5) kmInit(st); return; }
+      if (st.t < 1.3) return;
+      st.t = 0;
+      if (st.next === 'assign') {
+        let changed = false;
+        st.assign = st.pts.map((q, i) => {
+          let best = 0, bd = Infinity;
+          st.cent.forEach((c, j) => { const d = (q[0] - c[0]) ** 2 + (q[1] - c[1]) ** 2; if (d < bd) { bd = d; best = j; } });
+          if (best !== st.assign[i]) changed = true;
+          return best;
+        });
+        st.from = null; st.it++;
+        if (!changed) { st.done = true; st.label = 'Convergé : plus aucun point ne change de groupe'; }
+        else { st.label = 'Étape 1 : chaque point rejoint le centre le plus proche'; st.next = 'move'; }
+      } else {
+        st.from = st.cent.map((c) => c.slice());
+        st.cent = st.cent.map((c, j) => {
+          let sx = 0, sy = 0, n = 0;
+          st.pts.forEach((q, i) => { if (st.assign[i] === j) { sx += q[0]; sy += q[1]; n++; } });
+          return n ? [sx / n, sy / n] : c;
+        });
+        st.cent.forEach((c, j) => st.hist[j].push(c.slice()));
+        st.label = 'Étape 2 : chaque centre va au milieu de ses points'; st.next = 'assign';
+      }
+    },
+    draw(E, st) {
+      const { S, C } = E, p = pad(E), top = 52 * S;
+      const side = Math.min(E.W - 2 * p, E.H - top - p), P = { x: (E.W - side) / 2, y: top, w: side, h: side };
+      const m = map(P, -5.5, 5.5, -5.5, 5.5);
+      box(E, P);
+      txt(E, 'itération ' + st.it + ' — ' + st.label, E.W / 2, 22 * S, { align: 'center', size: 16, bold: true, color: st.done ? C.ok : C.ink });
+      let inertia = 0;
+      st.pts.forEach((q, i) => {
+        const a = st.assign[i];
+        if (a >= 0) inertia += (q[0] - st.cent[a][0]) ** 2 + (q[1] - st.cent[a][1]) ** 2;
+        dot(E, m.X(q[0]), m.Y(q[1]), 4 * S, a < 0 ? alpha(C.soft, 0.6) : alpha(C.c[a], 0.85));
+      });
+      txt(E, st.assign[0] >= 0 ? 'inertie (somme des distances²) : ' + fmt(inertia, 1) : 'les points ne sont pas encore affectés', E.W / 2, 42 * S, { align: 'center', size: 13, color: C.soft });
+      const k = st.from ? ease(st.t / 0.8) : 1;
+      st.cent.forEach((c, j) => {
+        poly(E, st.hist[j].map((h) => [m.X(h[0]), m.Y(h[1])]), C.ink, 1.4, [4, 3]);
+        const x = st.from ? lerp(st.from[j][0], c[0], k) : c[0], y = st.from ? lerp(st.from[j][1], c[1], k) : c[1];
+        const X = m.X(x), Y = m.Y(y), s = 11 * S, ctx = E.ctx;
+        ctx.beginPath(); ctx.moveTo(X, Y - s); ctx.lineTo(X + s, Y); ctx.lineTo(X, Y + s); ctx.lineTo(X - s, Y); ctx.closePath();
+        ctx.fillStyle = C.c[j]; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5 * S; ctx.stroke();
+      });
+    }
+  };
+
+  /* ===== 6. Softmax ===== */
+  const CLASSES = ['chat', 'chien', 'oiseau', 'poisson', 'cheval', 'lapin'];
+  const softmax = {
+    titre: 'Softmax et température',
+    resume: 'Softmax transforme des scores bruts (logits) en probabilités positives dont la somme vaut 1. Une température basse rend la décision tranchée, une température haute l’aplatit.',
+    params: {
+      classes: { label: 'Classes', type: 'range', min: 3, max: 6, step: 1, def: 4 },
+      temperature: { label: 'Température T', type: 'range', min: 0.2, max: 5, step: 0.1, def: 1 }
+    },
+    setup(p, seed) { const r = rng(seed); return { t: 0, base: Array.from({ length: p.classes }, () => gauss(r) * 1.3), ph: Array.from({ length: p.classes }, () => r() * 6.28) }; },
+    update(st, dt) { st.t += dt; },
+    draw(E, st, p) {
+      const { S, C } = E, n = st.base.length, T = p.temperature;
+      const z = st.base.map((b, i) => clamp(b + 1.2 * Math.sin(0.55 * st.t + st.ph[i]), -4, 4));
+      const ex = z.map((v) => Math.exp(v / T)), sum = ex.reduce((a, b) => a + b, 0), pr = ex.map((v) => v / sum);
+      txt(E, 'pᵢ = e^(zᵢ / T) / Σⱼ e^(zⱼ / T)      T = ' + fmt(T, 1), E.W / 2, 26 * S, { align: 'center', size: 19, serif: true, italic: true });
+      const [L, R] = split(E, 0.5, 34 * S);
+      const bars = (b, vals, lo, hi, title, col, lab) => {
+        box(E, b);
+        txt(E, title, b.x + 8 * S, b.y + 18 * S, { size: 13, color: C.soft });
+        const inner = inset(b, 12 * S, 30 * S, 12 * S, 30 * S), m = map(inner, 0, n, lo, hi), bw = (inner.w / n) * 0.62;
+        if (lo < 0) seg(E, inner.x, m.Y(0), inner.x + inner.w, m.Y(0), C.gmaj, 1.2);
+        vals.forEach((v, i) => {
+          const x = m.X(i + 0.5) - bw / 2, y0 = m.Y(Math.max(0, lo)), y1 = m.Y(v);
+          E.ctx.fillStyle = col(i, v); E.ctx.fillRect(x, Math.min(y0, y1), bw, Math.abs(y1 - y0));
+          txt(E, lab(v), m.X(i + 0.5), v >= 0 ? y1 - 6 * S : y1 + 16 * S, { align: 'center', size: 13, mono: true });
+          txt(E, CLASSES[i], m.X(i + 0.5), b.y + b.h - 10 * S, { align: 'center', size: 13, color: C.soft });
+        });
+      };
+      const best = pr.indexOf(Math.max(...pr));
+      bars(L, z, -4.5, 4.5, 'Scores bruts z (logits)', () => C.c[0], (v) => fmt(v, 1));
+      bars(R, pr, 0, 1.05, 'Probabilités (somme = 100 %)', (i) => (i === best ? C.pen : alpha(C.pen, 0.45)), pct);
+    }
+  };
+
+  /* ===== 7. Convolution ===== */
+  const KERNELS = {
+    contours: { k: [[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]] },
+    vertical: { k: [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]] },
+    horizontal: { k: [[-1, -2, -1], [0, 0, 0], [1, 2, 1]] },
+    flou: { k: [[1, 1, 1], [1, 1, 1], [1, 1, 1]].map((r) => r.map((v) => v / 9)), lab: '1/9' },
+    nettete: { k: [[0, -1, 0], [-1, 5, -1], [0, -1, 0]] }
+  };
+  const CONV_STEP = 0.2, CONV_N = 12;
+  const convolution = {
+    titre: 'Convolution sur une image',
+    resume: 'Un petit filtre 3×3 glisse sur l’image ; à chaque position, on multiplie pixel par pixel et on additionne. C’est ainsi qu’un réseau convolutif détecte des contours ou des motifs.',
+    params: { noyau: { label: 'Filtre', type: 'choice', options: { contours: 'Contours', vertical: 'Bords verticaux', horizontal: 'Bords horizontaux', flou: 'Flou', nettete: 'Netteté' }, def: 'contours' } },
+    setup(p, seed) {
+      const r = rng(seed), N = CONV_N, img = Array.from({ length: N }, () => Array(N).fill(0.1));
+      const r0 = 1 + Math.floor(r() * 3), c0 = 1 + Math.floor(r() * 3), sz = 5 + Math.floor(r() * 2);
+      for (let i = r0; i < r0 + sz; i++) for (let j = c0; j < c0 + sz; j++) img[i][j] = 0.9;
+      for (let i = 0; i < N; i++) { const j = N - 1 - i; if (img[i][j] < 0.5) img[i][j] = 0.6; }
+      const K = KERNELS[p.noyau].k, out = [];
+      for (let i = 0; i < N - 2; i++) { out.push([]); for (let j = 0; j < N - 2; j++) { let s = 0; for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) s += img[i + a][j + b] * K[a][b]; out[i].push(s); } }
+      const flat = out.flat();
+      return { t: 0, img, out, K, lo: Math.min(...flat), hi: Math.max(...flat) };
+    },
+    update(st, dt) { st.t += dt; if (st.t > CONV_STEP * 100 + 3) st.t = 0; },
+    draw(E, st, p) {
+      const { S, C } = E, ctx = E.ctx, N = CONV_N, M = N - 2, pos = Math.min(100, Math.floor(st.t / CONV_STEP));
+      const g = Math.min((E.W - 2 * pad(E)) / 29, (E.H - 110 * S) / N), x0 = (E.W - 29 * g) / 2, y0 = 44 * S;
+      const xi = x0, xk = x0 + 14 * g, xo = x0 + 19 * g, yk = y0 + (N / 2 - 1.5) * g, yo = y0 + g;
+      const [ir, ig, ib] = rgb(C.ink);
+      const cell = (x, y, v, s) => { ctx.fillStyle = 'rgba(' + ir + ',' + ig + ',' + ib + ',' + clamp(v, 0, 1) + ')'; ctx.fillRect(x, y, s, s); ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, s - 1, s - 1); };
+      txt(E, 'Image', xi + (N * g) / 2, y0 - 12 * S, { align: 'center', size: 14, bold: true });
+      txt(E, 'Filtre : ' + convolution.params.noyau.options[p.noyau].toLowerCase(), xk + 1.5 * g, yk - 12 * S, { align: 'center', size: 14, bold: true });
+      txt(E, 'Carte de sortie', xo + (M * g) / 2, y0 - 12 * S, { align: 'center', size: 14, bold: true });
+      for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) cell(xi + j * g, y0 + i * g, st.img[i][j], g);
+      const lab = KERNELS[p.noyau].lab;
+      for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) {
+        const v = st.K[a][b], x = xk + b * g, y = yk + a * g;
+        ctx.fillStyle = v > 0 ? alpha(C.c[0], 0.18) : v < 0 ? alpha(C.c[1], 0.18) : C.card; ctx.fillRect(x, y, g, g);
+        ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, g - 1, g - 1);
+        txt(E, lab || fmt(v, 0), x + g / 2, y + g / 2, { align: 'center', base: 'middle', mono: true, size: Math.min(14, g / S / 2.4) });
+      }
+      for (let i = 0; i < M; i++) for (let j = 0; j < M; j++) {
+        const idx = i * M + j, x = xo + j * g, y = yo + i * g;
+        if (idx < pos) cell(x, y, (st.out[i][j] - st.lo) / (st.hi - st.lo || 1), g);
+        else { ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, g - 1, g - 1); }
+      }
+      if (pos < 100) {
+        const i = Math.floor(pos / M), j = pos % M;
+        ctx.strokeStyle = C.pen; ctx.lineWidth = 3 * S;
+        ctx.strokeRect(xi + j * g, y0 + i * g, 3 * g, 3 * g);
+        ctx.strokeRect(xo + j * g, yo + i * g, g, g);
+        seg(E, xi + (j + 3) * g, y0 + (i + 1.5) * g, xk, yk + 1.5 * g, C.pen, 1.4, [5, 4]);
+        seg(E, xk + 3 * g, yk + 1.5 * g, xo + j * g, yo + (i + 0.5) * g, C.pen, 1.4, [5, 4]);
+        txt(E, 'Σ (pixels × filtre) = ' + fmt(st.out[i][j], 2), E.W / 2, E.H - 22 * S, { align: 'center', size: 18, serif: true, italic: true, color: C.pen });
+      } else txt(E, 'La carte de sortie met en évidence ce que le filtre détecte.', E.W / 2, E.H - 22 * S, { align: 'center', size: 16, color: C.ok });
+    }
+  };
+
+  /* ===== 8. Descente de gradient en 2D ===== */
+  const SURF = {
+    bol: { nom: 'Bol allongé', f: (x, y) => 0.5 * x * x + 5 * y * y, g: (x, y) => [x, 10 * y], dom: [-3, 3, -2, 2], start: [-2.7, 1.4], lr: { sgd: 0.18, momentum: 0.04, adam: 0.12 }, fmin: 0, mins: [[0, 0]] },
+    rosenbrock: { nom: 'Vallée de Rosenbrock', f: (x, y) => (1 - x) ** 2 + 10 * (y - x * x) ** 2, g: (x, y) => [-2 * (1 - x) - 40 * x * (y - x * x), 20 * (y - x * x)], dom: [-2, 2, -1, 3], start: [-1.2, 2.6], lr: { sgd: 0.01, momentum: 0.002, adam: 0.05 }, fmin: 0, mins: [[1, 1]] },
+    col: { nom: 'Point col', f: (x, y) => 0.5 * x * x - y * y + 0.25 * y ** 4, g: (x, y) => [x, -2 * y + y ** 3], dom: [-3, 3, -2.2, 2.2], start: [2.8, 0.05], lr: { sgd: 0.1, momentum: 0.02, adam: 0.1 }, fmin: -1, mins: [[0, Math.SQRT2], [0, -Math.SQRT2]] }
+  };
+  const RUNNERS = [['sgd', 'Descente simple', 0], ['momentum', 'Momentum', 2], ['adam', 'Adam', 1]];
+  function d2Init(st) {
+    st.run = RUNNERS.map(([key, nom, ci]) => ({ key, nom, ci, x: st.s.start[0], y: st.s.start[1], v: [0, 0], m: [0, 0], u: [0, 0], k: 0, path: [st.s.start.slice()], out: false }));
+    st.step = 0; st.hold = 0;
+  }
+  const descente2d = {
+    titre: 'Descente de gradient en 2D',
+    resume: 'Trois méthodes partent du même point sur une surface vue de dessus (courbes de niveau) : la descente simple, le momentum et Adam ne prennent pas le même chemin vers le minimum.',
+    params: {
+      surface: { label: 'Surface', type: 'choice', options: { bol: 'Bol allongé', rosenbrock: 'Vallée de Rosenbrock', col: 'Point col' }, def: 'bol' },
+      taux: { label: 'Multiplicateur de η', type: 'range', min: 0.2, max: 2, step: 0.1, def: 1 }
+    },
+    setup(p) { const st = { s: SURF[p.surface], acc: 0, img: null, key: '' }; d2Init(st); return st; },
+    update(st, dt, p) {
+      st.acc += dt;
+      while (st.acc > 0.04) {
+        st.acc -= 0.04;
+        if (st.step >= 400) { if ((st.hold += 0.04) > 3) d2Init(st); continue; }
+        st.step++;
+        for (const R of st.run) {
+          if (R.out) continue;
+          const g = st.s.g(R.x, R.y), lr = st.s.lr[R.key] * p.taux;
+          let d;
+          if (R.key === 'momentum') { R.v = [0.9 * R.v[0] + g[0], 0.9 * R.v[1] + g[1]]; d = [lr * R.v[0], lr * R.v[1]]; }
+          else if (R.key === 'adam') {
+            R.k++;
+            R.m = R.m.map((v, i) => 0.9 * v + 0.1 * g[i]); R.u = R.u.map((v, i) => 0.999 * v + 0.001 * g[i] * g[i]);
+            d = [0, 1].map((i) => (lr * (R.m[i] / (1 - 0.9 ** R.k))) / (Math.sqrt(R.u[i] / (1 - 0.999 ** R.k)) + 1e-8));
+          } else d = [lr * g[0], lr * g[1]];
+          R.x -= d[0]; R.y -= d[1];
+          if (!isFinite(R.x) || !isFinite(R.y) || Math.abs(R.x) > 50 || Math.abs(R.y) > 50) R.out = true;
+          else { R.path.push([R.x, R.y]); if (R.path.length > 500) R.path.shift(); }
+        }
+      }
+    },
+    draw(E, st, pp) {
+      const { S, C } = E, s = st.s, [x0, x1, y0, y1] = s.dom, p = pad(E);
+      const legendW = Math.min(17 * 16 * S, E.W * 0.32), wide = E.W - legendW > E.H * 0.9;
+      const P = wide ? { x: p, y: p, w: E.W - legendW - 3 * p, h: E.H - 2 * p } : { x: p, y: p, w: E.W - 2 * p, h: E.H * 0.7 - 2 * p };
+      const m = map(P, x0, x1, y0, y1), key = [P.w, P.h, s.nom, C.card, C.c[0]].join('|');
+      if (st.key !== key) {
+        const cw = Math.max(40, Math.round(P.w / (3 * S))), ch = Math.max(30, Math.round(P.h / (3 * S)));
+        const off = document.createElement('canvas'); off.width = cw; off.height = ch;
+        const o = off.getContext('2d'), im = o.createImageData(cw, ch), bg = rgb(C.card), tint = rgb(C.c[0]), ln = rgb(C.gmaj);
+        const vals = [];
+        for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) vals.push(Math.log(1 + s.f(x0 + ((i + 0.5) / cw) * (x1 - x0), y1 - ((j + 0.5) / ch) * (y1 - y0)) - s.fmin));
+        const vmax = Math.max(...vals.filter(isFinite));
+        vals.forEach((v, idx) => {
+          const k = (v / vmax) * 9, fr = k - Math.floor(k), a = 0.08 + 0.32 * (1 - v / vmax);
+          const col = fr < 0.09 ? ln : bg.map((c, q) => Math.round(c * (1 - a) + tint[q] * a));
+          im.data.set([col[0], col[1], col[2], 255], idx * 4);
+        });
+        o.putImageData(im, 0, 0); st.img = off; st.key = key;
+      }
+      E.ctx.imageSmoothingEnabled = true; E.ctx.drawImage(st.img, P.x, P.y, P.w, P.h);
+      box(E, P);
+      s.mins.forEach(([a, b]) => { const X = m.X(a), Y = m.Y(b), r = 7 * S; seg(E, X - r, Y - r, X + r, Y + r, C.ok, 3); seg(E, X - r, Y + r, X + r, Y - r, C.ok, 3); });
+      const ctx = E.ctx;
+      ctx.save(); ctx.beginPath(); ctx.rect(P.x, P.y, P.w, P.h); ctx.clip();
+      for (const R of st.run) {
+        poly(E, R.path.map(([a, b]) => [m.X(a), m.Y(b)]), C.c[R.ci], 2.6);
+        const [a, b] = R.path[R.path.length - 1];
+        dot(E, m.X(a), m.Y(b), 7 * S, C.c[R.ci], C.card, 2);
+      }
+      ctx.restore();
+      dot(E, m.X(s.start[0]), m.Y(s.start[1]), 5 * S, C.ink);
+      const lx = wide ? P.x + P.w + p : p, ly = wide ? P.y + 20 * S : P.y + P.h + 26 * S;
+      txt(E, s.nom + ' · pas ' + st.step, lx, ly, { size: 16, bold: true });
+      st.run.forEach((R, i) => {
+        const y = ly + (30 + i * 46) * S, [a, b] = R.path[R.path.length - 1];
+        E.ctx.fillStyle = C.c[R.ci]; E.ctx.fillRect(lx, y - 10 * S, 14 * S, 14 * S);
+        txt(E, R.nom + ' (η = ' + fmt(s.lr[R.key] * pp.taux, 3) + ')', lx + 22 * S, y + 2 * S, { size: 14, bold: true });
+        txt(E, R.out ? 'diverge !' : 'f = ' + fmt(s.f(a, b), 3), lx + 22 * S, y + 22 * S, { size: 13, mono: true, color: R.out ? C.pen : C.soft });
+      });
+      txt(E, '✕ minimum   ● départ', lx, ly + 172 * S, { size: 13, color: C.soft });
+    }
+  };
+
+  /* ===== 9. Seuil, matrice de confusion, ROC ===== */
+  const seuil = {
+    titre: 'Seuil de décision, précision et rappel',
+    resume: 'Un classifieur donne un score à chaque exemple. En déplaçant le seuil, on échange des faux positifs contre des faux négatifs : la matrice de confusion et la courbe ROC le montrent.',
+    params: { separation: { label: 'Séparation des classes', type: 'range', min: 0.5, max: 4, step: 0.1, def: 2 } },
+    setup(p, seed) {
+      const r = rng(seed), neg = Array.from({ length: 300 }, () => gauss(r) - p.separation / 2), pos = Array.from({ length: 300 }, () => gauss(r) + p.separation / 2);
+      const roc = [];
+      for (let k = 0; k <= 120; k++) { const th = 6 - k * 0.1; roc.push([neg.filter((v) => v >= th).length / 300, pos.filter((v) => v >= th).length / 300]); }
+      let auc = 0; for (let k = 1; k < roc.length; k++) auc += (roc[k][0] - roc[k - 1][0]) * (roc[k][1] + roc[k - 1][1]) / 2;
+      return { t: 0, neg, pos, roc, auc };
+    },
+    update(st, dt) { st.t += dt; },
+    draw(E, st) {
+      const { S, C } = E, p = pad(E), th = 2.6 * Math.sin(st.t * 0.4);
+      const top = { x: p, y: p, w: E.W - 2 * p, h: (E.H - 3 * p) * 0.48 };
+      box(E, top);
+      const m = map(inset(top, 10 * S, 26 * S, 10 * S, 22 * S), -5, 5, 0, 1);
+      const bins = 40, hist = (arr) => { const h = Array(bins).fill(0); arr.forEach((v) => { const i = Math.floor(((v + 5) / 10) * bins); if (i >= 0 && i < bins) h[i]++; }); return h; };
+      const hn = hist(st.neg), hp = hist(st.pos), mx = Math.max(...hn, ...hp);
+      [[hn, C.c[0]], [hp, C.c[1]]].forEach(([h, col]) => h.forEach((v, i) => {
+        const xa = m.X(-5 + (i * 10) / bins), xb = m.X(-5 + ((i + 1) * 10) / bins);
+        E.ctx.fillStyle = alpha(col, 0.4); E.ctx.fillRect(xa, m.Y((v / mx) * 0.95), xb - xa - 1, m.Y(0) - m.Y((v / mx) * 0.95));
+      }));
+      seg(E, m.X(th), top.y + 20 * S, m.X(th), top.y + top.h - 18 * S, C.pen, 3);
+      txt(E, 'seuil = ' + fmt(th, 2) + '  →  au-delà : prédit positif', m.X(th) + 8 * S, top.y + 34 * S, { size: 13, bold: true, color: C.pen });
+      txt(E, 'scores des négatifs (bleu) et des positifs (rouge)', top.x + 8 * S, top.y + 16 * S, { size: 12, color: C.soft });
+      const TP = st.pos.filter((v) => v >= th).length, FN = 300 - TP, FP = st.neg.filter((v) => v >= th).length, TN = 300 - FP;
+      const by = top.y + top.h + p, bh = E.H - by - p, bw = (E.W - 4 * p) / 3;
+      const cm = { x: p, y: by, w: bw, h: bh }, cs = Math.min((cm.w - 50 * S) / 2, (cm.h - 40 * S) / 2), cx = cm.x + 50 * S, cy = cm.y + 30 * S;
+      txt(E, 'prédit +', cx + cs / 2, cy - 8 * S, { align: 'center', size: 12, color: C.soft }); txt(E, 'prédit −', cx + cs * 1.5, cy - 8 * S, { align: 'center', size: 12, color: C.soft });
+      txt(E, 'réel +', cx - 8 * S, cy + cs / 2, { align: 'right', base: 'middle', size: 12, color: C.soft }); txt(E, 'réel −', cx - 8 * S, cy + cs * 1.5, { align: 'right', base: 'middle', size: 12, color: C.soft });
+      [[TP, 'VP', 0, 0, true], [FN, 'FN', 1, 0, false], [FP, 'FP', 0, 1, false], [TN, 'VN', 1, 1, true]].forEach(([v, lab, i, j, good]) => {
+        const x = cx + i * cs, y = cy + j * cs;
+        E.ctx.fillStyle = alpha(good ? C.ok : C.pen, 0.12 + (v / 300) * 0.4); E.ctx.fillRect(x, y, cs - 3 * S, cs - 3 * S);
+        txt(E, String(v), x + cs / 2, y + cs / 2 - 4 * S, { align: 'center', base: 'middle', size: 20, bold: true, mono: true });
+        txt(E, lab, x + cs / 2, y + cs / 2 + 18 * S, { align: 'center', base: 'middle', size: 12, color: C.soft });
+      });
+      const mx2 = 2 * p + bw, prec = TP / (TP + FP), rec = TP / 300, acc = (TP + TN) / 600;
+      [['Précision', 'VP / (VP + FP)', prec, 'parmi les prédits positifs, combien le sont vraiment'], ['Rappel', 'VP / (VP + FN)', rec, 'parmi les vrais positifs, combien sont trouvés'], ['Exactitude', '(VP + VN) / total', acc, 'part des bonnes réponses']]
+        .forEach(([n, f, v, d], i) => {
+          const y = by + 22 * S + i * (bh / 3.1);
+          txt(E, n + ' = ' + pct(v), mx2, y, { size: 18, bold: true, color: C.pen });
+          txt(E, f, mx2, y + 20 * S, { size: 14, serif: true, italic: true });
+          txt(E, d, mx2, y + 38 * S, { size: 12, color: C.soft });
+        });
+      const rs = Math.min(bw, bh) - 30 * S, rb = { x: 3 * p + 2 * bw + (bw - rs) / 2, y: by + 20 * S, w: rs, h: rs };
+      box(E, rb);
+      const rm = map(rb, 0, 1, 0, 1);
+      seg(E, rm.X(0), rm.Y(0), rm.X(1), rm.Y(1), C.gmaj, 1, [4, 4]);
+      poly(E, st.roc.map(([a, b]) => [rm.X(a), rm.Y(b)]), C.c[0], 2.4);
+      dot(E, rm.X(FP / 300), rm.Y(TP / 300), 7 * S, C.pen, C.card, 2);
+      txt(E, 'Courbe ROC · aire = ' + fmt(st.auc, 2), rb.x, rb.y - 6 * S, { size: 13, bold: true });
+      txt(E, 'taux de faux positifs →', rb.x + rb.w, rb.y + rb.h + 14 * S, { size: 11, align: 'right', color: C.soft });
+    }
+  };
+
+  /* ===== 10. Entraînement, validation, test ===== */
+  function dcShuffle(st) {
+    const perm = st.items.map((_, i) => i);
+    for (let i = perm.length - 1; i > 0; i--) { const j = Math.floor(st.r() * (i + 1)); [perm[i], perm[j]] = [perm[j], perm[i]]; }
+    st.slot = Array(perm.length); perm.forEach((item, q) => { st.slot[item] = q; });
+  }
+  const decoupage = {
+    titre: 'Entraînement, validation et test',
+    resume: 'On mélange les données puis on les sépare : l’entraînement sert à apprendre, la validation à régler le modèle, et le test, gardé de côté jusqu’à la fin, mesure honnêtement la performance.',
+    params: {
+      train: { label: 'Entraînement (%)', type: 'range', min: 50, max: 90, step: 5, def: 70 },
+      val: { label: 'Validation (%)', type: 'range', min: 0, max: 30, step: 5, def: 15 }
+    },
+    setup(p, seed) {
+      const N = 60, nTr = Math.round((N * p.train) / 100), nVa = Math.min(Math.round((N * p.val) / 100), N - nTr - 1);
+      const st = { r: rng(seed), t: 0, items: Array.from({ length: N }, (_, i) => Math.floor((i * 3) / N)), nTr, nVa, nTe: N - nTr - nVa };
+      dcShuffle(st);
+      return st;
+    },
+    update(st, dt) { st.t += dt; if (st.t > 11) { st.t = 0; dcShuffle(st); } },
+    draw(E, st) {
+      const { S, C } = E, p = pad(E), t = st.t, N = st.items.length, cols = 12, rows = 5;
+      const cell = Math.min((E.W - 2 * p) / (cols + 2), (E.H * 0.42) / (rows + 1)), gx = (E.W - cols * cell) / 2, gy = 52 * S;
+      const gridPos = (q) => [gx + (q % cols) * cell, gy + Math.floor(q / cols) * cell];
+      const bins = [['Entraînement', st.nTr, C.c[0], 'apprendre les paramètres'], ['Validation', st.nVa, C.c[3], 'choisir les réglages'], ['Test', st.nTe, C.pen, 'mesure finale, une seule fois']];
+      const by = E.H * 0.56, bh = E.H - by - p, tw = E.W - 2 * p - 2 * p, rects = [];
+      let x = p;
+      bins.forEach(([, n]) => { const w = n ? Math.max(cell * 2.5, (tw * n) / N) : 0; rects.push({ x, y: by, w, h: bh }); x += w + (n ? p : 0); });
+      const scale = (E.W - p - x + p) < 0 ? (E.W - 2 * p) / (x - p) : 1;
+      if (scale !== 1) { let xx = p; rects.forEach((r) => { r.x = xx; r.w *= scale; xx += r.w + (r.w ? p * scale : 0); }); }
+      const binPos = (q) => {
+        const b = q < st.nTr ? 0 : q < st.nTr + st.nVa ? 1 : 2, k = q - (b === 0 ? 0 : b === 1 ? st.nTr : st.nTr + st.nVa), R = rects[b];
+        const bc = Math.max(1, Math.floor((R.w - 8 * S) / cell));
+        return [R.x + 4 * S + (k % bc) * cell, R.y + 40 * S + Math.floor(k / bc) * cell];
+      };
+      const PH = t < 1.5 ? '1. Les données, rangées dans l’ordre où on les a collectées' : t < 4.5 ? '2. On les mélange au hasard (sinon les groupes seraient biaisés)' : '3. On les sépare en trois ensembles';
+      txt(E, PH, E.W / 2, 26 * S, { align: 'center', size: 16, bold: true });
+      if (t > 4.5) rects.forEach((R, b) => {
+        if (!R.w) return;
+        const [nom, n, col, role] = bins[b];
+        E.ctx.strokeStyle = col; E.ctx.lineWidth = 2.5 * S; E.ctx.strokeRect(R.x, R.y, R.w, R.h);
+        txt(E, nom + ' ' + Math.round((n / N) * 100) + ' % (' + n + ')', R.x + 6 * S, R.y + 18 * S, { size: 13, bold: true, color: col });
+        txt(E, role, R.x + 6 * S, R.y + 34 * S, { size: 11, color: C.soft });
+      });
+      st.items.forEach((cls, i) => {
+        const a = gridPos(i), b = gridPos(st.slot[i]), c = binPos(st.slot[i]);
+        let pos;
+        if (t < 1.5) pos = a;
+        else if (t < 3.5) { const k = ease((t - 1.5) / 2); pos = [lerp(a[0], b[0], k), lerp(a[1], b[1], k)]; }
+        else if (t < 4.5) pos = b;
+        else { const k = ease((t - 4.5 - (st.slot[i] / N) * 0.6) / 1.4); pos = [lerp(b[0], c[0], k), lerp(b[1], c[1], k)]; }
+        E.ctx.fillStyle = [C.c[0], C.c[2], C.c[4]][cls];
+        E.ctx.fillRect(pos[0] + 2 * S, pos[1] + 2 * S, cell - 4 * S, cell - 4 * S);
+      });
+    }
+  };
+
+  const LIB = { neurone, retro, sur, frontiere, kmeans, softmax, convolution, descente2d, seuil, decoupage };
+
+  /* bornes les paramètres proposés par l'IA (ou saisis) */
+  function sanitize(id, params) {
+    const L = LIB[id], out = {};
+    for (const [k, d] of Object.entries(L.params)) {
+      const v = params ? params[k] : undefined;
+      if (d.type === 'choice') out[k] = Object.prototype.hasOwnProperty.call(d.options, v) ? v : d.def;
+      else {
+        const n = typeof v === 'number' ? v : typeof v === 'string' ? parseFloat(v.replace(',', '.')) : NaN;
+        out[k] = isFinite(n) ? clamp(Math.round(n / d.step) * d.step, d.min, d.max) : d.def;
+        out[k] = parseFloat(out[k].toFixed(4));
+      }
+    }
+    return out;
+  }
+  function catalog() {
+    return Object.entries(LIB).map(([id, L]) => id + ' : ' + L.titre + ' — ' + L.resume + ' Paramètres : ' +
+      Object.entries(L.params).map(([k, d]) => k + (d.type === 'choice' ? ' (' + Object.keys(d.options).join(' | ') + ')' : ' (' + d.min + ' à ' + d.max + ')')).join(', ') + '.').join('\n');
+  }
+  return { LIB, sanitize, catalog, ids: () => Object.keys(LIB) };
 })();
 </script>
 
@@ -1618,16 +2588,16 @@ const Engine = (() => {
   }
 
   /* [url, en-têtes, corps] selon le fournisseur ; « full » ajoute les réglages facultatifs */
-  function buildRequest(prompt, full) {
+  function buildRequest(prompt, full, maxTokens) {
     const key = ai.keys[ai.provider], model = ai.models[ai.provider].replace(/^models\//, '');
     if (!/^[A-Za-z0-9._\/-]+$/.test(model)) throw Object.assign(new Error('modèle'), { status: 404 });
     if (ai.provider === 'groq') {
       const body = { model, messages: [{ role: 'user', content: prompt }] };
-      if (full) { body.temperature = 0.2; body.max_completion_tokens = 2048; if (/gpt-oss/.test(model)) body.reasoning_effort = 'low'; }
+      if (full) { body.temperature = 0.2; body.max_completion_tokens = maxTokens || 2048; if (/gpt-oss/.test(model)) body.reasoning_effort = 'low'; }
       return ['https://api.groq.com/openai/v1/chat/completions', { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key }, body];
     }
     const body = { contents: [{ role: 'user', parts: [{ text: prompt }] }] };
-    if (full) body.generationConfig = { temperature: 0.2 };
+    if (full) body.generationConfig = { temperature: 0.2, maxOutputTokens: maxTokens || 2048 };
     return ['https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body];
   }
   function replyText(data) {
@@ -1639,18 +2609,15 @@ const Engine = (() => {
     return parts.filter((p) => p && !p.thought && typeof p.text === 'string').map((p) => p.text).join('');
   }
 
-  async function askLLM(texts, opts) {
-    if (ai.busy) return;
-    ai.busy = true; askAi.disabled = true; aiTest.disabled = true;
-    setStatus('Je demande à l’assistant IA…'); aiNote.textContent = '';
-    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 45000);
+  /* Appel brut au fournisseur choisi : renvoie le texte de la réponse, ou lève une erreur avec son statut HTTP. */
+  async function callLLM(prompt, o) {
+    o = o || {};
+    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), o.timeout || 45000);
     try {
-      const state = { curves: curves.map((c) => c.text), opt: gdOpt.value, lr: lrVal };
-      const prompt = E.llmPrompt(texts, state);
-      const send = (full) => { const [url, headers, body] = buildRequest(prompt, full); return fetch(url, { method: 'POST', headers, body: JSON.stringify(body), signal: ctl.signal }); };
+      const send = (full) => { const [url, headers, body] = buildRequest(prompt, full, o.maxTokens); return fetch(url, { method: 'POST', headers, body: JSON.stringify(body), signal: ctl.signal }); };
       let resp = await send(true);
       if (resp.status >= 500) {
-        setStatus(PROVIDERS[ai.provider].name + ' a répondu par une erreur ' + resp.status + '. Nouvel essai…');
+        if (o.onRetry) o.onRetry(resp.status);
         await new Promise((r) => setTimeout(r, 1500));
         resp = await send(false);
       }
@@ -1659,7 +2626,18 @@ const Engine = (() => {
         try { const j = await resp.json(); detail = (j && j.error && j.error.message) || ''; } catch (e) { /* corps illisible */ }
         throw Object.assign(new Error('http'), { status: resp.status, detail: String(detail).slice(0, 240) });
       }
-      const out = E.parseLLM(replyText(await resp.json()));
+      return replyText(await resp.json());
+    } finally { clearTimeout(to); }
+  }
+
+  async function askLLM(texts, opts) {
+    if (ai.busy) return;
+    ai.busy = true; askAi.disabled = true; aiTest.disabled = true;
+    setStatus('Je demande à l’assistant IA…'); aiNote.textContent = '';
+    try {
+      const state = { curves: curves.map((c) => c.text), opt: gdOpt.value, lr: lrVal };
+      const text = await callLLM(E.llmPrompt(texts, state), { onRetry: (st) => setStatus(PROVIDERS[ai.provider].name + ' a répondu par une erreur ' + st + '. Nouvel essai…') });
+      const out = E.parseLLM(text);
       if (!out) { setStatus('La réponse de l’IA est illisible. Reformulez ou écrivez l’équation.', 'error'); return; }
       const fb = ((opts && opts.fallback) || []).filter((x) => ['concept', 'deriv', 'opt', 'lr', 'start'].includes(x.type));
       if (out.actions.length) runActions(out.actions);
@@ -1669,7 +2647,7 @@ const Engine = (() => {
       aiNote.textContent = out.explain ? 'Assistant IA : ' + out.explain : '';
       if (out.explain && !(opts && opts.test)) showTab('notions');
     } catch (err) { setStatus(aiErrorMessage(err), 'error'); }
-    finally { clearTimeout(to); ai.busy = false; askAi.disabled = false; aiTest.disabled = false; }
+    finally { ai.busy = false; askAi.disabled = false; aiTest.disabled = false; }
   }
 
   aiKey.addEventListener('change', readAiFields);
@@ -1714,9 +2692,15 @@ const Engine = (() => {
     try { E.parseExpression(alts[0]); } catch (err) { setStatus('Je n’ai pas compris. ' + (err.friendly ? err.message : '') + aiHint(), 'error'); }
   }
 
+  /* Commande vocale : une phrase. Si l'écoute du cours tourne, on l'arrête d'abord (une seule reconnaissance à la fois),
+     la commande démarre quand elle s'est terminée, puis l'écoute du cours reprend. */
   function startListening() {
     if (listening && rec) { rec.stop(); return; }
     if (!SR) { setStatus('La dictée vocale n’existe pas dans ce navigateur. Utilisez Chrome, Edge ou Safari, ou écrivez l’équation.', 'warn'); return; }
+    if (course.rec) { course.pendingCommand = true; course.rec.stop(); return; }
+    startCommandRec();
+  }
+  function startCommandRec() {
     rec = new SR();
     rec.lang = 'fr-FR'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 3;
     rec.onstart = () => { listening = true; paintMic(); setStatus('Je vous écoute. Dites l’équation ou le concept.'); heardEl.textContent = ''; };
@@ -1735,9 +2719,60 @@ const Engine = (() => {
       };
       if (e.error !== 'aborted') setStatus(m[e.error] || 'La dictée a échoué (' + e.error + ').', 'warn');
     };
-    rec.onend = () => { listening = false; paintMic(); };
-    try { rec.start(); } catch (err) { setStatus('Impossible de démarrer le micro. Écrivez l’équation ci-dessus.', 'warn'); }
+    rec.onend = () => { listening = false; rec = null; paintMic(); if (course.on) setTimeout(courseSpawn, 200); };
+    try { rec.start(); } catch (err) { setStatus('Impossible de démarrer le micro. Écrivez l’équation ci-dessus.', 'warn'); if (course.on) courseSpawn(); }
   }
+
+  /* Écoute du cours : reconnaissance continue, relancée automatiquement quand Chrome la coupe (silence, réseau). */
+  const course = { on: false, rec: null, pendingCommand: false, fails: 0 };
+  const courseBtn = $('courseBtn'), courseLbl = $('courseLbl'), interimEl = $('interim');
+  function paintCourse() {
+    courseBtn.classList.toggle('on', course.on); courseBtn.setAttribute('aria-pressed', String(course.on));
+    courseLbl.textContent = course.on ? 'Cours écouté · arrêter' : 'Écouter le cours';
+  }
+  function toggleCourse() { if (course.on) stopCourse(); else startCourse(); }
+  function startCourse() {
+    if (!SR) { setStatus('La dictée vocale n’existe pas dans ce navigateur. Utilisez Chrome ou Edge pour écouter le cours.', 'warn'); return; }
+    course.on = true; course.fails = 0; paintCourse();
+    setStatus('Écoute du cours : la transcription s’ajoute dans « Synthèse du cours ».', 'ok');
+    if (!listening) courseSpawn();
+  }
+  function stopCourse() {
+    course.on = false; paintCourse(); interimEl.textContent = '';
+    if (course.rec) course.rec.stop();
+    setStatus('Écoute du cours arrêtée.', 'ok');
+  }
+  function courseSpawn() {
+    if (!course.on || listening || course.rec) return;
+    const r = new SR();
+    course.rec = r;
+    r.lang = 'fr-FR'; r.continuous = true; r.interimResults = true; r.maxAlternatives = 1;
+    r.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const res = e.results[i];
+        if (res.isFinal) appendTranscript(res[0].transcript); else interim += res[0].transcript;
+      }
+      interimEl.textContent = interim ? '… ' + interim : '';
+      course.fails = 0;
+    };
+    r.onerror = (e) => {
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') {
+        course.on = false; paintCourse();
+        setStatus(e.error === 'audio-capture' ? 'Aucun micro détecté.' : 'Le micro est bloqué ici. Ouvrez la page directement dans Chrome et autorisez le micro.', 'warn');
+      } else if (e.error !== 'no-speech' && e.error !== 'aborted') course.fails++;
+    };
+    r.onend = () => {
+      course.rec = null; interimEl.textContent = '';
+      if (course.pendingCommand) { course.pendingCommand = false; startCommandRec(); return; }
+      if (!course.on) return;
+      if (course.fails > 5) { stopCourse(); setStatus('Écoute du cours interrompue : la connexion semble perdue.', 'warn'); return; }
+      setTimeout(courseSpawn, course.fails ? 1500 : 250);
+    };
+    try { r.start(); } catch (err) { course.rec = null; course.fails++; if (course.fails <= 5) setTimeout(courseSpawn, 1500); }
+  }
+  courseBtn.addEventListener('click', toggleCourse);
+
   mic.addEventListener('click', startListening);
 
   /* ----- saisie écrite et exemples ----- */
@@ -1863,7 +2898,7 @@ const Engine = (() => {
     zoom = Math.max(0.8, Math.min(1.6, Math.round(z * 10) / 10));
     root.style.setProperty('--zoom', String(zoom));
     try { localStorage.setItem('cav.zoom', String(zoom)); } catch (e) { /* ignoré */ }
-    requestAnimationFrame(() => { resize(); drawLoss(); });
+    requestAnimationFrame(() => { resize(); drawLoss(); if (currentView === 'illus') ilResize(); });
   }
   $('fontUp').addEventListener('click', () => applyZoom(zoom + 0.1));
   $('fontDown').addEventListener('click', () => applyZoom(zoom - 0.1));
@@ -1881,6 +2916,317 @@ const Engine = (() => {
   });
   $('helpBtn').addEventListener('click', () => help.showModal());
 
+  /* ----- vues principales : Courbes, Synthèse du cours, Illustrations ----- */
+  const VIEWS = ['courbes', 'synthese', 'illus'].map((n) => ({ name: n, btn: $('vt-' + n), panel: $('view-' + n) }));
+  let currentView = 'courbes';
+  function showView(name) {
+    currentView = name;
+    for (const v of VIEWS) {
+      const on = v.name === name;
+      v.btn.setAttribute('aria-selected', String(on)); v.btn.tabIndex = on ? 0 : -1; v.panel.hidden = !on;
+    }
+    if (name === 'courbes') requestAnimationFrame(() => { resize(); drawLoss(); });
+    if (name === 'illus') requestAnimationFrame(() => { ilResize(); ilEnsureLoop(); });
+    if (name === 'synthese') updatePending();
+  }
+  VIEWS.forEach((v, i) => {
+    v.btn.addEventListener('click', () => showView(v.name));
+    v.btn.addEventListener('keydown', (e) => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      const n = VIEWS[(i + d + VIEWS.length) % VIEWS.length];
+      showView(n.name); n.btn.focus();
+    });
+  });
+
+  /* ----- synthèse du cours ----- */
+  const transcript = $('transcript'), synthBtn = $('synthBtn'), synthBody = $('synthBody'), synthTitle = $('synthTitle');
+  const synthState = $('synthState'), transCount = $('transCount'), synthCount = $('synthCount');
+  const synth = { data: null, upTo: 0, at: 0, busy: false };
+  const words = (s) => (s.match(/\S+/g) || []).length;
+  const CHUNK_WORDS = 1800;
+  try {
+    const saved = JSON.parse(localStorage.getItem('cav.cours') || 'null');
+    if (saved && typeof saved === 'object') {
+      transcript.value = typeof saved.transcript === 'string' ? saved.transcript : '';
+      synth.upTo = Math.min(transcript.value.length, Math.max(0, saved.upTo | 0));
+      synth.data = saved.data && typeof saved.data === 'object' ? E.parseSynth(JSON.stringify(saved.data), Illus.ids()) : null;
+      synth.at = saved.at | 0;
+    }
+  } catch (e) { /* rien de sauvegardé */ }
+  let saveTimer = 0;
+  /* le cours est gardé dans ce navigateur : un rechargement de la page ne perd pas une heure de transcription */
+  function saveCourse() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem('cav.cours', JSON.stringify({ transcript: transcript.value, upTo: synth.upTo, data: synth.data, at: synth.at })); } catch (e) { /* stockage plein ou bloqué */ }
+    }, 400);
+  }
+  function pendingWords() { return words(transcript.value.slice(Math.min(synth.upTo, transcript.value.length))); }
+  function updatePending() {
+    const total = words(transcript.value), pend = pendingWords();
+    transCount.textContent = total + (total > 1 ? ' mots' : ' mot');
+    synthBtn.disabled = synth.busy || !pend;
+    synthBtn.textContent = synth.busy ? 'Synthèse en cours…' : pend ? 'Synthétiser (' + pend + ' mots nouveaux)' : 'Synthèse à jour';
+    synthCount.textContent = pend ? '+' + pend : '';
+    if (!synth.busy) {
+      if (!synth.data) { synthState.textContent = 'vide'; synthState.className = 'badge'; }
+      else {
+        const hm = synth.at ? new Date(synth.at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+        synthState.textContent = pend ? pend + ' mots en attente' : 'à jour' + (hm ? ' · ' + hm : '');
+        synthState.className = 'badge ' + (pend ? 'warn' : 'ok');
+      }
+    }
+  }
+  function appendTranscript(text) {
+    const t = String(text).trim();
+    if (!t) return;
+    const ta = transcript, atEnd = ta.scrollTop + ta.clientHeight >= ta.scrollHeight - 8;
+    const s0 = ta.selectionStart, s1 = ta.selectionEnd, focused = document.activeElement === ta;
+    ta.value += (ta.value && !/\n$/.test(ta.value) ? '\n' : '') + t.charAt(0).toUpperCase() + t.slice(1);
+    if (focused) ta.setSelectionRange(s0, s1);
+    if (atEnd) ta.scrollTop = ta.scrollHeight;
+    updatePending(); saveCourse();
+  }
+  transcript.addEventListener('input', () => {
+    if (synth.upTo > transcript.value.length) synth.upTo = transcript.value.length;
+    updatePending(); saveCourse();
+  });
+
+  /* découpe le texte non synthétisé en morceaux d'environ CHUNK_WORDS mots (fin de morceau = position dans le texte) */
+  function chunksFrom(full, start) {
+    const out = [], re = /\S+/g;
+    let pos = start;
+    while (pos < full.length) {
+      re.lastIndex = pos;
+      let n = 0, end = full.length, m;
+      while ((m = re.exec(full))) { n++; if (n === CHUNK_WORDS) { end = m.index + m[0].length; break; } }
+      const text = full.slice(pos, end);
+      if (text.trim()) out.push({ text, end });
+      pos = end;
+    }
+    return out;
+  }
+
+  async function runSynth() {
+    if (synth.busy) return;
+    readAiFields();
+    if (!ai.keys[ai.provider]) { setStatus('La synthèse utilise l’assistant IA : ajoutez une clé dans Courbes › Assistant IA.', 'warn'); renderSynth(); return; }
+    const full = transcript.value, chunks = chunksFrom(full, Math.min(synth.upTo, full.length));
+    if (!chunks.length) { updatePending(); return; }
+    synth.busy = true; updatePending();
+    try {
+      for (let i = 0; i < chunks.length; i++) {
+        synthState.textContent = chunks.length > 1 ? 'synthèse ' + (i + 1) + '/' + chunks.length + '…' : 'synthèse…';
+        synthState.className = 'badge run';
+        setStatus('Synthèse du cours en cours' + (chunks.length > 1 ? ' (partie ' + (i + 1) + ' sur ' + chunks.length + ')' : '') + '…');
+        const prompt = E.synthPrompt(synth.data, chunks[i].text, { part: i + 1, parts: chunks.length, catalog: Illus.catalog() });
+        const out = E.parseSynth(await callLLM(prompt, { maxTokens: 6000, timeout: 120000 }), Illus.ids());
+        if (!out) throw Object.assign(new Error('illisible'), { unreadable: true });
+        synth.data = out; synth.upTo = chunks[i].end; synth.at = Date.now();
+        saveCourse(); renderSynth(); renderIlList();
+      }
+      setStatus('Synthèse à jour.', 'ok');
+    } catch (err) {
+      setStatus(err.unreadable ? 'La réponse de l’IA est illisible : relancez la synthèse.' : aiErrorMessage(err), 'error');
+    } finally { synth.busy = false; updatePending(); }
+  }
+  synthBtn.addEventListener('click', runSynth);
+
+  /* une courbe proposée n'est gardée que si chacune de ses équations passe l'analyseur */
+  function validCurve(c) {
+    const actions = c.actions.filter((a) => {
+      if (a.type !== 'equation' && a.type !== 'curve') return true;
+      try { E.parseExpression(a.expr); return true; } catch (err) { return false; }
+    });
+    return actions.some((a) => ['concept', 'equation', 'curve'].includes(a.type)) ? Object.assign({}, c, { actions }) : null;
+  }
+  function describeActions(acts) {
+    return acts.map((a) => a.type === 'concept' ? E.CONCEPTS[a.id].label : a.type === 'equation' ? 'y = ' + a.expr : a.type === 'curve' ? a.label + ' : ' + a.expr
+      : a.type === 'gd' ? 'descente de gradient' : a.type === 'deriv' ? (a.value ? 'dérivée' : '') : a.type === 'opt' ? OPT_NAMES[a.value] : a.type === 'lr' ? 'η = ' + fmtLr(a.value) : '')
+      .filter(Boolean).join(' · ');
+  }
+  function openCurves(c) {
+    showView('courbes');
+    runActions([{ type: 'clear' }].concat(c.actions));
+    aiNote.textContent = c.titre + (c.pourquoi ? ' — ' + c.pourquoi : '');
+    showTab('notions');
+  }
+  /* rendu de la synthèse : tout le texte venant de l'IA passe par textContent */
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+  function renderSynth() {
+    const d = synth.data;
+    synthTitle.textContent = d && d.titre ? d.titre : 'Synthèse';
+    synthBody.innerHTML = '';
+    if (!d) {
+      synthBody.appendChild(el('p', 'tip', 'Écoutez le cours ou collez un texte, puis cliquez sur « Synthétiser ». L’assistant IA rédige les points clés et les notions, propose des courbes à ouvrir dans l’onglet Courbes et des animations à montrer dans Illustrations. Chaque nouveau clic complète la synthèse avec ce qui a été dit depuis.'));
+      if (!ai.keys[ai.provider]) {
+        const b = el('button', 'btn', 'Configurer l’assistant IA'); b.type = 'button';
+        b.addEventListener('click', () => { showView('courbes'); showTab('ia'); aiKey.focus(); });
+        synthBody.appendChild(b);
+      }
+      return;
+    }
+    if (d.points.length) {
+      const sec = el('section'); sec.appendChild(el('h3', '', 'Points clés'));
+      const ol = el('ol'); d.points.forEach((p) => ol.appendChild(el('li', '', p))); sec.appendChild(ol); synthBody.appendChild(sec);
+    }
+    if (d.notions.length) {
+      const sec = el('section'); sec.appendChild(el('h3', '', 'Notions'));
+      const dl = el('dl'); d.notions.forEach((n) => { dl.appendChild(el('dt', '', n.nom)); dl.appendChild(el('dd', '', n.definition)); });
+      sec.appendChild(dl); synthBody.appendChild(sec);
+    }
+    const cs = d.courbes.map(validCurve).filter(Boolean);
+    if (cs.length) {
+      const sec = el('section'); sec.appendChild(el('h3', '', 'Courbes proposées'));
+      const grid = el('div', 'props');
+      cs.forEach((c) => {
+        const card = el('div', 'prop');
+        card.appendChild(el('h4', '', c.titre));
+        if (c.pourquoi) card.appendChild(el('p', '', c.pourquoi));
+        card.appendChild(el('p', 'what', describeActions(c.actions)));
+        const b = el('button', 'btn primary', 'Ouvrir dans Courbes'); b.type = 'button';
+        b.addEventListener('click', () => openCurves(c));
+        card.appendChild(b); grid.appendChild(card);
+      });
+      sec.appendChild(grid); synthBody.appendChild(sec);
+    }
+    if (d.illustrations.length) {
+      const sec = el('section'); sec.appendChild(el('h3', '', 'Animations proposées'));
+      const grid = el('div', 'props');
+      d.illustrations.forEach((it) => {
+        const card = el('div', 'prop anim');
+        card.appendChild(el('h4', '', Illus.LIB[it.id].titre));
+        card.appendChild(el('p', '', it.pourquoi || Illus.LIB[it.id].resume));
+        const b = el('button', 'btn primary', 'Voir l’animation'); b.type = 'button';
+        b.addEventListener('click', () => { showView('illus'); ilLoad(it.id, it.params, it.pourquoi); });
+        card.appendChild(b); grid.appendChild(card);
+      });
+      sec.appendChild(grid); synthBody.appendChild(sec);
+    }
+  }
+
+  function synthMarkdown() {
+    const d = synth.data, L = [];
+    L.push('# ' + ((d && d.titre) || 'Synthèse du cours'), '', '_' + new Date(synth.at || Date.now()).toLocaleString('fr-FR') + '_', '');
+    if (d) {
+      if (d.points.length) { L.push('## Points clés', ''); d.points.forEach((p, i) => L.push((i + 1) + '. ' + p)); L.push(''); }
+      if (d.notions.length) { L.push('## Notions', ''); d.notions.forEach((n) => L.push('- **' + n.nom + '** : ' + n.definition)); L.push(''); }
+      const cs = d.courbes.map(validCurve).filter(Boolean);
+      if (cs.length) { L.push('## Courbes à retracer', ''); cs.forEach((c) => L.push('- **' + c.titre + '** (' + describeActions(c.actions) + ')' + (c.pourquoi ? ' : ' + c.pourquoi : ''))); L.push(''); }
+      if (d.illustrations.length) { L.push('## Animations', ''); d.illustrations.forEach((it) => L.push('- **' + Illus.LIB[it.id].titre + '**' + (it.pourquoi ? ' : ' + it.pourquoi : ''))); L.push(''); }
+    }
+    if (transcript.value.trim()) L.push('## Transcription', '', transcript.value.trim(), '');
+    return L.join('\n');
+  }
+  $('synthExport').addEventListener('click', () => {
+    if (!synth.data && !transcript.value.trim()) { setStatus('Rien à télécharger pour l’instant.', 'warn'); return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([synthMarkdown()], { type: 'text/markdown;charset=utf-8' }));
+    a.download = 'synthese-cours-' + new Date().toISOString().slice(0, 10) + '.md';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  });
+  $('transClear').addEventListener('click', () => {
+    if ((transcript.value.trim() || synth.data) && !confirm('Commencer un nouveau cours ? La transcription et la synthèse actuelles seront effacées (pensez à les télécharger).')) return;
+    transcript.value = ''; synth.data = null; synth.upTo = 0; synth.at = 0;
+    saveCourse(); renderSynth(); renderIlList(); updatePending();
+    setStatus('Nouveau cours : transcription et synthèse effacées.', 'ok');
+  });
+
+  /* ----- illustrations ----- */
+  const ilCv = $('illusCv'), ilx = ilCv.getContext('2d'), ilPlayBtn = $('ilPlay'), ilSpeed = $('ilSpeed');
+  const il = { id: 'neurone', p: {}, st: null, seed: 1, playing: true, raf: 0, last: 0, caption: '', W: 0, H: 0 };
+  let ilColors = null;
+  function readColors() {
+    ilColors = { ink: css('--ink'), soft: css('--ink-soft'), pen: css('--pen'), card: css('--card'), paper: css('--paper'), line: css('--line'),
+      gmin: css('--grid-minor'), gmaj: css('--grid-major'), ok: css('--ok'), c: COLORS.map(css) };
+  }
+  function ilResize() {
+    const r = ilCv.getBoundingClientRect();
+    S = (parseFloat(getComputedStyle(root).fontSize) || 16) / 16;
+    const d = window.devicePixelRatio || 1;
+    il.W = r.width; il.H = r.height;
+    ilCv.width = Math.round(il.W * d); ilCv.height = Math.round(il.H * d);
+    ilDraw();
+  }
+  function ilDraw() {
+    if (!il.W || !il.H || !il.st) return;
+    if (!ilColors) readColors();
+    const d = window.devicePixelRatio || 1;
+    ilx.setTransform(d, 0, 0, d, 0, 0);
+    ilx.fillStyle = ilColors.card; ilx.fillRect(0, 0, il.W, il.H);
+    Illus.LIB[il.id].draw({ ctx: ilx, W: il.W, H: il.H, S, C: ilColors }, il.st, il.p);
+  }
+  function ilFrame(ts) {
+    il.raf = 0;
+    if (currentView !== 'illus' || !il.playing) return;
+    const dt = il.last ? Math.min(0.1, (ts - il.last) / 1000) : 0;
+    il.last = ts;
+    Illus.LIB[il.id].update(il.st, dt * parseFloat(ilSpeed.value || '1'), il.p);
+    ilDraw();
+    il.raf = requestAnimationFrame(ilFrame);
+  }
+  function ilEnsureLoop() { if (!il.raf && il.playing && currentView === 'illus') { il.last = 0; il.raf = requestAnimationFrame(ilFrame); } }
+  function ilSetup() { il.st = Illus.LIB[il.id].setup(il.p, il.seed); ilDraw(); }
+  function ilLoad(id, params, caption) {
+    if (!Illus.LIB[id]) return;
+    il.id = id; il.p = Illus.sanitize(id, params || {}); il.caption = caption || ''; il.seed = (Math.random() * 1e9) | 0;
+    const L = Illus.LIB[id];
+    $('illusTitle').textContent = L.titre;
+    $('illusCaption').textContent = il.caption || L.resume;
+    renderIlParams(); renderIlList(); ilSetup();
+    il.playing = true; ilPlayBtn.textContent = 'Pause'; ilEnsureLoop();
+  }
+  function renderIlParams() {
+    const host = $('illusParams'), L = Illus.LIB[il.id];
+    host.innerHTML = '';
+    for (const [k, d] of Object.entries(L.params)) {
+      const lab = el('label', 'param'), id = 'ilp-' + k;
+      lab.htmlFor = id;
+      const head = el('span', '', d.label + ' ');
+      let ctrl;
+      if (d.type === 'choice') {
+        ctrl = el('select');
+        for (const [v, t] of Object.entries(d.options)) { const o = el('option', '', t); o.value = v; ctrl.appendChild(o); }
+        ctrl.value = il.p[k];
+        ctrl.addEventListener('change', () => { il.p[k] = ctrl.value; ilSetup(); });
+      } else {
+        const val = el('b', '', String(il.p[k]).replace('.', ','));
+        head.appendChild(val);
+        ctrl = el('input'); ctrl.type = 'range'; ctrl.min = d.min; ctrl.max = d.max; ctrl.step = d.step; ctrl.value = il.p[k];
+        ctrl.addEventListener('input', () => { il.p[k] = parseFloat(ctrl.value); val.textContent = ctrl.value.replace('.', ','); ilSetup(); });
+      }
+      ctrl.id = id;
+      lab.appendChild(head); lab.appendChild(ctrl); host.appendChild(lab);
+    }
+  }
+  function renderIlList() {
+    const prop = $('illusProposed'), lib = $('illusLib');
+    prop.innerHTML = ''; lib.innerHTML = '';
+    const item = (id, sub, onClick, cls, pressed) => {
+      const b = el('button', 'illus-item' + (cls ? ' ' + cls : '')); b.type = 'button';
+      b.appendChild(document.createTextNode(Illus.LIB[id].titre));
+      b.appendChild(el('small', '', sub));
+      b.setAttribute('aria-pressed', String(!!pressed));
+      b.addEventListener('click', onClick);
+      return b;
+    };
+    const props = (synth.data && synth.data.illustrations) || [];
+    if (props.length) {
+      prop.appendChild(el('h3', '', 'Proposées par la synthèse'));
+      props.forEach((it) => prop.appendChild(item(it.id, it.pourquoi || Illus.LIB[it.id].resume, () => ilLoad(it.id, it.params, it.pourquoi), 'proposed', il.id === it.id && il.caption === it.pourquoi)));
+    }
+    for (const id of Illus.ids()) lib.appendChild(item(id, Illus.LIB[id].resume, () => ilLoad(id, {}, ''), '', il.id === id && !il.caption));
+  }
+  function ilToggle() { il.playing = !il.playing; ilPlayBtn.textContent = il.playing ? 'Pause' : 'Lecture'; ilEnsureLoop(); }
+  function ilRestart() { ilSetup(); }
+  ilPlayBtn.addEventListener('click', ilToggle);
+  $('ilRestart').addEventListener('click', ilRestart);
+  $('ilSeed').addEventListener('click', () => { il.seed = (Math.random() * 1e9) | 0; ilSetup(); });
+  new ResizeObserver(() => { if (currentView === 'illus') ilResize(); }).observe(ilCv);
+
   /* ----- raccourcis clavier (télécommande ou clavier du poste de l'enseignant) ----- */
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey || help.open) return;
@@ -1892,17 +3238,21 @@ const Engine = (() => {
     if (t.closest && t.closest('button, [role="tab"]') && (e.key === ' ' || e.key === 'Enter' || e.key.startsWith('Arrow'))) return;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     const A = {
+      '1': () => showView('courbes'), '2': () => showView('synthese'), '3': () => showView('illus'),
+      m: startListening, l: toggleCourse, f: toggleFull, '/': () => input.focus(), '?': () => help.showModal()
+    };
+    if (currentView === 'courbes') Object.assign(A, {
       ' ': togglePlay, ArrowRight: stepOnce, n: stepOnce, r: () => gdReset({ keepStart: true }),
       d: () => { dToggle.checked = !dToggle.checked; updateReadout(); draw(); },
       t: () => { tToggle.checked = !tToggle.checked; draw(); },
-      m: startListening, f: toggleFull, '+': zoomIn, '=': zoomIn, '-': zoomOut, '0': recenter,
-      '/': () => input.focus(), '?': () => help.showModal()
-    };
+      '+': zoomIn, '=': zoomIn, '-': zoomOut, '0': recenter
+    });
+    else if (currentView === 'illus') Object.assign(A, { ' ': ilToggle, r: ilRestart });
     if (A[k]) { e.preventDefault(); A[k](); }
   });
 
   /* ----- démarrage : un exemple déjà tracé ----- */
-  const redraw = () => { draw(); drawLoss(); };
+  const redraw = () => { readColors(); draw(); drawLoss(); ilDraw(); };
   new ResizeObserver(resize).observe(canvas);
   new ResizeObserver(drawLoss).observe(lossCv);
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
@@ -1917,6 +3267,7 @@ const Engine = (() => {
   gdFn.value = String(c0.id); gdReset();
   heardEl.textContent = 'Exemple : « x au carré moins quatre »';
   setStatus('Touchez le micro et dites votre équation ou un concept.');
+  readColors(); renderSynth(); updatePending(); ilLoad('neurone', {}, '');
   resize();
 })();
 </script>
