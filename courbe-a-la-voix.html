@@ -309,6 +309,16 @@ kbd { font: 500 0.85rem var(--font-mono); border: 1px solid var(--line); border-
 .illus-item:hover { border-color: var(--ink-soft); }
 .illus-item[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 3px 0 0 var(--pen); }
 .illus-item.proposed { background: var(--paper); }
+.stage iframe { width: 100%; height: 100%; border: 0; display: block; background: var(--card); }
+.genpanel { display: grid; gap: 0.55rem; }
+.genpanel textarea { font: 400 1rem var(--font-body); color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 0.45rem 0.6rem; width: 100%; resize: vertical; }
+.gdmsg.err { color: var(--pen); }
+.gensrc { margin: 0; max-height: 14rem; overflow: auto; font: 0.78rem/1.45 var(--font-mono); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem 0.7rem; white-space: pre; }
+.illus-row { display: flex; gap: 0.3rem; align-items: stretch; }
+.illus-row .illus-item { flex: 1; min-width: 0; }
+.illus-row .x { align-self: center; }
+.illus-item.create { border-style: dashed; border-color: var(--pen); }
+.badge.beta { color: var(--pen); border-color: currentColor; font-size: 0.7rem; padding: 0 0.4rem; margin-left: 0.35rem; vertical-align: 2px; }
 .caption { margin: 0; font-size: 1.02rem; max-width: 80ch; }
 .params { display: flex; flex-wrap: wrap; gap: 0.5rem 1.4rem; align-items: end; }
 .param { display: grid; gap: 0.15rem; font-size: 0.85rem; color: var(--ink-soft); min-width: 12rem; }
@@ -520,9 +530,27 @@ kbd { font: 500 0.85rem var(--font-mono); border: 1px solid var(--line); border-
           </select>
         </div>
       </div>
-      <div class="stage"><canvas id="illusCv" role="img" aria-label="Animation pédagogique"></canvas></div>
+      <div class="stage">
+        <canvas id="illusCv" role="img" aria-label="Animation pédagogique"></canvas>
+        <iframe id="genFrame" sandbox="allow-scripts" title="Animation écrite par l’IA" hidden></iframe>
+      </div>
       <p id="illusCaption" class="caption"></p>
       <div id="illusParams" class="params"></div>
+      <div id="genPanel" class="genpanel" hidden>
+        <p class="warnbox">Bêta : le code de l’animation est écrit par l’IA. Il tourne isolé (sans accès à la page, à votre clé ni à internet), mais le contenu peut être faux ou maladroit : vérifiez-le avant de le projeter.</p>
+        <label class="field" for="genPrompt"><span>Que doit montrer l’animation ?</span>
+          <textarea id="genPrompt" rows="2" placeholder="Ex. : un réseau de neurones à trois couches en 3D, le signal qui traverse les couches"></textarea>
+        </label>
+        <div id="genIdeas" class="chips"></div>
+        <div class="row wrap">
+          <button id="genGo" class="btn primary" type="button">Générer</button>
+          <button id="genFix" class="btn" type="button" hidden>Corriger l’erreur avec l’IA</button>
+          <button id="genKeep" class="btn" type="button" hidden>Garder dans « Mes animations »</button>
+          <button id="genCode" class="btn" type="button" aria-expanded="false" hidden>Voir le code</button>
+        </div>
+        <p id="genMsg" class="gdmsg" role="status"></p>
+        <pre id="genSrc" class="gensrc" hidden></pre>
+      </div>
     </section>
   </div>
 </div>
@@ -1092,7 +1120,58 @@ const Engine = (() => {
     };
   }
 
-  return { parseExpression, normalize, pretty, interpret, makeDescent, numDeriv, CONCEPTS, llmPrompt, parseLLM, synthPrompt, parseSynth };
+  /* ===== Animations écrites librement par l'IA (bêta) : consigne, correction, lecture de la réponse ===== */
+  function genRules() {
+    return [
+      'Contraintes techniques STRICTES :',
+      '- Écris UNE fonction nommée anim : function anim(ctx, W, H, t, C, S) { ... }, appelée environ 60 fois par seconde.',
+      '- ctx : contexte Canvas 2D, déjà effacé avec la couleur de fond C.card. W et H : taille en pixels CSS. t : temps en secondes depuis le début.',
+      '- C : couleurs du thème { ink (texte), soft (texte secondaire), pen (accent rouge), card (fond), line (traits fins), ok (vert), c: [6 couleurs pour des séries] }. N’utilise que ces couleurs (avec éventuellement de la transparence via ctx.globalAlpha).',
+      '- S : objet vide au départ et conservé d’une image à l’autre, pour l’état (initialise-le une fois avec if (!S.init) { ... S.init = true; }).',
+      '- Tu peux écrire des fonctions auxiliaires au-dessus de anim. Rien d’autre : pas de DOM, pas de fetch ni d’accès réseau, pas d’image externe, pas de bibliothèque, pas de console, pas de setTimeout.',
+      '- Animation en boucle : utilise t modulo une durée de 8 à 20 secondes, découpée en phases lisibles, avec un titre de phase en haut.',
+      '- Lisible au fond d’un amphi : texte d’au moins Math.max(14, H / 32) pixels, traits épais, peu d’éléments à la fois.',
+      '- Mise en page proportionnelle à W et H, qui doit marcher en 16/9 comme en format plus carré.',
+      '- Textes en français, virgule décimale.',
+      '- Pour la 3D : projette toi-même (rotation lente selon t, perspective simple) et dessine du plus loin au plus proche.',
+      '- Pas de boucle infinie ; au plus quelques milliers d’opérations par image.',
+      '- Exactitude : les formules, valeurs et explications affichées doivent être justes.',
+      'Réponds exactement dans ce format, sans rien d’autre :',
+      'TITRE: titre court',
+      'LEGENDE: une ou deux phrases qui disent ce que montre l’animation',
+      '```javascript',
+      '// le code',
+      '```'
+    ];
+  }
+  function genPrompt(ask, context) {
+    return [
+      'Tu écris une animation pédagogique en JavaScript (Canvas 2D) pour un cours projeté en salle ou en amphi, souvent en apprentissage automatique ou en mathématiques.',
+      'Ce que l’enseignant veut montrer : ' + JSON.stringify(String(ask).slice(0, 1200)),
+      context ? 'Contexte du cours en cours : ' + JSON.stringify(context).slice(0, 3000) : '',
+      ...genRules()
+    ].filter(Boolean).join('\n');
+  }
+  function genFixPrompt(cur, err) {
+    return [
+      'Tu as écrit cette animation pédagogique en JavaScript (Canvas 2D) pour un cours, sur le sujet : ' + JSON.stringify(String(cur.prompt || cur.titre).slice(0, 1200)),
+      'Elle produit cette erreur : ' + JSON.stringify(String(err).slice(0, 400)),
+      'Corrige-la en gardant le même sujet et la même idée. Code actuel :',
+      '```javascript', String(cur.code).slice(0, 30000), '```',
+      ...genRules()
+    ].join('\n');
+  }
+  function parseGen(text) {
+    const t = String(text || '');
+    const m = /```(?:javascript|js)?[^\n]*\n([\s\S]*?)```/i.exec(t);
+    const code = m ? m[1] : t;
+    if (!/function\s+anim\s*\(/.test(code)) return null;
+    const titre = (/^\s*\**TITRE\**\s*:\s*(.+)$/mi.exec(t) || [])[1] || 'Animation générée';
+    const legende = (/^\s*\**L[EÉ]GENDE\**\s*:\s*(.+)$/mi.exec(t) || [])[1] || '';
+    return { titre: titre.replace(/\*+/g, '').trim().slice(0, 100), legende: legende.replace(/\*+/g, '').trim().slice(0, 400), code: code.trim().slice(0, 40000) };
+  }
+
+  return { parseExpression, normalize, pretty, interpret, makeDescent, numDeriv, CONCEPTS, llmPrompt, parseLLM, synthPrompt, parseSynth, genPrompt, genFixPrompt, parseGen };
 })();
 </script>
 
@@ -1674,6 +1753,7 @@ const Illus = (() => {
   const SURF = {
     bol: { nom: 'Bol allongé', f: (x, y) => 0.5 * x * x + 5 * y * y, g: (x, y) => [x, 10 * y], dom: [-3, 3, -2, 2], start: [-2.7, 1.4], lr: { sgd: 0.18, momentum: 0.04, adam: 0.12 }, fmin: 0, mins: [[0, 0]] },
     rosenbrock: { nom: 'Vallée de Rosenbrock', f: (x, y) => (1 - x) ** 2 + 10 * (y - x * x) ** 2, g: (x, y) => [-2 * (1 - x) - 40 * x * (y - x * x), 20 * (y - x * x)], dom: [-2, 2, -1, 3], start: [-1.2, 2.6], lr: { sgd: 0.01, momentum: 0.002, adam: 0.05 }, fmin: 0, mins: [[1, 1]] },
+    deuxcreux: { nom: 'Deux creux', f: (x, y) => 0.25 * x ** 4 - x * x + 0.3 * x + y * y, g: (x, y) => [x ** 3 - 2 * x + 0.3, 2 * y], dom: [-2.2, 2.2, -1.5, 1.5], start: [2.1, 1], lr: { sgd: 0.05, momentum: 0.045, adam: 0.06 }, fmin: -1.45, mins: [[-1.486, 0], [1.338, 0]] },
     col: { nom: 'Point col', f: (x, y) => 0.5 * x * x - y * y + 0.25 * y ** 4, g: (x, y) => [x, -2 * y + y ** 3], dom: [-3, 3, -2.2, 2.2], start: [2.8, 0.05], lr: { sgd: 0.1, momentum: 0.02, adam: 0.1 }, fmin: -1, mins: [[0, Math.SQRT2], [0, -Math.SQRT2]] }
   };
   const RUNNERS = [['sgd', 'Descente simple', 0], ['momentum', 'Momentum', 2], ['adam', 'Adam', 1]];
@@ -1685,7 +1765,7 @@ const Illus = (() => {
     titre: 'Descente de gradient en 2D',
     resume: 'Trois méthodes partent du même point sur une surface vue de dessus (courbes de niveau) : la descente simple, le momentum et Adam ne prennent pas le même chemin vers le minimum.',
     params: {
-      surface: { label: 'Surface', type: 'choice', options: { bol: 'Bol allongé', rosenbrock: 'Vallée de Rosenbrock', col: 'Point col' }, def: 'bol' },
+      surface: { label: 'Surface', type: 'choice', options: { bol: 'Bol allongé', rosenbrock: 'Vallée de Rosenbrock', col: 'Point col', deuxcreux: 'Deux creux (minimum local)' }, def: 'bol' },
       taux: { label: 'Multiplicateur de η', type: 'range', min: 0.2, max: 2, step: 0.1, def: 1 }
     },
     setup(p) { const st = { s: SURF[p.surface], acc: 0, img: null, key: '' }; d2Init(st); return st; },
@@ -1868,7 +1948,300 @@ const Illus = (() => {
     }
   };
 
-  const LIB = { neurone, retro, sur, frontiere, kmeans, softmax, convolution, descente2d, seuil, decoupage };
+  /* ===== 3D : petit moteur de projection (rotation + perspective), sans bibliothèque =====
+     Repère du monde : x et y dans [−1 ; 1] au sol, z vers le haut. La caméra tourne autour de l'axe z (yaw)
+     et regarde plus ou moins d'en haut (pitch). Les objets sont dessinés du plus loin au plus proche. */
+  function cam3(E, o) {
+    o = o || {};
+    const cam = E.cam || { yaw: 0.7, pitch: 0.45, zoom: 1 };
+    const cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw), cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+    const sc = Math.min(E.W, E.H) * (o.scale || 0.36) * cam.zoom, ox = o.ox !== undefined ? o.ox : E.W / 2, oy = o.oy !== undefined ? o.oy : E.H * 0.55;
+    const zc = o.zc || 0, D = 4.5;
+    return (p) => {
+      const x = p[0] * cy - p[1] * sy, y = p[0] * sy + p[1] * cy, z = p[2] - zc;
+      const depth = y * cp - z * sp, up = y * sp + z * cp, f = D / (D + depth);
+      return [ox + x * sc * f, oy - up * sc * f, depth, f];
+    };
+  }
+  const mix = (a, b, k) => a.map((v, i) => Math.round(v + (b[i] - v) * clamp(k, 0, 1)));
+  const rgbs = (c, a) => 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (a === undefined ? 1 : a) + ')';
+  function lambert(w) {
+    const ux = w[1][0] - w[0][0], uy = w[1][1] - w[0][1], uz = w[1][2] - w[0][2];
+    const vx = w[3][0] - w[0][0], vy = w[3][1] - w[0][1], vz = w[3][2] - w[0][2];
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, l = Math.hypot(nx, ny, nz) || 1;
+    return Math.abs(-0.4 * nx - 0.5 * ny + 0.77 * nz) / l;
+  }
+  /* algorithme du peintre : chaque objet donne sa profondeur d et sa fonction de dessin */
+  function paint(items) { items.sort((a, b) => b.d - a.d); for (const it of items) it.draw(); }
+  function quadItem(E, pr, w, fill, stroke) {
+    const P = w.map(pr), d = (P[0][2] + P[1][2] + P[2][2] + P[3][2]) / 4;
+    return { d, draw: () => {
+      const c = E.ctx;
+      c.beginPath(); c.moveTo(P[0][0], P[0][1]); for (let k = 1; k < 4; k++) c.lineTo(P[k][0], P[k][1]); c.closePath();
+      c.fillStyle = fill; c.fill();
+      if (stroke) { c.strokeStyle = stroke; c.lineWidth = 0.8 * E.S; c.stroke(); }
+    } };
+  }
+  function pointItem(E, pr, w, r, fill, stroke) {
+    const P = pr(w);
+    return { d: P[2] - 0.001, draw: () => dot(E, P[0], P[1], r * P[3], fill, stroke, 1.2) };
+  }
+  function segItem(E, pr, a, b, color, lw, dash) {
+    const A = pr(a), B = pr(b);
+    return { d: (A[2] + B[2]) / 2 - 0.002, draw: () => seg(E, A[0], A[1], B[0], B[1], color, lw, dash) };
+  }
+  function floor3(E, pr, z) {
+    for (let k = -1; k <= 1.001; k += 0.5) {
+      const a = pr([k, -1, z]), b = pr([k, 1, z]), c = pr([-1, k, z]), d = pr([1, k, z]);
+      seg(E, a[0], a[1], b[0], b[1], E.C.gmaj, 1); seg(E, c[0], c[1], d[0], d[1], E.C.gmaj, 1);
+    }
+  }
+  function axes3(E, pr, labs, z0, z1) {
+    const C = E.C, o = pr([-1, -1, z0]), X = pr([1.2, -1, z0]), Y = pr([-1, 1.2, z0]), Z = pr([-1, -1, z1]);
+    [[X, labs[0]], [Y, labs[1]], [Z, labs[2]]].forEach(([q, l]) => {
+      seg(E, o[0], o[1], q[0], q[1], C.ink, 2);
+      txt(E, l, q[0], q[1] - 6 * E.S, { size: 17, serif: true, italic: true, align: 'center', halo: true });
+    });
+  }
+  const HINT3 = 'Glissez pour faire tourner · molette pour zoomer';
+  function hint3(E) { txt(E, HINT3, E.W - pad(E), E.H - 10 * E.S, { size: 12, align: 'right', color: E.C.soft }); }
+  function circle3(E, pr, r, z, color, lw) {
+    const pts = []; for (let k = 0; k <= 64; k++) { const a = (k / 64) * Math.PI * 2, q = pr([r * Math.cos(a), r * Math.sin(a), z]); pts.push([q[0], q[1]]); }
+    poly(E, pts, color, lw);
+  }
+
+  /* ===== 11. Surface de perte en 3D ===== */
+  const R3 = [0, 4, 1];
+  const surface3d = {
+    titre: 'Surface de perte en 3D', is3d: true,
+    resume: 'La perte vue comme un relief : trois billes (descente simple, momentum, Adam) partent du même point et roulent vers un creux. On voit pourquoi le chemin, et parfois le creux atteint, dépendent de la méthode.',
+    params: {
+      surface: { label: 'Surface', type: 'choice', options: { deuxcreux: 'Deux creux (minimum local)', bol: 'Bol allongé', rosenbrock: 'Vallée de Rosenbrock', col: 'Point col' }, def: 'deuxcreux' },
+      taux: { label: 'Multiplicateur de η', type: 'range', min: 0.2, max: 2, step: 0.1, def: 1 }
+    },
+    setup(p) {
+      const s = SURF[p.surface], [x0, x1, y0, y1] = s.dom, N = 26, grid = [];
+      let fmax = -Infinity;
+      for (let i = 0; i <= N; i++) { grid.push([]); for (let j = 0; j <= N; j++) { const f = s.f(x0 + ((x1 - x0) * i) / N, y0 + ((y1 - y0) * j) / N); grid[i].push(f); fmax = Math.max(fmax, f); } }
+      const st = { s, acc: 0, N, grid, L: Math.log1p(fmax - s.fmin) };
+      d2Init(st);
+      return st;
+    },
+    update(st, dt, p) { descente2d.update(st, dt, p); },
+    draw(E, st, p) {
+      const { S, C } = E, s = st.s, [x0, x1, y0, y1] = s.dom, N = st.N;
+      const zf = (f) => (1.1 * Math.log1p(Math.max(0, f - s.fmin))) / st.L;
+      const W3 = (x, y) => [((x - x0) / (x1 - x0)) * 2 - 1, ((y - y0) / (y1 - y0)) * 2 - 1, zf(s.f(x, y))];
+      const pr = cam3(E, { zc: 0.45, ox: E.W * 0.6, scale: 0.3 });
+      floor3(E, pr, 0);
+      const lo = rgb(C.c[2]), hi = rgb(C.c[3]), black = [0, 0, 0], items = [];
+      const gw = (i, j) => [(i / N) * 2 - 1, (j / N) * 2 - 1, zf(st.grid[i][j])];
+      for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+        const w = [gw(i, j), gw(i + 1, j), gw(i + 1, j + 1), gw(i, j + 1)], h = (w[0][2] + w[1][2] + w[2][2] + w[3][2]) / 4.4;
+        items.push(quadItem(E, pr, w, rgbs(mix(mix(lo, hi, h), black, 0.45 * (1 - lambert(w)))), alpha(C.card, 0.3)));
+      }
+      paint(items);
+      axes3(E, pr, ['x', 'y', 'perte'], 0, 1.25);
+      s.mins.forEach(([a, b]) => { const q = pr(W3(a, b)), r = 7 * S; seg(E, q[0] - r, q[1] - r, q[0] + r, q[1] + r, C.ok, 3); seg(E, q[0] - r, q[1] + r, q[0] + r, q[1] - r, C.ok, 3); });
+      st.run.forEach((R, i) => {
+        const col = C.c[R3[i]];
+        poly(E, R.path.map(([a, b]) => { const q = pr(W3(a, b)); return [q[0], q[1] - 3 * S]; }), col, 3);
+        const [a, b] = R.path[R.path.length - 1], q = pr(W3(a, b));
+        dot(E, q[0], q[1] - 6 * S, 9 * S * q[3], col, C.card, 2);
+      });
+      const lx = pad(E), ly = 26 * S;
+      txt(E, s.nom + ' · pas ' + st.step, lx, ly, { size: 16, bold: true });
+      st.run.forEach((R, i) => {
+        const y = ly + (28 + i * 44) * S, [a, b] = R.path[R.path.length - 1];
+        E.ctx.fillStyle = C.c[R3[i]]; E.ctx.fillRect(lx, y - 10 * S, 14 * S, 14 * S);
+        txt(E, R.nom + ' (η = ' + fmt(s.lr[R.key] * p.taux, 3) + ')', lx + 22 * S, y + 2 * S, { size: 14, bold: true });
+        txt(E, R.out ? 'diverge !' : 'perte = ' + fmt(s.f(a, b), 3), lx + 22 * S, y + 21 * S, { size: 13, mono: true, color: R.out ? C.pen : C.soft });
+      });
+      txt(E, '✕ minimum', lx, ly + 166 * S, { size: 13, color: C.soft });
+      hint3(E);
+    }
+  };
+
+  /* ===== 12. Régression linéaire en 3D ===== */
+  function rgInit(st) { const r = st.r; st.w = [gauss(r) * 1.2, gauss(r) * 1.2]; st.b = gauss(r) * 0.8; st.step = 0; st.hold = 0; st.mse = rgMse(st); st.hist = [st.mse]; }
+  function rgMse(st) { return st.pts.reduce((s, [a, b, y]) => s + (st.w[0] * a + st.w[1] * b + st.b - y) ** 2, 0) / st.pts.length; }
+  const regression3d = {
+    titre: 'Régression linéaire à deux variables', is3d: true,
+    resume: 'Un plan ŷ = w₁x₁ + w₂x₂ + b s’ajuste à un nuage de points par descente de gradient. Les traits rouges sont les erreurs (résidus) dont on minimise la moyenne des carrés.',
+    params: {
+      bruit: { label: 'Bruit', type: 'range', min: 0, max: 0.6, step: 0.05, def: 0.2 },
+      eta: { label: 'Taux d’apprentissage η', type: 'range', min: 0.05, max: 1, step: 0.05, def: 0.25 }
+    },
+    setup(p, seed) {
+      const r = rng(seed), a = gauss(r) * 0.7, b = gauss(r) * 0.7, c = gauss(r) * 0.3;
+      const pts = Array.from({ length: 40 }, () => { const x1 = r() * 2 - 1, x2 = r() * 2 - 1; return [x1, x2, a * x1 + b * x2 + c + gauss(r) * p.bruit]; });
+      const st = { r, pts, acc: 0 };
+      rgInit(st);
+      return st;
+    },
+    update(st, dt, p) {
+      st.acc += dt;
+      while (st.acc > 0.06) {
+        st.acc -= 0.06;
+        if (st.step >= 150) { if ((st.hold += 0.06) > 3) rgInit(st); continue; }
+        let g0 = 0, g1 = 0, gb = 0;
+        for (const [a, b, y] of st.pts) { const e = st.w[0] * a + st.w[1] * b + st.b - y; g0 += e * a; g1 += e * b; gb += e; }
+        const n = st.pts.length;
+        st.w[0] -= (2 * p.eta * g0) / n; st.w[1] -= (2 * p.eta * g1) / n; st.b -= (2 * p.eta * gb) / n;
+        st.step++; st.mse = rgMse(st); st.hist.push(st.mse);
+      }
+    },
+    draw(E, st) {
+      const { S, C } = E, pr = cam3(E, { zc: 0, ox: E.W * 0.6 }), zs = 0.4;
+      const yh = (a, b) => st.w[0] * a + st.w[1] * b + st.b;
+      floor3(E, pr, -1.1);
+      axes3(E, pr, ['x₁', 'x₂', 'y'], -1.1, 1.1);
+      const items = [], n = 8, pl = rgb(C.c[0]);
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+        const g = (u, v) => { const a = -1 + (2 * u) / n, b = -1 + (2 * v) / n; return [a, b, clamp(yh(a, b) * zs, -1.4, 1.4)]; };
+        items.push(quadItem(E, pr, [g(i, j), g(i + 1, j), g(i + 1, j + 1), g(i, j + 1)], rgbs(pl, 0.22), rgbs(pl, 0.55)));
+      }
+      for (const [a, b, y] of st.pts) {
+        const top = [a, b, y * zs], foot = [a, b, clamp(yh(a, b) * zs, -1.4, 1.4)];
+        items.push(segItem(E, pr, top, foot, C.pen, 2));
+        items.push(pointItem(E, pr, top, 6.5 * S, y > yh(a, b) ? C.c[2] : C.c[4], C.card));
+      }
+      paint(items);
+      const lx = pad(E), ly = 26 * S;
+      txt(E, 'pas ' + st.step + ' · erreur quadratique moyenne = ' + fmt(st.mse, 3), lx, ly, { size: 16, bold: true });
+      txt(E, 'ŷ = ' + fmt(st.w[0]) + '·x₁ + ' + par(fmt(st.w[1])) + '·x₂ + ' + par(fmt(st.b)), lx, ly + 30 * S, { size: 19, serif: true, italic: true });
+      txt(E, '— résidu y − ŷ (rouge) · plan bleu = prédiction', lx, ly + 56 * S, { size: 13, color: C.soft });
+      lossPlot(E, { x: lx, y: ly + 72 * S, w: Math.min(E.W * 0.3, 260 * S), h: Math.min(E.H * 0.25, 130 * S) }, [{ data: st.hist, color: C.pen }], { title: 'Erreur (MSE)', n: 150 });
+      hint3(E);
+    }
+  };
+
+  /* ===== 13. Astuce du noyau ===== */
+  const NOYAU_T = 17;
+  const noyau3d = {
+    titre: 'Astuce du noyau (passage en 3D)', is3d: true,
+    resume: 'Deux classes disposées en cercles ne sont pas séparables par une droite. En ajoutant une dimension z = x² + y², elles se retrouvent à deux hauteurs différentes : un simple plan les sépare, et ce plan redevient un cercle dans le plan de départ.',
+    params: {
+      points: { label: 'Points', type: 'range', min: 60, max: 240, step: 20, def: 140 },
+      bruit: { label: 'Bruit', type: 'range', min: 0, max: 0.15, step: 0.01, def: 0.04 }
+    },
+    setup(p, seed) {
+      const r = rng(seed);
+      const pts = Array.from({ length: p.points }, (_, i) => {
+        const k = i % 2, a = r() * Math.PI * 2, rad = k ? 0.74 + r() * 0.24 : Math.sqrt(r()) * 0.46;
+        return [rad * Math.cos(a) + gauss(r) * p.bruit, rad * Math.sin(a) + gauss(r) * p.bruit, k];
+      });
+      return { t: 0, pts };
+    },
+    update(st, dt) { st.t += dt; if (st.t > NOYAU_T) st.t = 0; },
+    draw(E, st) {
+      const { S, C } = E, t = st.t, k = ease((t - 3) / 3), lvl = 0.36;
+      const pr = cam3(E, { zc: 0.45 });
+      const PH = t < 3 ? '1. Dans le plan (x, y), aucune droite ne sépare les deux classes'
+        : t < 7 ? '2. On ajoute une dimension : z = x² + y²'
+        : t < 11 ? '3. Un plan horizontal sépare maintenant les deux classes'
+        : '4. Ramené dans le plan de départ, ce plan devient un cercle : une frontière non linéaire';
+      txt(E, PH, E.W / 2, 26 * S, { align: 'center', size: 16, bold: true });
+      floor3(E, pr, 0);
+      axes3(E, pr, ['x', 'y', 'z = x² + y²'], 0, 1.25);
+      const items = [];
+      for (const [x, y, c] of st.pts) items.push(pointItem(E, pr, [x, y, k * (x * x + y * y)], 6 * S, c ? C.pen : C.c[0], C.card));
+      if (t > 7) {
+        const a = ease((t - 7) / 1.2) * 0.3, pl = rgb(C.c[3]), n = 6;
+        for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+          const g = (u, v) => [-1.05 + (2.1 * u) / n, -1.05 + (2.1 * v) / n, lvl];
+          items.push(quadItem(E, pr, [g(i, j), g(i + 1, j), g(i + 1, j + 1), g(i, j + 1)], rgbs(pl, a), rgbs(pl, a * 1.8)));
+        }
+      }
+      paint(items);
+      if (t > 11) {
+        circle3(E, pr, Math.sqrt(lvl), lvl, C.c[3], 3);
+        circle3(E, pr, Math.sqrt(lvl), 0, C.c[3], 3.5);
+        const q = pr([Math.sqrt(lvl), 0, 0]);
+        txt(E, 'x² + y² = ' + fmt(lvl, 2), q[0] + 8 * S, q[1] + 18 * S, { size: 15, serif: true, italic: true, halo: true, color: C.c[3] });
+      }
+      hint3(E);
+    }
+  };
+
+  /* ===== 14. Analyse en composantes principales ===== */
+  function eig3(M) {
+    let A = M.map((r) => r.slice());
+    const vals = [], vecs = [];
+    for (let k = 0; k < 3; k++) {
+      let v = [1, 0.6, 0.3];
+      for (let it = 0; it < 200; it++) {
+        let w = [0, 1, 2].map((i) => A[i][0] * v[0] + A[i][1] * v[1] + A[i][2] * v[2]);
+        vecs.forEach((u) => { const d = w[0] * u[0] + w[1] * u[1] + w[2] * u[2]; w = w.map((x, i) => x - d * u[i]); });
+        const n = Math.hypot(...w) || 1; v = w.map((x) => x / n);
+      }
+      const Av = [0, 1, 2].map((i) => A[i][0] * v[0] + A[i][1] * v[1] + A[i][2] * v[2]), lam = Av[0] * v[0] + Av[1] * v[1] + Av[2] * v[2];
+      vals.push(Math.max(lam, 0)); vecs.push(v);
+      A = A.map((r, i) => r.map((x, j) => x - lam * v[i] * v[j]));
+    }
+    return { vals, vecs };
+  }
+  const ACP_T = 16;
+  const acp3d = {
+    titre: 'Analyse en composantes principales (ACP)', is3d: true,
+    resume: 'L’ACP cherche les directions où les données varient le plus. En projetant les points sur les deux premières, on passe de 3 à 2 dimensions en gardant l’essentiel de l’information.',
+    params: {
+      points: { label: 'Points', type: 'range', min: 100, max: 400, step: 20, def: 220 },
+      aplatissement: { label: 'Épaisseur du nuage', type: 'range', min: 0.02, max: 0.6, step: 0.02, def: 0.12 }
+    },
+    setup(p, seed) {
+      const r = rng(seed);
+      let a = [gauss(r), gauss(r), gauss(r)], b = [gauss(r), gauss(r), gauss(r)];
+      const nrm = (v) => { const n = Math.hypot(...v) || 1; return v.map((x) => x / n); };
+      a = nrm(a); const d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; b = nrm(b.map((x, i) => x - d * a[i]));
+      const c = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+      const sd = [0.5, 0.26, 0.5 * p.aplatissement];
+      const pts = Array.from({ length: p.points }, () => { const g = [gauss(r) * sd[0], gauss(r) * sd[1], gauss(r) * sd[2]]; return [0, 1, 2].map((i) => g[0] * a[i] + g[1] * b[i] + g[2] * c[i]); });
+      const mean = [0, 1, 2].map((i) => pts.reduce((s, q) => s + q[i], 0) / pts.length);
+      const cov = [0, 1, 2].map((i) => [0, 1, 2].map((j) => pts.reduce((s, q) => s + (q[i] - mean[i]) * (q[j] - mean[j]), 0) / pts.length));
+      const { vals, vecs } = eig3(cov), tot = vals.reduce((s, v) => s + v, 0) || 1;
+      const proj = pts.map((q) => { const u = q.map((x, i) => x - mean[i]), s1 = u[0] * vecs[0][0] + u[1] * vecs[0][1] + u[2] * vecs[0][2], s2 = u[0] * vecs[1][0] + u[1] * vecs[1][1] + u[2] * vecs[1][2]; return [0, 1, 2].map((i) => mean[i] + s1 * vecs[0][i] + s2 * vecs[1][i]); });
+      return { t: 0, pts, proj, mean, vals, vecs, share: vals.map((v) => v / tot) };
+    },
+    update(st, dt) { st.t += dt; if (st.t > ACP_T) st.t = 0; },
+    draw(E, st) {
+      const { S, C } = E, t = st.t, pr = cam3(E, { zc: 0, scale: 0.42 });
+      const PH = t < 3 ? '1. Un nuage de points en 3 dimensions'
+        : t < 7.5 ? '2. On cherche les directions de plus grande variance : les composantes principales'
+        : t < 11 ? '3. On projette chaque point sur le plan des deux premières composantes'
+        : '4. Résultat : 2 dimensions au lieu de 3, presque sans perte';
+      txt(E, PH, E.W / 2, 26 * S, { align: 'center', size: 16, bold: true });
+      floor3(E, pr, -0.9);
+      const items = [], k = ease((t - 7.5) / 3), m = st.mean, v = st.vecs, COLS = [C.pen, C.c[2], C.c[4]];
+      if (t > 7) {
+        const a = ease((t - 7) / 1) * 0.25, pl = rgb(C.c[0]), L1 = 2.2 * Math.sqrt(st.vals[0]) + 0.1, L2 = 2.2 * Math.sqrt(st.vals[1]) + 0.1, n = 6;
+        for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+          const g = (u, w) => { const s1 = -L1 + (2 * L1 * u) / n, s2 = -L2 + (2 * L2 * w) / n; return [0, 1, 2].map((q) => m[q] + s1 * v[0][q] + s2 * v[1][q]); };
+          items.push(quadItem(E, pr, [g(i, j), g(i + 1, j), g(i + 1, j + 1), g(i, j + 1)], rgbs(pl, a), rgbs(pl, a * 1.6)));
+        }
+      }
+      st.pts.forEach((q, i) => {
+        const p2 = st.proj[i], w = k > 0 ? q.map((x, j) => lerp(x, p2[j], k)) : q;
+        items.push(pointItem(E, pr, w, 4.5 * S, alpha(C.ink, 0.75)));
+      });
+      if (t > 3) {
+        const g = ease((t - 3) / 2);
+        v.forEach((dir, i) => {
+          const L = (2.4 * Math.sqrt(st.vals[i]) + 0.05) * g;
+          items.push(segItem(E, pr, m.map((x, j) => x - dir[j] * L), m.map((x, j) => x + dir[j] * L), COLS[i], 4.5 - i));
+        });
+      }
+      paint(items);
+      if (t > 3) v.forEach((dir, i) => {
+        const L = (2.4 * Math.sqrt(st.vals[i]) + 0.05) * ease((t - 3) / 2), q = pr(m.map((x, j) => x + dir[j] * L));
+        txt(E, 'PC' + (i + 1) + ' : ' + pct(st.share[i]), q[0] + 6 * S, q[1], { size: 15, bold: true, halo: true, color: COLS[i] });
+      });
+      if (t > 11) txt(E, 'Information gardée (PC1 + PC2) : ' + pct(st.share[0] + st.share[1]), E.W / 2, E.H - 30 * S, { align: 'center', size: 18, bold: true, color: C.ok });
+      hint3(E);
+    }
+  };
+
+  const LIB = { neurone, retro, sur, frontiere, kmeans, softmax, convolution, descente2d, seuil, decoupage, surface3d, regression3d, noyau3d, acp3d };
 
   /* bornes les paramètres proposés par l'IA (ou saisis) */
   function sanitize(id, params) {
@@ -2926,7 +3299,7 @@ const Illus = (() => {
       v.btn.setAttribute('aria-selected', String(on)); v.btn.tabIndex = on ? 0 : -1; v.panel.hidden = !on;
     }
     if (name === 'courbes') requestAnimationFrame(() => { resize(); drawLoss(); });
-    if (name === 'illus') requestAnimationFrame(() => { ilResize(); ilEnsureLoop(); });
+    if (name === 'illus') { gen.lastTick = gen.startedAt = performance.now(); requestAnimationFrame(() => { ilResize(); ilEnsureLoop(); }); }
     if (name === 'synthese') updatePending();
   }
   VIEWS.forEach((v, i) => {
@@ -3092,9 +3465,15 @@ const Illus = (() => {
       });
       sec.appendChild(grid); synthBody.appendChild(sec);
     }
-    if (d.illustrations.length) {
+    {
       const sec = el('section'); sec.appendChild(el('h3', '', 'Animations proposées'));
       const grid = el('div', 'props');
+      const custom = el('div', 'prop anim');
+      custom.appendChild(el('h4', '', 'Animation sur mesure (bêta)'));
+      custom.appendChild(el('p', '', 'L’IA écrit une animation à partir d’un point clé de ce cours. À vérifier avant de la projeter.'));
+      const cb = el('button', 'btn', 'Créer avec l’IA'); cb.type = 'button';
+      cb.addEventListener('click', () => { showView('illus'); openGen(null); });
+      custom.appendChild(cb);
       d.illustrations.forEach((it) => {
         const card = el('div', 'prop anim');
         card.appendChild(el('h4', '', Illus.LIB[it.id].titre));
@@ -3103,6 +3482,7 @@ const Illus = (() => {
         b.addEventListener('click', () => { showView('illus'); ilLoad(it.id, it.params, it.pourquoi); });
         card.appendChild(b); grid.appendChild(card);
       });
+      grid.appendChild(custom);
       sec.appendChild(grid); synthBody.appendChild(sec);
     }
   }
@@ -3137,7 +3517,8 @@ const Illus = (() => {
 
   /* ----- illustrations ----- */
   const ilCv = $('illusCv'), ilx = ilCv.getContext('2d'), ilPlayBtn = $('ilPlay'), ilSpeed = $('ilSpeed');
-  const il = { id: 'neurone', p: {}, st: null, seed: 1, playing: true, raf: 0, last: 0, caption: '', W: 0, H: 0 };
+  const il = { id: 'neurone', p: {}, st: null, seed: 1, playing: true, raf: 0, last: 0, caption: '', W: 0, H: 0, mode: 'lib',
+    cam: { yaw: 0.7, pitch: 0.45, zoom: 1 }, drag: null, lastDrag: 0 };
   let ilColors = null;
   function readColors() {
     ilColors = { ink: css('--ink'), soft: css('--ink-soft'), pen: css('--pen'), card: css('--card'), paper: css('--paper'), line: css('--line'),
@@ -3152,30 +3533,36 @@ const Illus = (() => {
     ilDraw();
   }
   function ilDraw() {
-    if (!il.W || !il.H || !il.st) return;
+    if (il.mode !== 'lib' || !il.W || !il.H || !il.st) return;
     if (!ilColors) readColors();
     const d = window.devicePixelRatio || 1;
     ilx.setTransform(d, 0, 0, d, 0, 0);
     ilx.fillStyle = ilColors.card; ilx.fillRect(0, 0, il.W, il.H);
-    Illus.LIB[il.id].draw({ ctx: ilx, W: il.W, H: il.H, S, C: ilColors }, il.st, il.p);
+    Illus.LIB[il.id].draw({ ctx: ilx, W: il.W, H: il.H, S, C: ilColors, cam: il.cam }, il.st, il.p);
   }
   function ilFrame(ts) {
     il.raf = 0;
-    if (currentView !== 'illus' || !il.playing) return;
+    if (currentView !== 'illus' || !il.playing || il.mode !== 'lib') return;
     const dt = il.last ? Math.min(0.1, (ts - il.last) / 1000) : 0;
     il.last = ts;
-    Illus.LIB[il.id].update(il.st, dt * parseFloat(ilSpeed.value || '1'), il.p);
+    const L = Illus.LIB[il.id];
+    /* la scène 3D tourne doucement toute seule, sauf juste après une manipulation à la souris */
+    if (L.is3d && !il.drag && ts - il.lastDrag > 3500) il.cam.yaw += dt * 0.18;
+    L.update(il.st, dt * parseFloat(ilSpeed.value || '1'), il.p);
     ilDraw();
     il.raf = requestAnimationFrame(ilFrame);
   }
-  function ilEnsureLoop() { if (!il.raf && il.playing && currentView === 'illus') { il.last = 0; il.raf = requestAnimationFrame(ilFrame); } }
+  function ilEnsureLoop() { if (!il.raf && il.playing && currentView === 'illus' && il.mode === 'lib') { il.last = 0; il.raf = requestAnimationFrame(ilFrame); } }
   function ilSetup() { il.st = Illus.LIB[il.id].setup(il.p, il.seed); ilDraw(); }
   function ilLoad(id, params, caption) {
     if (!Illus.LIB[id]) return;
+    setMode('lib');
     il.id = id; il.p = Illus.sanitize(id, params || {}); il.caption = caption || ''; il.seed = (Math.random() * 1e9) | 0;
+    il.cam = { yaw: 0.7, pitch: 0.45, zoom: 1 };
     const L = Illus.LIB[id];
     $('illusTitle').textContent = L.titre;
     $('illusCaption').textContent = il.caption || L.resume;
+    ilCv.style.cursor = L.is3d ? 'grab' : 'default';
     renderIlParams(); renderIlList(); ilSetup();
     il.playing = true; ilPlayBtn.textContent = 'Pause'; ilEnsureLoop();
   }
@@ -3205,9 +3592,9 @@ const Illus = (() => {
   function renderIlList() {
     const prop = $('illusProposed'), lib = $('illusLib');
     prop.innerHTML = ''; lib.innerHTML = '';
-    const item = (id, sub, onClick, cls, pressed) => {
+    const item = (title, sub, onClick, cls, pressed) => {
       const b = el('button', 'illus-item' + (cls ? ' ' + cls : '')); b.type = 'button';
-      b.appendChild(document.createTextNode(Illus.LIB[id].titre));
+      b.appendChild(document.createTextNode(title));
       b.appendChild(el('small', '', sub));
       b.setAttribute('aria-pressed', String(!!pressed));
       b.addEventListener('click', onClick);
@@ -3216,16 +3603,185 @@ const Illus = (() => {
     const props = (synth.data && synth.data.illustrations) || [];
     if (props.length) {
       prop.appendChild(el('h3', '', 'Proposées par la synthèse'));
-      props.forEach((it) => prop.appendChild(item(it.id, it.pourquoi || Illus.LIB[it.id].resume, () => ilLoad(it.id, it.params, it.pourquoi), 'proposed', il.id === it.id && il.caption === it.pourquoi)));
+      props.forEach((it) => prop.appendChild(item(Illus.LIB[it.id].titre, it.pourquoi || Illus.LIB[it.id].resume, () => ilLoad(it.id, it.params, it.pourquoi), 'proposed', il.mode === 'lib' && il.id === it.id && il.caption === it.pourquoi)));
     }
-    for (const id of Illus.ids()) lib.appendChild(item(id, Illus.LIB[id].resume, () => ilLoad(id, {}, ''), '', il.id === id && !il.caption));
+    prop.appendChild(el('h3', '', 'Écrites par l’IA (bêta)'));
+    prop.appendChild(item('Créer une animation avec l’IA', 'Décrivez ce que vous voulez montrer : l’IA écrit l’animation, vous la vérifiez avant de la projeter.', () => openGen(null), 'create', il.mode === 'gen' && !gen.savedId));
+    gen.saved.forEach((g) => {
+      const row = el('div', 'illus-row');
+      row.appendChild(item(g.titre, g.legende || g.prompt || '', () => openGen(g), 'proposed', il.mode === 'gen' && gen.savedId === g.id));
+      const x = el('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Supprimer l’animation ' + g.titre);
+      x.addEventListener('click', () => {
+        if (!confirm('Supprimer l’animation « ' + g.titre + ' » ?')) return;
+        gen.saved = gen.saved.filter((k) => k.id !== g.id); saveGen();
+        if (gen.savedId === g.id) gen.savedId = null;
+        renderIlList();
+      });
+      row.appendChild(x); prop.appendChild(row);
+    });
+    const ids = Illus.ids();
+    lib.appendChild(el('h3', '', 'En 2D'));
+    ids.filter((id) => !Illus.LIB[id].is3d).forEach((id) => lib.appendChild(item(Illus.LIB[id].titre, Illus.LIB[id].resume, () => ilLoad(id, {}, ''), '', il.mode === 'lib' && il.id === id && !il.caption)));
+    lib.appendChild(el('h3', '', 'En 3D'));
+    ids.filter((id) => Illus.LIB[id].is3d).forEach((id) => lib.appendChild(item(Illus.LIB[id].titre, Illus.LIB[id].resume, () => ilLoad(id, {}, ''), '', il.mode === 'lib' && il.id === id && !il.caption)));
   }
-  function ilToggle() { il.playing = !il.playing; ilPlayBtn.textContent = il.playing ? 'Pause' : 'Lecture'; ilEnsureLoop(); }
-  function ilRestart() { ilSetup(); }
+  function ilToggle() {
+    il.playing = !il.playing; ilPlayBtn.textContent = il.playing ? 'Pause' : 'Lecture';
+    if (il.mode === 'gen') postGen({ cmd: il.playing ? 'play' : 'pause' }); else ilEnsureLoop();
+  }
+  function ilRestart() { if (il.mode === 'gen') postGen({ cmd: 'restart' }); else ilSetup(); }
   ilPlayBtn.addEventListener('click', ilToggle);
   $('ilRestart').addEventListener('click', ilRestart);
   $('ilSeed').addEventListener('click', () => { il.seed = (Math.random() * 1e9) | 0; ilSetup(); });
+  ilSpeed.addEventListener('change', () => postGen({ speed: parseFloat(ilSpeed.value) }));
   new ResizeObserver(() => { if (currentView === 'illus') ilResize(); }).observe(ilCv);
+
+  /* rotation et zoom des scènes 3D à la souris */
+  ilCv.addEventListener('pointerdown', (e) => {
+    if (!Illus.LIB[il.id].is3d) return;
+    ilCv.setPointerCapture(e.pointerId); il.drag = { x: e.clientX, y: e.clientY }; ilCv.style.cursor = 'grabbing';
+  });
+  ilCv.addEventListener('pointermove', (e) => {
+    if (!il.drag) return;
+    il.cam.yaw -= (e.clientX - il.drag.x) * 0.01;
+    il.cam.pitch = Math.max(-0.15, Math.min(1.5, il.cam.pitch + (e.clientY - il.drag.y) * 0.008));
+    il.drag = { x: e.clientX, y: e.clientY }; il.lastDrag = performance.now();
+    ilDraw();
+  });
+  const ilRelease = () => { if (il.drag) { il.drag = null; il.lastDrag = performance.now(); ilCv.style.cursor = 'grab'; } };
+  ilCv.addEventListener('pointerup', ilRelease);
+  ilCv.addEventListener('pointercancel', ilRelease);
+  ilCv.addEventListener('wheel', (e) => {
+    if (!Illus.LIB[il.id].is3d) return;
+    e.preventDefault();
+    il.cam.zoom = Math.max(0.5, Math.min(2.5, il.cam.zoom * Math.exp(-e.deltaY * 0.0012)));
+    il.lastDrag = performance.now(); ilDraw();
+  }, { passive: false });
+
+  /* ----- animations écrites par l'IA (bêta) -----
+     Le code tourne dans un iframe sandbox="allow-scripts" sans allow-same-origin : origine opaque, donc aucun accès
+     à cette page, à son stockage (la clé API) ni à ses cookies. Une politique CSP interdit en plus tout accès réseau.
+     La page et l'iframe ne se parlent que par postMessage : erreurs et battements de cœur dans un sens, commandes dans l'autre. */
+  const genFrame = $('genFrame'), genPanel = $('genPanel'), genPrompt = $('genPrompt'), genMsg = $('genMsg'), genSrc = $('genSrc');
+  const genGo = $('genGo'), genFix = $('genFix'), genKeep = $('genKeep'), genCode = $('genCode'), genIdeas = $('genIdeas');
+  const gen = { cur: null, err: '', busy: false, lastTick: 0, startedAt: 0, saved: [], savedId: null };
+  try { const sv = JSON.parse(localStorage.getItem('cav.gen') || '[]'); if (Array.isArray(sv)) gen.saved = sv.filter((g) => g && typeof g.code === 'string' && typeof g.titre === 'string').slice(0, 30); } catch (e) { /* rien */ }
+  function saveGen() { try { localStorage.setItem('cav.gen', JSON.stringify(gen.saved)); } catch (e) { setGenMsg('Stockage plein : supprimez des animations gardées.', true); } }
+  function setGenMsg(text, err) { genMsg.textContent = text; genMsg.className = 'gdmsg' + (err ? ' err' : ''); }
+  const GEN_IDEAS = ['La dérivée comme pente de la tangente qui glisse le long d’une courbe', 'Un réseau de neurones à trois couches en 3D, avec le signal qui traverse les couches',
+    'Le mécanisme d’attention : des flèches plus ou moins épaisses entre les mots d’une phrase', 'Le dilemme biais-variance avec des tirs sur une cible'];
+  function renderGenIdeas() {
+    genIdeas.innerHTML = '';
+    const pts = synth.data && synth.data.points.length ? synth.data.points.slice(0, 6) : GEN_IDEAS;
+    pts.forEach((t) => {
+      const b = el('button', 'chip', t.length > 90 ? t.slice(0, 88) + '…' : t); b.type = 'button';
+      b.addEventListener('click', () => { genPrompt.value = synth.data && synth.data.points.length ? 'Illustrer : ' + t : t; genPrompt.focus(); });
+      genIdeas.appendChild(b);
+    });
+  }
+  function setMode(mode) {
+    il.mode = mode;
+    const g = mode === 'gen';
+    ilCv.hidden = g; genFrame.hidden = !g; genPanel.hidden = !g; $('illusParams').hidden = g; $('ilSeed').hidden = g;
+    if (!g) { genFrame.removeAttribute('srcdoc'); genFrame.src = 'about:blank'; gen.cur = null; gen.savedId = null; }
+    else if (il.raf) { cancelAnimationFrame(il.raf); il.raf = 0; }
+  }
+  function postGen(msg) { if (il.mode === 'gen' && genFrame.contentWindow) genFrame.contentWindow.postMessage(msg, '*'); }
+  function genDoc(code) {
+    const C = JSON.stringify(ilColors), safe = code.replace(/<\/script/gi, '<\\/script').replace(/<\!--/g, '<\\!--');
+    return '<!doctype html><html><head><meta charset="utf-8">' +
+      '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\'; style-src \'unsafe-inline\'">' +
+      '<style>html,body{margin:0;height:100%;overflow:hidden;background:' + ilColors.card + '}canvas{display:block;width:100vw;height:100vh}</style></head><body><canvas id="c"></canvas>' +
+      '<script>window.__cavErr=function(m){parent.postMessage({cav:"err",msg:String(m).slice(0,400)},"*")};' +
+      'window.onerror=function(m,s,l,c,e){window.__cavErr((e&&e.message)||m);return true};<\/script>' +
+      '<script>' + safe + '\n<\/script>' +
+      '<script>(function(){var cv=document.getElementById("c"),ctx=cv.getContext("2d"),C=' + C + ',S={},W=0,H=0,t=0,last=0,playing=true,speed=' + (parseFloat(ilSpeed.value) || 1) + ',dead=false,n=0;' +
+      'function size(){var d=devicePixelRatio||1;W=innerWidth;H=innerHeight;cv.width=Math.round(W*d);cv.height=Math.round(H*d);}addEventListener("resize",size);size();' +
+      'if(typeof anim!=="function"){window.__cavErr("La fonction anim(ctx, W, H, t, C, S) est absente du code.");return;}' +
+      'addEventListener("message",function(e){if(e.source!==parent)return;var m=e.data||{};if(m.cmd==="pause")playing=false;if(m.cmd==="play")playing=true;if(m.cmd==="restart"){t=0;for(var k in S)delete S[k];}if(m.speed)speed=m.speed;});' +
+      'function frame(ts){if(dead)return;var dt=last?Math.min(0.1,(ts-last)/1000):0;last=ts;if(playing)t+=dt*speed;var d=devicePixelRatio||1;' +
+      'ctx.setTransform(d,0,0,d,0,0);ctx.globalAlpha=1;ctx.setLineDash([]);ctx.fillStyle=C.card;ctx.fillRect(0,0,W,H);ctx.save();' +
+      'try{anim(ctx,W,H,t,C,S);}catch(err){dead=true;window.__cavErr((err&&err.message)||err);}ctx.restore();' +
+      'if(++n%15===0)parent.postMessage({cav:"tick"},"*");requestAnimationFrame(frame);}requestAnimationFrame(frame);})();<\/script></body></html>';
+  }
+  function runGen(item) {
+    gen.cur = item; gen.err = ''; gen.startedAt = gen.lastTick = performance.now();
+    if (!ilColors) readColors();
+    genFrame.srcdoc = genDoc(item.code);
+    $('illusTitle').textContent = item.titre;
+    $('illusCaption').textContent = item.legende || '';
+    genSrc.textContent = item.code;
+    genFix.hidden = true; genCode.hidden = false; genKeep.hidden = !!gen.savedId;
+    il.playing = true; ilPlayBtn.textContent = 'Pause';
+  }
+  function openGen(item) {
+    setMode('gen');
+    gen.savedId = item ? item.id : null;
+    renderGenIdeas();
+    if (item) { genPrompt.value = item.prompt || ''; runGen(item); setGenMsg(''); }
+    else {
+      genFrame.removeAttribute('srcdoc'); genFrame.src = 'about:blank'; gen.cur = null;
+      $('illusTitle').textContent = 'Créer une animation avec l’IA';
+      $('illusCaption').textContent = 'Décrivez ce que l’animation doit montrer, ou partez d’une idée ci-dessous, puis cliquez sur « Générer ». Comptez 15 à 60 secondes.';
+      genFix.hidden = genKeep.hidden = genCode.hidden = true; genSrc.hidden = true; setGenMsg('');
+    }
+    renderIlList();
+  }
+  window.addEventListener('message', (e) => {
+    if (e.source !== genFrame.contentWindow || !e.data || il.mode !== 'gen') return;
+    if (e.data.cav === 'tick') gen.lastTick = performance.now();
+    else if (e.data.cav === 'err' && !gen.err) {
+      gen.err = String(e.data.msg || 'erreur inconnue').slice(0, 400);
+      setGenMsg('Erreur dans l’animation : ' + gen.err, true); genFix.hidden = false;
+    }
+  });
+  /* garde-fou : si l'animation ne donne plus signe de vie (boucle trop longue), on la coupe */
+  setInterval(() => {
+    if (il.mode !== 'gen' || !gen.cur || gen.err || currentView !== 'illus' || document.hidden) return;
+    const now = performance.now();
+    if (now - gen.lastTick > 5000 && now - gen.startedAt > 5000) {
+      genFrame.removeAttribute('srcdoc'); genFrame.src = 'about:blank';
+      gen.err = 'L’animation ne répond plus (calcul trop long ou boucle infinie) : elle a été arrêtée.';
+      setGenMsg(gen.err, true); genFix.hidden = false;
+    }
+  }, 2000);
+
+  async function generate(fix) {
+    if (gen.busy) return;
+    readAiFields();
+    if (!ai.keys[ai.provider]) { setGenMsg('Ajoutez d’abord une clé dans Courbes › Assistant IA.', true); return; }
+    const ask = genPrompt.value.trim();
+    if (!fix && !ask) { setGenMsg('Décrivez ce que l’animation doit montrer.', true); genPrompt.focus(); return; }
+    gen.busy = true; genGo.disabled = genFix.disabled = true;
+    setGenMsg(fix ? 'Correction en cours…' : 'Génération en cours (15 à 60 secondes)…');
+    try {
+      const context = synth.data ? { titre: synth.data.titre, points: synth.data.points } : null;
+      const prompt = fix ? E.genFixPrompt(gen.cur, gen.err) : E.genPrompt(ask, context);
+      const out = E.parseGen(await callLLM(prompt, { maxTokens: 9000, timeout: 180000 }));
+      if (!out) throw Object.assign(new Error('illisible'), { unreadable: true });
+      out.prompt = fix ? gen.cur.prompt : ask;
+      if (fix && gen.savedId) out.id = gen.savedId;
+      gen.savedId = null;
+      runGen(out);
+      setGenMsg((fix ? 'Animation corrigée' : 'Animation générée') + ' : vérifiez-la avant de la projeter, puis gardez-la si elle vous convient.');
+      renderIlList();
+    } catch (err) {
+      setGenMsg(err.unreadable ? 'La réponse de l’IA ne contient pas de code utilisable : relancez ou reformulez.' : aiErrorMessage(err), true);
+    } finally { gen.busy = false; genGo.disabled = genFix.disabled = false; }
+  }
+  genGo.addEventListener('click', () => generate(false));
+  genFix.addEventListener('click', () => generate(true));
+  genKeep.addEventListener('click', () => {
+    if (!gen.cur) return;
+    const g = { id: gen.cur.id || Date.now(), titre: gen.cur.titre, legende: gen.cur.legende, code: gen.cur.code, prompt: gen.cur.prompt || '', at: Date.now() };
+    gen.saved = [g].concat(gen.saved.filter((k) => k.id !== g.id)).slice(0, 30);
+    saveGen(); gen.savedId = g.id; gen.cur = g; genKeep.hidden = true;
+    setGenMsg('Gardée dans « Mes animations ».'); renderIlList();
+  });
+  genCode.addEventListener('click', () => {
+    genSrc.hidden = !genSrc.hidden;
+    genCode.setAttribute('aria-expanded', String(!genSrc.hidden)); genCode.textContent = genSrc.hidden ? 'Voir le code' : 'Masquer le code';
+  });
 
   /* ----- raccourcis clavier (télécommande ou clavier du poste de l'enseignant) ----- */
   document.addEventListener('keydown', (e) => {
@@ -3252,7 +3808,8 @@ const Illus = (() => {
   });
 
   /* ----- démarrage : un exemple déjà tracé ----- */
-  const redraw = () => { readColors(); draw(); drawLoss(); ilDraw(); };
+  const redraw = () => { readColors(); draw(); drawLoss(); ilDraw(); if (il.mode === 'gen' && gen.cur) runGen(gen.cur); };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) gen.lastTick = gen.startedAt = performance.now(); });
   new ResizeObserver(resize).observe(canvas);
   new ResizeObserver(drawLoss).observe(lossCv);
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
